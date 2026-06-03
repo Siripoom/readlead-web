@@ -123,3 +123,61 @@ export interface Review {
   createdAt: string
   likes: number
 }
+
+export interface DiscountNovelItem {
+  id: string
+  title: string
+  imageUrl: string
+  publisher: string
+  author: string
+  genre: string
+  translator: string
+  discountLabel: string
+  countdown: string
+  badgeType: 'percent' | 'episode'
+  href: string
+}
+
+export interface RankingNovelItem {
+  id: string
+  title: string
+  imageUrl: string
+  genre: string
+  status: string
+  views: number
+  episodes: number
+  badgeLabel: string | null
+  badgeType: 'discount' | 'completed' | 'none'
+  href: string
+}
+
+export interface RankingShowcaseItem {
+  id: string
+  title: string
+  imageUrl: string
+  author: string
+  synopsis: string
+  category: string
+  href: string
+}
+
+export interface SidebarItem {
+  id: string
+  label: string
+}
+
+export interface PopularRankingItem {
+  id: string
+  rank: number
+  title: string
+  author: string
+  category: string
+  description: string
+  imageUrl: string
+}
+
+export interface PopularRankingSection {
+  id: string
+  title: string
+  items: PopularRankingItem[]
+}

@@ -5,146 +5,180 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { HomePromotionBanner } from '@/lib/types'
+import type { HomePromotionBanner, HomePromotionSlide } from '@/lib/types'
+
+interface BannerCardProps {
+  banner: HomePromotionBanner
+  gradientDir?: 'left' | 'right'
+  priority?: boolean
+  className?: string
+}
+
+function BannerCard({ banner, gradientDir = 'left', priority, className }: BannerCardProps) {
+  return (
+    <Link
+      href={banner.href}
+      className={cn(
+        'group relative block overflow-hidden rounded-2xl shadow-lg',
+        className,
+      )}
+    >
+      <div className="relative aspect-16/7 min-h-48">
+        <Image
+          src={banner.imageUrl}
+          alt={banner.title}
+          fill
+          priority={priority}
+          className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          sizes="(max-width: 768px) 100vw, 50vw"
+        />
+        <div
+          className={cn(
+            'absolute inset-0',
+            gradientDir === 'right'
+              ? 'bg-linear-to-l from-black/80 via-black/55 to-transparent'
+              : 'bg-linear-to-r from-black/80 via-black/55 to-transparent',
+          )}
+        />
+        <div
+          className={cn(
+            'absolute inset-0 flex flex-col justify-end gap-2 p-5 text-white md:p-7',
+            gradientDir === 'right' && 'items-end text-right',
+          )}
+        >
+          {banner.eyebrow && (
+            <span className="inline-flex self-start rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-white/85 backdrop-blur">
+              {banner.eyebrow}
+            </span>
+          )}
+          <h2 className="text-xl font-black leading-tight md:text-2xl">{banner.title}</h2>
+          <p className="line-clamp-2 text-sm text-white/80 md:text-base">{banner.description}</p>
+          <span className="mt-1 inline-flex self-start items-center gap-1.5 rounded-full bg-white/15 border border-white/30 px-5 py-2 text-sm font-bold backdrop-blur transition-colors group-hover:bg-white/25">
+            {banner.ctaLabel ?? 'ดูรายละเอียด'}
+            <ChevronRight className="h-3.5 w-3.5" />
+          </span>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+interface DesktopSlideProps {
+  slide: HomePromotionSlide
+  priority?: boolean
+}
+
+function DesktopSlide({ slide, priority }: DesktopSlideProps) {
+  return (
+    <div className="flex gap-3 md:gap-4">
+      <BannerCard
+        banner={slide.banners[0]}
+        gradientDir="left"
+        priority={priority}
+        className="flex-1"
+      />
+      <BannerCard
+        banner={slide.banners[1]}
+        gradientDir="right"
+        priority={priority}
+        className="flex-1"
+      />
+    </div>
+  )
+}
 
 interface Props {
-  items: HomePromotionBanner[]
+  slides: HomePromotionSlide[]
 }
 
 const AUTO_SLIDE_MS = 6000
 
-export function HomePromotionCards({ items }: Props) {
-  const viewportRef = useRef<HTMLDivElement | null>(null)
-  const itemRefs = useRef<Array<HTMLAnchorElement | null>>([])
-  const hasMountedRef = useRef(false)
+export function HomePromotionCards({ slides }: Props) {
+  const [isDesktop, setIsDesktop] = useState<boolean | null>(null)
   const [idx, setIdx] = useState(0)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const touchStartX = useRef<number>(0)
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const syncPreference = () => setPrefersReducedMotion(mediaQuery.matches)
-
-    syncPreference()
-    mediaQuery.addEventListener('change', syncPreference)
-
-    return () => mediaQuery.removeEventListener('change', syncPreference)
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const sync = () => setPrefersReducedMotion(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
   }, [])
 
-  const activeIndex = items.length === 0 ? 0 : Math.min(idx, items.length - 1)
-
   useEffect(() => {
-    const target = itemRefs.current[activeIndex]
-
-    if (!target) return
-
-    target.scrollIntoView({
-      behavior: hasMountedRef.current && !prefersReducedMotion ? 'smooth' : 'auto',
-      block: 'nearest',
-      inline: 'start',
-    })
-
-    hasMountedRef.current = true
-  }, [activeIndex, prefersReducedMotion])
-
-  useEffect(() => {
-    const viewport = viewportRef.current
-
-    if (!viewport || items.length <= 1) return
-
-    let frame = 0
-
-    const syncActiveIndex = () => {
-      const scrollLeft = viewport.scrollLeft
-      let nextIndex = 0
-      let minDistance = Number.POSITIVE_INFINITY
-
-      itemRefs.current.forEach((item, itemIndex) => {
-        if (!item) return
-
-        const distance = Math.abs(item.offsetLeft - scrollLeft)
-
-        if (distance < minDistance) {
-          minDistance = distance
-          nextIndex = itemIndex
-        }
+    const update = () => {
+      const next = window.innerWidth >= 768
+      setIsDesktop(prev => {
+        if (prev !== null && prev !== next) setIdx(0)
+        return next
       })
-
-      setIdx(current => (current === nextIndex ? current : nextIndex))
     }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
 
-    const handleScroll = () => {
-      cancelAnimationFrame(frame)
-      frame = window.requestAnimationFrame(syncActiveIndex)
-    }
+  const units: (HomePromotionSlide | HomePromotionBanner)[] = isDesktop
+    ? slides
+    : slides.flatMap(s => s.banners)
 
-    viewport.addEventListener('scroll', handleScroll, { passive: true })
-
-    return () => {
-      cancelAnimationFrame(frame)
-      viewport.removeEventListener('scroll', handleScroll)
-    }
-  }, [items.length])
+  const count = units.length
 
   useEffect(() => {
-    if (items.length <= 1 || prefersReducedMotion) return
-
+    if (count <= 1 || prefersReducedMotion) return
     const timer = window.setInterval(() => {
-      setIdx(current => (current + 1) % items.length)
+      setIdx(prev => (prev + 1) % count)
     }, AUTO_SLIDE_MS)
-
     return () => window.clearInterval(timer)
-  }, [items.length, prefersReducedMotion])
+  }, [count, prefersReducedMotion])
 
-  if (items.length === 0) return null
+  if (slides.length === 0 || isDesktop === null) return null
 
-  const showControls = items.length > 1
-  const cardWidthClassName = items.length === 1
-    ? 'basis-full'
-    : 'basis-[85%] md:basis-[calc((100%-1rem)/2)]'
+  const goToPrev = () => setIdx(prev => (prev - 1 + count) % count)
+  const goToNext = () => setIdx(prev => (prev + 1) % count)
 
-  const goToPrev = () => setIdx((activeIndex - 1 + items.length) % items.length)
-  const goToNext = () => setIdx((activeIndex + 1) % items.length)
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    const delta = e.changedTouches[0].clientX - touchStartX.current
+    if (Math.abs(delta) > 50) {
+      if (delta < 0) goToNext()
+      else goToPrev()
+    }
+  }
 
   return (
-    <section className="relative overflow-hidden rounded-[1.75rem] bg-transparent">
+    <section className="relative overflow-hidden rounded-[1.75rem]">
       <div
-        ref={viewportRef}
-        className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:px-5 md:py-5"
+        className={cn(
+          'flex',
+          !prefersReducedMotion && 'transition-transform duration-500 ease-out',
+        )}
+        style={{ transform: `translateX(-${idx * 100}%)` }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
-        {items.map((item, index) => (
-          <Link
-            key={item.id}
-            ref={node => {
-              itemRefs.current[index] = node
-            }}
-            href={item.href}
-            aria-label={item.title}
-            className={cn(
-              'group relative block min-w-0 flex-none snap-start overflow-hidden rounded-[1.35rem] border border-border/60 bg-muted/20',
-              cardWidthClassName,
+        {units.map((unit, i) => (
+          <div key={'id' in unit ? unit.id : (unit as HomePromotionBanner).id} className="w-full shrink-0">
+            {isDesktop ? (
+              <DesktopSlide slide={unit as HomePromotionSlide} priority={i === 0} />
+            ) : (
+              <BannerCard banner={unit as HomePromotionBanner} priority={i === 0} />
             )}
-          >
-            <div className="relative aspect-[16/9] min-h-32 overflow-hidden">
-              <Image
-                src={item.imageUrl}
-                alt={item.title}
-                fill
-                priority={index === 0}
-                className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                sizes={items.length === 1 ? '100vw' : '(max-width: 768px) 85vw, 50vw'}
-              />
-            </div>
-          </Link>
+          </div>
         ))}
       </div>
 
-      {showControls && (
+      {count > 1 && (
         <>
           <button
             type="button"
             onClick={goToPrev}
             aria-label="Previous promotion"
-            className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/25 bg-black/35 p-2 text-white backdrop-blur transition-colors hover:bg-black/55"
+            className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/25 bg-black/35 p-2 text-white backdrop-blur transition-colors hover:bg-black/55"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -152,10 +186,25 @@ export function HomePromotionCards({ items }: Props) {
             type="button"
             onClick={goToNext}
             aria-label="Next promotion"
-            className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/25 bg-black/35 p-2 text-white backdrop-blur transition-colors hover:bg-black/55"
+            className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/25 bg-black/35 p-2 text-white backdrop-blur transition-colors hover:bg-black/55"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
+
+          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 rounded-full bg-black/35 px-3 py-1.5 backdrop-blur">
+            {units.map((unit, i) => (
+              <button
+                key={`dot-${'id' in unit ? unit.id : i}`}
+                type="button"
+                onClick={() => setIdx(i)}
+                aria-label={`Go to promotion ${i + 1}`}
+                className={cn(
+                  'h-2 rounded-full transition-all',
+                  i === idx ? 'w-6 bg-white' : 'w-2 bg-white/40',
+                )}
+              />
+            ))}
+          </div>
         </>
       )}
     </section>

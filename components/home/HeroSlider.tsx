@@ -1,115 +1,169 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { HomePromotionSlide } from '@/lib/types'
+
+// Center card = 70% of container, each side peek = 15%
+const CARD_PCT = 70
+const AUTO_SLIDE_MS = 6000
+const TRANSITION_MS = 500
 
 interface Props {
   slides: HomePromotionSlide[]
 }
 
 export function HeroSlider({ slides }: Props) {
-  const [idx, setIdx] = useState(0)
+  const banners = useMemo(
+    () => slides.map(s => s.banners[0]).filter(Boolean),
+    [slides],
+  )
+  const extended = useMemo(
+    () => [...banners, ...banners, ...banners],
+    [banners],
+  )
+
+  const n = banners.length
+  const [idx, setIdx] = useState(n)
+  const [animated, setAnimated] = useState(true)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (slides.length <= 1) return
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const sync = () => setPrefersReducedMotion(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
 
-    const timer = setInterval(() => {
-      setIdx(current => (current + 1) % slides.length)
-    }, 6000)
+  useEffect(() => {
+    if (n === 0) return
+    if (resetTimerRef.current) clearTimeout(resetTimerRef.current)
 
+    if (idx >= n * 2) {
+      resetTimerRef.current = setTimeout(() => {
+        setAnimated(false)
+        setIdx(prev => prev - n)
+        setTimeout(() => setAnimated(true), 50)
+      }, TRANSITION_MS)
+    } else if (idx < n) {
+      resetTimerRef.current = setTimeout(() => {
+        setAnimated(false)
+        setIdx(prev => prev + n)
+        setTimeout(() => setAnimated(true), 50)
+      }, TRANSITION_MS)
+    }
+
+    return () => {
+      if (resetTimerRef.current) clearTimeout(resetTimerRef.current)
+    }
+  }, [idx, n])
+
+  useEffect(() => {
+    if (n <= 1 || prefersReducedMotion) return
+    const timer = setInterval(() => setIdx(prev => prev + 1), AUTO_SLIDE_MS)
     return () => clearInterval(timer)
-  }, [slides.length])
+  }, [n, prefersReducedMotion])
 
-  if (slides.length === 0) return null
+  if (n === 0) return null
 
-  const prev = () => setIdx(current => (current - 1 + slides.length) % slides.length)
-  const next = () => setIdx(current => (current + 1) % slides.length)
+  const activeDot = ((idx - n) % n + n) % n
+  // translateX% is relative to the track's own width (= section width, no explicit width set)
+  // This centers item[idx] in the section: left edge at (100-CARD_PCT)/2 %
+  const translateXPct = (100 - CARD_PCT) / 2 - idx * CARD_PCT
 
   return (
-    <section className="relative overflow-hidden rounded-[1.75rem] bg-transparent">
+    <section className="relative overflow-hidden">
       <div
-        className="flex transition-transform duration-500 ease-out"
-        style={{ transform: `translateX(-${idx * 100}%)`, width: `${slides.length * 100}%` }}
+        className={cn(
+          'flex items-center',
+          animated && !prefersReducedMotion && 'transition-transform duration-500 ease-out',
+        )}
+        style={{ transform: `translateX(${translateXPct}%)` }}
       >
-        {slides.map(slide => (
-          <div key={slide.id} className="w-full flex-shrink-0 p-4 md:p-5" style={{ width: `${100 / slides.length}%` }}>
-            <div className="grid gap-4">
-              {slide.banners.map((banner, bannerIndex) => (
-                <Link
-                  key={banner.id}
-                  href={banner.href}
-                  className="group relative block overflow-hidden rounded-[1.35rem] border border-border/60 bg-muted/30"
-                >
-                  <div className="relative aspect-[16/6] min-h-36">
-                    <Image
-                      src={banner.imageUrl}
-                      alt={banner.title}
-                      fill
-                      priority={idx === 0 && bannerIndex === 0}
-                      className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                      sizes="(max-width: 768px) 100vw, 1200px"
-                    />
-                    <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(20,9,6,0.88)_0%,rgba(20,9,6,0.58)_45%,rgba(20,9,6,0.18)_100%)]" />
-                    <div className="absolute inset-0 flex items-center justify-between gap-4 p-5 md:p-7">
-                      <div className="max-w-xl text-white">
-                        {banner.eyebrow && (
-                          <span className="inline-flex rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/85 backdrop-blur">
-                            {banner.eyebrow}
-                          </span>
-                        )}
-                        <h2 className="mt-3 text-xl font-bold leading-tight md:text-3xl">{banner.title}</h2>
-                        <p className="mt-2 line-clamp-2 text-sm text-white/80 md:text-base">{banner.description}</p>
-                      </div>
+        {extended.map((banner, i) => {
+          const isActive = i === idx
+          return (
+            <div
+              key={`${banner.id}-${i}`}
+              className={cn(
+                'shrink-0 px-2',
+                animated && !prefersReducedMotion && 'transition-all duration-500',
+                isActive ? 'opacity-100' : 'opacity-50',
+              )}
+              style={{ width: `${CARD_PCT}%` }}
+            >
+              <Link href={banner.href} className="group block">
+                <div className="relative aspect-video overflow-hidden rounded-3xl bg-muted/30">
+                  <Image
+                    src={banner.imageUrl}
+                    alt={banner.title}
+                    fill
+                    priority={i >= n && i < n * 2}
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    sizes="(max-width: 768px) 80vw, 70vw"
+                  />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/30 to-transparent" />
 
-                      <span className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), 'hidden md:inline-flex rounded-full px-4')}>
-                        {banner.ctaLabel ?? 'ดูรายละเอียด'}
+                  {isActive && (
+                    <div className="absolute bottom-0 left-0 right-0 space-y-3 p-6 text-white md:p-10">
+                      {banner.eyebrow && (
+                        <span className="inline-block rounded-full bg-red-600 px-3 py-1 text-xs font-bold uppercase tracking-widest">
+                          {banner.eyebrow}
+                        </span>
+                      )}
+                      <h2 className="line-clamp-2 text-2xl font-black leading-tight md:text-4xl">
+                        {banner.title}
+                      </h2>
+                      <p className="line-clamp-2 text-sm text-white/80 md:text-base">{banner.description}</p>
+                      <span className="inline-flex items-center gap-2 rounded-full bg-red-600 px-6 py-2.5 text-sm font-bold text-white md:text-base">
+                        {banner.ctaLabel ?? 'อ่านเลย'}
+                        <ChevronRight className="h-4 w-4" />
                       </span>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  )}
+                </div>
+              </Link>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
-      {slides.length > 1 && (
-        <>
-          <button
-            onClick={prev}
-            aria-label="Previous promotion"
-            className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/25 bg-black/35 p-2 text-white backdrop-blur transition-colors hover:bg-black/55"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            onClick={next}
-            aria-label="Next promotion"
-            className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/25 bg-black/35 p-2 text-white backdrop-blur transition-colors hover:bg-black/55"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
+      <button
+        type="button"
+        onClick={() => setIdx(prev => prev - 1)}
+        aria-label="Previous slide"
+        className="absolute left-[17%] top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/25 bg-black/40 p-2.5 text-white backdrop-blur transition-colors hover:bg-black/60"
+      >
+        <ChevronLeft className="h-5 w-5" />
+      </button>
+      <button
+        type="button"
+        onClick={() => setIdx(prev => prev + 1)}
+        aria-label="Next slide"
+        className="absolute right-[17%] top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/25 bg-black/40 p-2.5 text-white backdrop-blur transition-colors hover:bg-black/60"
+      >
+        <ChevronRight className="h-5 w-5" />
+      </button>
 
-          <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-2 rounded-full bg-black/35 px-3 py-1.5 backdrop-blur">
-            {slides.map((slide, slideIndex) => (
-              <button
-                key={slide.id}
-                onClick={() => setIdx(slideIndex)}
-                aria-label={`Go to promotion slide ${slideIndex + 1}`}
-                className={cn(
-                  'h-2 rounded-full transition-all',
-                  slideIndex === idx ? 'w-6 bg-white' : 'w-2 bg-white/45',
-                )}
-              />
-            ))}
-          </div>
-        </>
-      )}
+      <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-2 rounded-full bg-black/35 px-3 py-1.5 backdrop-blur">
+        {banners.map((banner, i) => (
+          <button
+            key={banner.id}
+            type="button"
+            onClick={() => { setAnimated(true); setIdx(n + i) }}
+            aria-label={`Go to slide ${i + 1}`}
+            className={cn(
+              'h-2 rounded-full transition-all',
+              i === activeDot ? 'w-6 bg-red-600' : 'w-2 bg-white/40',
+            )}
+          />
+        ))}
+      </div>
     </section>
   )
 }

@@ -20,6 +20,8 @@ npx next typegen # generate PageProps/LayoutProps/RouteContext type helpers
 - **React 19**
 - **TypeScript** (strict mode); path alias `@/*` → project root
 - **Tailwind CSS v4** via `@tailwindcss/postcss` — no `tailwind.config.js`
+- **shadcn/ui** components in `components/ui/` (configured via `components.json`)
+- **lucide-react** for icons
 
 ## Key Next.js 16 Breaking Changes
 
@@ -57,13 +59,45 @@ Turbopack is the default bundler for both `next dev` and `next build`. Do not ad
 
 ## Architecture
 
+ReadLead (`阅先`) is a Thai-language Chinese fiction reading platform supporting novels (`novel`), manga (`manga`), and audiobooks (`audiobook`).
+
 ```
-app/
-  layout.tsx      # root layout — sets fonts (Geist/Geist Mono), metadata, body wrapper
-  page.tsx        # home route (/)
-  globals.css     # global styles; Tailwind imported with `@import "tailwindcss"`
-public/           # static assets served at /
+app/                        # Next.js App Router routes
+  page.tsx                  # home (/) — content-type filtered via ?type= searchParam
+  login/ register/          # auth stubs
+  dashboard/                # user library, wallet, bookmarks
+  discover/                 # browse/search all works
+  detail/                   # work detail page (episodes, reviews, voting)
+  reader/                   # episode reader
+  creator/                  # creator studio (works CRUD, episodes, promotions)
+components/
+  layout/                   # SiteHeader, SiteFooter, Providers, RouteGuard
+  home/                     # hero slider, carousels, ranking lists
+  creator/                  # studio UI (stats, revenue chart, withdraw)
+  dashboard/                # profile card, wallet, bookmarks
+  detail/                   # content header, episode list, reviews, voting
+  reader/                   # reader toolbar, content, comments
+  modals/                   # DonateModal, PurchaseEpisodeModal, TopUpModal
+  shared/                   # BookCard, OrnamentalDivider
+  ui/                       # shadcn/ui primitives
+contexts/
+  RoleContext.tsx            # role (guest|user|creator|admin) — persisted in localStorage
+  ProfileContext.tsx         # user profile (display name, VIP, rank) — persisted in localStorage
+  WalletContext.tsx          # coin balance — persisted in localStorage, starts at 100
+lib/
+  types.ts                  # all shared TypeScript types
+  mock-data.ts              # all static data (MOCK_WORKS, MOCK_EPISODES, etc.)
+  content-types.ts          # ContentType constants, labels, parseHomeContentType()
+  utils.ts                  # cn() helper (clsx + tailwind-merge)
 ```
+
+### State and data
+
+There is **no backend or API** — all data lives in `lib/mock-data.ts`. The three React contexts (`RoleContext`, `ProfileContext`, `WalletContext`) manage client-side state persisted to `localStorage` with `rl_*` keys.
+
+### Auth model
+
+Auth is simulated: `RoleContext` exposes `role` and `setRole`. The header includes a dev role-switcher dropdown for toggling between `guest`, `user`, `creator`, and `admin`. `RouteGuard` (`components/layout/RouteGuard.tsx`) wraps pages that need specific roles.
 
 ### Tailwind v4 conventions
 
@@ -73,4 +107,4 @@ public/           # static assets served at /
 
 ### Server vs. Client Components
 
-All `app/` files are Server Components by default. Add `'use client'` only when you need state, event handlers, lifecycle hooks, or browser APIs. Pass data from Server Components to Client Components via props.
+All `app/` files are Server Components by default. Add `'use client'` only when you need state, event handlers, lifecycle hooks, or browser APIs. Context providers (`Providers.tsx`) and most `components/` files are Client Components. Pass data from Server Components to Client Components via props.

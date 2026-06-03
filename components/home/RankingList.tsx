@@ -1,17 +1,8 @@
-'use client'
-
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronRight, Eye, Star } from 'lucide-react'
 import type { Work } from '@/lib/types'
 import { GENRE_LABELS } from '@/lib/mock-data'
-import { cn } from '@/lib/utils'
-
-const RANK_COLORS = [
-  'border-[#F3B43F] bg-[#FFF6DC] text-[#D48A00]',
-  'border-[#B8C2CC] bg-[#EEF2F6] text-[#64748B]',
-  'border-[#DBA381] bg-[#FFF0E7] text-[#C46D3F]',
-]
 
 const META_NUMBER_FORMATTER = new Intl.NumberFormat('th-TH', {
   notation: 'compact',
@@ -31,11 +22,11 @@ interface Props {
   maxItems?: number
 }
 
-function formatMetaNumber(value: number) {
+export function formatMetaNumber(value: number) {
   return META_NUMBER_FORMATTER.format(value)
 }
 
-function formatPrimaryStat(work: Work, statVariant: RankingStatVariant) {
+export function formatPrimaryStat(work: Work, statVariant: RankingStatVariant) {
   switch (statVariant) {
     case 'reads':
       return formatMetaNumber(work.readCount)
@@ -77,20 +68,15 @@ export function RankingList({
         </Link>
       </div>
 
-      <div className="grid gap-x-10 rounded-3xl border border-border/80 bg-card px-2 md:grid-cols-2 md:px-5">
+      <div className="rounded-3xl border border-border/80 bg-card px-2 md:px-5">
         {visibleWorks.length > 0 ? visibleWorks.map((work, index) => (
           <Link
             key={work.id}
             href={`/detail?bookId=${work.id}`}
-            className="grid grid-cols-[2.75rem_4.5rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/70 py-4 transition-colors hover:bg-muted/20 last:border-b-0 md:px-2"
+            className="grid grid-cols-[2.5rem_4.5rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/70 py-4 transition-colors hover:bg-muted/20 last:border-b-0 md:px-2"
           >
-            <span
-              className={cn(
-                'flex h-10 w-10 items-center justify-center rounded-full border text-base font-black',
-                RANK_COLORS[index] ?? 'border-border bg-background text-muted-foreground',
-              )}
-            >
-              {index + 1}
+            <span className="w-10 text-right text-2xl font-black tabular-nums text-muted-foreground">
+              {String(index + 1).padStart(2, '0')}
             </span>
 
             <div className="relative h-24 w-16 overflow-hidden rounded-xl">

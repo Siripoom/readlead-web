@@ -1,9 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight, Eye, BookOpen, TrendingUp } from 'lucide-react'
+import { Eye, BookOpen, TrendingUp, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatMetaNumber } from '@/components/home/RankingList'
 import { GENRE_LABELS } from '@/lib/mock-data'
@@ -11,11 +10,13 @@ import type { Work } from '@/lib/types'
 
 type FilterType = 'reads' | 'views' | 'popularity'
 
-const FILTERS: { key: FilterType; label: string; icon: typeof Eye }[] = [
+const COLUMNS: { key: FilterType; label: string; icon: typeof Eye }[] = [
   { key: 'reads', label: 'ยอดอ่าน', icon: BookOpen },
   { key: 'views', label: 'ยอดดู', icon: Eye },
   { key: 'popularity', label: 'นิยมสูงสุด', icon: TrendingUp },
 ]
+
+const TOP_N = 10
 
 function sortWorks(works: Work[], filter: FilterType): Work[] {
   return [...works].sort((a, b) => {
@@ -31,158 +32,131 @@ function statValue(work: Work, filter: FilterType): string {
   return `${work.rankingScore}`
 }
 
-interface BadgeProps {
-  rank: number
+interface FeaturedCardProps {
+  work: Work
+  filter: FilterType
 }
 
-function RankBadge({ rank }: BadgeProps) {
-  if (rank <= 3) {
-    return (
-      <div
-        className={cn(
-          'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-black text-white shadow-sm',
-          rank === 1 ? 'bg-amber-400' :
-          rank === 2 ? 'bg-slate-400' :
-          'bg-orange-500',
-        )}
-      >
-        {rank}
-      </div>
-    )
-  }
+function FeaturedRankCard({ work, filter }: FeaturedCardProps) {
   return (
-    <span className="w-8 shrink-0 text-right text-xl font-black tabular-nums text-muted-foreground">
-      {rank}
-    </span>
+    <Link
+      href={`/detail?bookId=${work.id}`}
+      className="group block overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition-shadow hover:shadow-md"
+    >
+      <div className="relative aspect-3/4 overflow-hidden">
+        <Image
+          src={work.coverUrl}
+          alt={work.title}
+          fill
+          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          sizes="(max-width: 768px) 100vw, 240px"
+        />
+        <span className="absolute left-3 top-3 rounded-full bg-amber-400 px-2.5 py-1 text-xs font-black text-white shadow">
+          อันดับ 1
+        </span>
+      </div>
+      <div className="space-y-1.5 p-3">
+        <p className="line-clamp-2 text-base font-black leading-tight text-foreground">{work.title}</p>
+        <p className="truncate text-xs text-muted-foreground">
+          {GENRE_LABELS[work.genres[0]] ?? work.genres[0]} · {work.authorName}
+        </p>
+        <p className="text-sm font-bold text-primary tabular-nums">{statValue(work, filter)}</p>
+      </div>
+    </Link>
   )
 }
 
-interface RowProps {
+interface CompactRowProps {
   work: Work
   rank: number
   filter: FilterType
 }
 
-function RankingRow({ work, rank, filter }: RowProps) {
+function CompactRankRow({ work, rank, filter }: CompactRowProps) {
   return (
     <Link
       href={`/detail?bookId=${work.id}`}
-      className="group flex items-center gap-3 rounded-xl px-2 py-3 transition-colors hover:bg-muted/30"
+      className="group flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-muted/30"
     >
-      <RankBadge rank={rank} />
-
-      <div className="relative h-28 w-20 shrink-0 overflow-hidden rounded-xl shadow-sm">
-        <Image
-          src={work.coverUrl}
-          alt={work.title}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-          sizes="80px"
-        />
-      </div>
-
-      <div className="min-w-0 flex-1 space-y-1.5">
-        <p className="line-clamp-2 text-sm font-bold leading-5 text-foreground">{work.title}</p>
-
-        <p className="truncate text-[11px] text-muted-foreground">
-          {GENRE_LABELS[work.genres[0]] ?? work.genres[0]} · {work.authorName}
-        </p>
-
-        <p className="text-xs font-semibold text-primary tabular-nums">
-          {statValue(work, filter)}
-        </p>
-      </div>
+      <span
+        className={cn(
+          'w-5 shrink-0 text-center text-sm font-black tabular-nums',
+          rank === 2 ? 'text-slate-400' :
+          rank === 3 ? 'text-orange-500' :
+          'text-muted-foreground',
+        )}
+      >
+        {rank}
+      </span>
+      <p className="line-clamp-1 flex-1 text-sm font-medium text-foreground group-hover:text-primary">
+        {work.title}
+      </p>
+      <span className="shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">
+        {statValue(work, filter)}
+      </span>
     </Link>
+  )
+}
+
+interface ColumnProps {
+  filter: FilterType
+  label: string
+  icon: typeof Eye
+  works: Work[]
+}
+
+function RankingColumn({ filter, label, icon: Icon, works }: ColumnProps) {
+  const ranked = sortWorks(works, filter).slice(0, TOP_N)
+  if (ranked.length === 0) return null
+
+  const [featured, ...rest] = ranked
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 border-b border-border/60 pb-2">
+        <Icon className="h-4 w-4 text-primary" />
+        <h3 className="text-base font-bold text-foreground">{label}</h3>
+      </div>
+
+      <FeaturedRankCard work={featured} filter={filter} />
+
+      <div className="divide-y divide-border/50">
+        {rest.map((work, i) => (
+          <CompactRankRow key={work.id} work={work} rank={i + 2} filter={filter} />
+        ))}
+      </div>
+    </div>
   )
 }
 
 interface Props {
   title: string
   works: Work[]
+  viewMoreHref?: string
 }
 
-export function RankingNovelList({ title, works }: Props) {
-  const [filter, setFilter] = useState<FilterType>('reads')
-  const [page, setPage] = useState(0)
-
+export function RankingNovelList({ title, works, viewMoreHref }: Props) {
   if (works.length === 0) return null
-
-  const sorted = sortWorks(works, filter)
-  const visibleItems = sorted.slice(page * 6, page * 6 + 6)
-  const leftCol = visibleItems.slice(0, 3)
-  const rightCol = visibleItems.slice(3, 6)
-  const canPrev = page > 0
-  const canNext = (page + 1) * 6 < sorted.length
-
-  function handleFilter(f: FilterType) {
-    setFilter(f)
-    setPage(0)
-  }
 
   return (
     <section className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <h2 className="text-2xl font-bold text-foreground">{title}</h2>
-        <div className="flex items-center gap-2">
-          {/* Filter tabs */}
-          <div className="flex gap-1.5">
-            {FILTERS.map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => handleFilter(key)}
-                className={cn(
-                  'inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors',
-                  filter === key
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground',
-                )}
-              >
-                <Icon className="h-3 w-3" />
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Pagination arrows */}
-          <div className="flex gap-1.5">
-            {canPrev && (
-              <button
-                type="button"
-                onClick={() => setPage(p => p - 1)}
-                aria-label="หน้าก่อนหน้า"
-                className="rounded-full bg-black/80 p-2 text-white transition-colors hover:bg-black"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-            )}
-            {canNext && (
-              <button
-                type="button"
-                onClick={() => setPage(p => p + 1)}
-                aria-label="หน้าถัดไป"
-                className="rounded-full bg-black/80 p-2 text-white transition-colors hover:bg-black"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        </div>
+        {viewMoreHref && (
+          <Link
+            href={viewMoreHref}
+            className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            ดูเพิ่มเติม
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+        )}
       </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 gap-x-6 md:grid-cols-2">
-        <div className="divide-y divide-border/60">
-          {leftCol.map((work, i) => (
-            <RankingRow key={work.id} work={work} rank={page * 6 + i + 1} filter={filter} />
-          ))}
-        </div>
-        <div className="divide-y divide-border/60">
-          {rightCol.map((work, i) => (
-            <RankingRow key={work.id} work={work} rank={page * 6 + i + 4} filter={filter} />
-          ))}
-        </div>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        {COLUMNS.map(({ key, label, icon }) => (
+          <RankingColumn key={key} filter={key} label={label} icon={icon} works={works} />
+        ))}
       </div>
     </section>
   )

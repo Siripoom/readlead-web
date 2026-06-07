@@ -1,10 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Flame } from 'lucide-react'
+import { Flame, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { SidebarItem, PopularRankingItem, PopularRankingSection } from '@/lib/types'
+import type { SidebarItem, PopularRankingItem } from '@/lib/types'
 
 // ── Sidebar ──────────────────────────────────────────────────────────────────
 
@@ -63,38 +64,7 @@ function SidebarTabs({ items, activeId, onSelect }: Omit<SidebarProps, 'title'>)
   )
 }
 
-// ── Featured card ─────────────────────────────────────────────────────────────
-
-function FeaturedCard({ item, onItemClick }: { item: PopularRankingItem; onItemClick?: (item: PopularRankingItem) => void }) {
-  return (
-    <Link
-      href={`/detail?bookId=${item.id}`}
-      onClick={() => onItemClick?.(item)}
-      className="group block overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition-shadow hover:shadow-md lg:w-[250px] lg:shrink-0"
-    >
-      <div className="relative aspect-3/4 overflow-hidden">
-        <Image
-          src={item.imageUrl}
-          alt={item.title}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          sizes="(max-width: 1024px) 100vw, 250px"
-          priority
-        />
-        <span className="absolute left-3 top-3 rounded-full bg-amber-400 px-2.5 py-1 text-xs font-black text-white shadow">
-          อันดับ 1
-        </span>
-      </div>
-      <div className="space-y-1.5 p-4">
-        <p className="line-clamp-2 text-xl font-black leading-tight text-foreground">{item.title}</p>
-        <p className="text-sm text-muted-foreground">{item.author}</p>
-        <p className="line-clamp-3 text-xs leading-relaxed text-muted-foreground">{item.description}</p>
-      </div>
-    </Link>
-  )
-}
-
-// ── Ranking grid (ranks 2–6) ──────────────────────────────────────────────────
+// ── Ranking list rows ─────────────────────────────────────────────────────────
 
 function RankBadgeOverlay({ rank }: { rank: number }) {
   return (
@@ -139,59 +109,14 @@ function RankItem({ item, onItemClick }: { item: PopularRankingItem; onItemClick
   )
 }
 
-// ── Bottom sections ───────────────────────────────────────────────────────────
-
-function MiniRankItem({ item, onItemClick }: { item: PopularRankingItem; onItemClick?: (item: PopularRankingItem) => void }) {
-  return (
-    <Link
-      href={`/detail?bookId=${item.id}`}
-      onClick={() => onItemClick?.(item)}
-      className="group flex gap-2 rounded-lg px-1 py-2 transition-colors hover:bg-muted/20 border-b border-border/40 last:border-b-0"
-    >
-      <div className="relative aspect-3/4 w-12 shrink-0 overflow-hidden rounded-lg shadow-sm">
-        <Image
-          src={item.imageUrl}
-          alt={item.title}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-          sizes="48px"
-        />
-      </div>
-      <div className="min-w-0 flex-1 space-y-0.5 py-0.5">
-        <p className="line-clamp-1 text-sm font-medium text-foreground">{item.title}</p>
-        <p className="line-clamp-1 text-xs text-muted-foreground">{item.description}</p>
-        <p className="truncate text-[10px] text-muted-foreground">{item.author} · {item.category}</p>
-      </div>
-    </Link>
-  )
-}
-
-function BottomSections({ sections, onItemClick }: { sections: PopularRankingSection[]; onItemClick?: (item: PopularRankingItem) => void }) {
-  return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {sections.map(section => (
-        <div key={section.id} className="space-y-0">
-          <h3 className="mb-3 text-base font-bold text-foreground">{section.title}</h3>
-          <div>
-            {section.items.map(item => (
-              <MiniRankItem key={item.id} item={item} onItemClick={onItemClick} />
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 // ── Main component ────────────────────────────────────────────────────────────
 
 interface Props {
   sidebarTitle?: string
   sidebarItems: SidebarItem[]
   activeSidebarId: string
-  featuredItem: PopularRankingItem
   rankingItems: PopularRankingItem[]
-  bottomSections: PopularRankingSection[]
+  itemsPerPage?: number
   onSidebarChange?: (id: string) => void
   onItemClick?: (item: PopularRankingItem) => void
 }
@@ -200,28 +125,77 @@ export function PopularRankingLayout({
   sidebarTitle = 'รายการความนิยม',
   sidebarItems,
   activeSidebarId,
-  featuredItem,
   rankingItems,
-  bottomSections,
+  itemsPerPage = 8,
   onSidebarChange,
   onItemClick,
 }: Props) {
+  const [page, setPage] = useState(1)
+
+  // เปลี่ยนหมวด sidebar แล้วกลับไปหน้า 1 (ปรับ state ตอน render ตามแนวทาง React)
+  const [prevSidebarId, setPrevSidebarId] = useState(activeSidebarId)
+  if (prevSidebarId !== activeSidebarId) {
+    setPrevSidebarId(activeSidebarId)
+    setPage(1)
+  }
+
+  const totalPages = Math.max(1, Math.ceil(rankingItems.length / itemsPerPage))
+  const paginatedItems = rankingItems.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage,
+  )
+
   const handleSidebar = (id: string) => onSidebarChange?.(id)
 
   const content = (
     <main className="min-w-0 flex-1 space-y-8">
-      {/* Showcase: featured + ranking grid */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
-        <FeaturedCard item={featuredItem} onItemClick={onItemClick} />
-        <div className="grid flex-1 grid-cols-1 content-start gap-1 sm:grid-cols-2">
-          {rankingItems.map(item => (
-            <RankItem key={item.id} item={item} onItemClick={onItemClick} />
-          ))}
-        </div>
+      {/* Ranking list */}
+      <div className="grid grid-cols-1 content-start gap-1 sm:grid-cols-2">
+        {paginatedItems.map(item => (
+          <RankItem key={item.id} item={item} onItemClick={onItemClick} />
+        ))}
       </div>
 
-      {/* Bottom sections */}
-      <BottomSections sections={bottomSections} onItemClick={onItemClick} />
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="inline-flex h-9 items-center gap-1 rounded-md border border-[#e5e5e5] bg-white px-3 text-sm font-medium text-foreground transition-colors hover:bg-[#f5f5f5] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            ก่อนหน้า
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setPage(p)}
+              className={cn(
+                'h-9 w-9 rounded-md border text-sm font-semibold transition-colors',
+                p === page
+                  ? 'border-black bg-black text-white'
+                  : 'border-[#e5e5e5] bg-white text-foreground hover:bg-[#f5f5f5]',
+              )}
+            >
+              {p}
+            </button>
+          ))}
+
+          <button
+            type="button"
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="inline-flex h-9 items-center gap-1 rounded-md border border-[#e5e5e5] bg-white px-3 text-sm font-medium text-foreground transition-colors hover:bg-[#f5f5f5] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            ถัดไป
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </main>
   )
 

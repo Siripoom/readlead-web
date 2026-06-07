@@ -2,10 +2,19 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { Star, ThumbsUp, MessageSquarePlus, ChevronDown } from 'lucide-react'
+import { Star, ThumbsUp, MessageSquarePlus, ChevronDown, CornerDownRight } from 'lucide-react'
 import { useRole } from '@/contexts/RoleContext'
 import { useRouter } from 'next/navigation'
 import type { Review } from '@/lib/types'
+
+interface ReplyItem {
+  id: string
+  reviewId: string
+  authorName: string
+  avatarUrl: string
+  text: string
+  createdAt: string
+}
 
 interface Props {
   workId: string
@@ -45,6 +54,7 @@ function StarRow({
 
 function timeAgo(iso: string) {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+  if (diff < 60) return 'เพิ่งเมื่อกี้'
   if (diff < 3600) return `${Math.floor(diff / 60)} นาทีที่แล้ว`
   if (diff < 86400) return `${Math.floor(diff / 3600)} ชั่วโมงที่แล้ว`
   return `${Math.floor(diff / 86400)} วันที่แล้ว`
@@ -61,9 +71,49 @@ export default function ReviewSection({ workId, initialReviews }: Props) {
   const [formRating, setFormRating] = useState(5)
   const [formText, setFormText] = useState('')
 
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
+  const [replies, setReplies] = useState<Record<string, ReplyItem[]>>({})
+  const [replyingTo, setReplyingTo] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
+
   const filtered = filter === 'all' ? reviews : reviews.filter(r => r.rating === filter)
-  const visible = expanded ? filtered : filtered.slice(0, 3)
-  const hiddenCount = filtered.length - 3
+  const visible = expanded ? filtered : filtered.slice(0, 5)
+  const hiddenCount = filtered.length - 5
+
+  function handleLike(reviewId: string) {
+    if (!isLoggedIn) { router.push('/login'); return }
+    const wasLiked = likedIds.has(reviewId)
+    setLikedIds(prev => {
+      const next = new Set(prev)
+      if (wasLiked) next.delete(reviewId)
+      else next.add(reviewId)
+      return next
+    })
+    setReviews(prev =>
+      prev.map(r => r.id === reviewId ? { ...r, likes: r.likes + (wasLiked ? -1 : 1) } : r)
+    )
+  }
+
+  function handleReply(reviewId: string) {
+    if (!isLoggedIn) { router.push('/login'); return }
+    setReplyingTo(prev => (prev === reviewId ? null : reviewId))
+    setReplyText('')
+  }
+
+  function submitReply(reviewId: string) {
+    if (!replyText.trim()) return
+    const newReply: ReplyItem = {
+      id: `reply-${Date.now()}`,
+      reviewId,
+      authorName: 'คุณ',
+      avatarUrl: 'https://picsum.photos/seed/me/40/40',
+      text: replyText.trim(),
+      createdAt: new Date().toISOString(),
+    }
+    setReplies(prev => ({ ...prev, [reviewId]: [...(prev[reviewId] ?? []), newReply] }))
+    setReplyText('')
+    setReplyingTo(null)
+  }
 
   function handleSubmit() {
     if (!isLoggedIn) { router.push('/login'); return }
@@ -72,7 +122,7 @@ export default function ReviewSection({ workId, initialReviews }: Props) {
       id: `r-${Date.now()}`,
       workId,
       authorName: 'คุณ',
-      avatarUrl: `https://picsum.photos/seed/me/40/40`,
+      avatarUrl: 'https://picsum.photos/seed/me/40/40',
       rating: formRating,
       text: formText.trim(),
       createdAt: new Date().toISOString(),
@@ -170,27 +220,120 @@ export default function ReviewSection({ workId, initialReviews }: Props) {
         <p className="text-sm text-muted-foreground py-4 text-center">ยังไม่มีรีวิวในหมวดนี้</p>
       ) : (
         <div className="space-y-3">
-          {visible.map(review => (
-            <div key={review.id} className="rounded-lg border bg-card p-4 space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="relative h-8 w-8 rounded-full overflow-hidden shrink-0">
-                    <Image src={review.avatarUrl} alt={review.authorName} fill className="object-cover" />
+          {visible.map(review => {
+            const isLiked = likedIds.has(review.id)
+            const reviewReplies = replies[review.id] ?? []
+            const isReplying = replyingTo === review.id
+
+            return (
+              <div key={review.id} className="rounded-lg border bg-card p-4 space-y-3">
+                {/* Header */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="relative h-8 w-8 rounded-full overflow-hidden shrink-0">
+                      <Image src={review.avatarUrl} alt={review.authorName} fill className="object-cover" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium leading-tight">{review.authorName}</p>
+                      <p className="text-xs text-muted-foreground">{timeAgo(review.createdAt)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium leading-tight">{review.authorName}</p>
-                    <p className="text-xs text-muted-foreground">{timeAgo(review.createdAt)}</p>
-                  </div>
+                  <StarRow rating={review.rating} />
                 </div>
-                <StarRow rating={review.rating} />
+
+                {/* Body */}
+                <p className="text-sm text-foreground leading-relaxed">{review.text}</p>
+
+                {/* Actions */}
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => handleLike(review.id)}
+                    className={`flex items-center gap-1.5 text-xs transition-colors ${
+                      isLiked
+                        ? 'text-primary font-medium'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <ThumbsUp className={`h-3.5 w-3.5 ${isLiked ? 'fill-primary' : ''}`} />
+                    {review.likes} คนพบว่าเป็นประโยชน์
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleReply(review.id)}
+                    className={`flex items-center gap-1.5 text-xs transition-colors ${
+                      isReplying
+                        ? 'text-primary font-medium'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <CornerDownRight className="h-3.5 w-3.5" />
+                    ตอบกลับ
+                    {reviewReplies.length > 0 && (
+                      <span className="ml-0.5">({reviewReplies.length})</span>
+                    )}
+                  </button>
+                </div>
+
+                {/* Existing replies */}
+                {reviewReplies.length > 0 && (
+                  <div className="space-y-2 pl-4 border-l-2 border-muted">
+                    {reviewReplies.map(r => (
+                      <div key={r.id} className="flex gap-2">
+                        <div className="relative h-6 w-6 rounded-full overflow-hidden shrink-0 mt-0.5">
+                          <Image src={r.avatarUrl} alt={r.authorName} fill className="object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-xs font-medium">{r.authorName}</span>
+                            <span className="text-xs text-muted-foreground">{timeAgo(r.createdAt)}</span>
+                          </div>
+                          <p className="text-xs text-foreground leading-relaxed mt-0.5">{r.text}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Reply form */}
+                {isReplying && (
+                  <div className="flex gap-2 pt-1">
+                    <div className="relative h-7 w-7 rounded-full overflow-hidden shrink-0 mt-0.5">
+                      <Image src="https://picsum.photos/seed/me/40/40" alt="คุณ" fill className="object-cover" />
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <textarea
+                        autoFocus
+                        value={replyText}
+                        onChange={e => setReplyText(e.target.value)}
+                        placeholder={`ตอบกลับ ${review.authorName}...`}
+                        rows={2}
+                        className="w-full rounded-md border bg-background px-3 py-2 text-xs resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setReplyingTo(null)}
+                          className="px-3 py-1 text-xs rounded-md border hover:bg-muted transition-colors"
+                        >
+                          ยกเลิก
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => submitReply(review.id)}
+                          disabled={!replyText.trim()}
+                          className="px-3 py-1 text-xs rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                        >
+                          ส่ง
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-              <p className="text-sm text-foreground leading-relaxed">{review.text}</p>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <ThumbsUp className="h-3.5 w-3.5" />
-                <span>{review.likes} คนพบว่าเป็นประโยชน์</span>
-              </div>
-            </div>
-          ))}
+            )
+          })}
 
           {!expanded && hiddenCount > 0 && (
             <button

@@ -54,9 +54,10 @@ function RankingCard({ work, rank }: CardProps) {
 interface Props {
   title: string
   works: Work[]
+  viewMoreHref?: string
 }
 
-export function AllTimeRankingCarousel({ title, works }: Props) {
+export function AllTimeRankingCarousel({ title, works, viewMoreHref }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
@@ -86,7 +87,17 @@ export function AllTimeRankingCarousel({ title, works }: Props) {
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-foreground">{title}</h2>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3">
+          {viewMoreHref && (
+            <Link
+              href={viewMoreHref}
+              className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              ดูเพิ่มเติม
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          )}
+          <div className="flex gap-2">
           {canScrollLeft && (
             <button
               type="button"
@@ -107,6 +118,7 @@ export function AllTimeRankingCarousel({ title, works }: Props) {
               <ChevronRight className="h-4 w-4" />
             </button>
           )}
+          </div>
         </div>
       </div>
 

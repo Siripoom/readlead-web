@@ -1,41 +1,46 @@
 import type { Work, Episode, Creator, TopUpOption, Review, UserProfile, HomePromotionSlide, DiscountNovelItem, RankingNovelItem, RankingShowcaseItem, SidebarItem, PopularRankingItem, PopularRankingSection } from './types'
+import type { Book } from '@/components/BookCategorySection'
+import type { Novel } from '@/components/LatestNovelUpdatesSection'
+import type { Story } from '@/components/PopularByCategorySection'
+import type { DailyManga } from '@/components/DailyMangaSection'
+import type { RankingBook } from '@/components/NovelRankingSection'
 
 export const MOCK_WORKS: Work[] = [
   {
     id: '1', type: 'novel', title: '用情至深', coverUrl: 'https://picsum.photos/seed/novel1/200/300',
     synopsis: 'เรื่องราวของหญิงสาวผู้เดินทางข้ามมิติเพื่อตามหาชายที่เธอรัก ผจญภัยในอาณาจักรโบราณท่ามกลางสงครามและการทรยศ',
     genres: ['romance', 'fantasy'], tags: ['穿越', 'ชีวิตหลังความตาย', 'ราชวงศ์'],
-    authorId: 'c1', authorName: 'ปลายฝัน', status: 'ongoing',
+    authorId: 'c1', authorName: 'ปลายฝัน', status: 'ongoing', origin: 'original',
     rating: 4.8, voteCount: 12400, viewCount: 890000, readCount: 1140000, vipTopUpTotal: 485000, episodeCount: 120,
     latestEpisode: 'ตอนที่ 120: คืนแห่งดวงจันทร์แดง', isFeatured: true, rankingScore: 98,
-    updatedAt: '2026-05-15T10:00:00Z',
+    updatedAt: '2026-05-15T10:00:00Z', weeklyVoteCount: 1500,
   },
   {
     id: '2', type: 'novel', title: '天命难违', coverUrl: 'https://picsum.photos/seed/novel2/200/300',
     synopsis: 'นักฆ่าจากโลกสมัยใหม่ถูกส่งย้อนกลับไปสู่ราชวงศ์ถัง ต้องใช้ความรู้ล้ำสมัยเพื่อเอาตัวรอดและปกป้องคนที่รัก',
     genres: ['action', 'historical'], tags: ['ย้อนอดีต', 'นักฆ่า', 'ราชสำนัก'],
-    authorId: 'c2', authorName: 'ลมดาว', status: 'ongoing',
+    authorId: 'c2', authorName: 'ลมดาว', status: 'ongoing', origin: 'translated',
     rating: 4.6, voteCount: 8900, viewCount: 650000, readCount: 790000, vipTopUpTotal: 342000, episodeCount: 85,
     latestEpisode: 'ตอนที่ 85: ดาบที่ซ่อนอยู่', isFeatured: true, rankingScore: 92,
-    updatedAt: '2026-05-14T08:00:00Z',
+    updatedAt: '2026-05-14T08:00:00Z', weeklyVoteCount: 1000,
   },
   {
     id: '3', type: 'novel', title: '锦绣江山', coverUrl: 'https://picsum.photos/seed/novel3/200/300',
     synopsis: 'เจ้าหญิงผู้ถูกลืมลุกขึ้นมากอบกู้อาณาจักรด้วยสติปัญญาและความกล้าหาญ เผชิญหน้ากับการสมคบคิดในราชสำนัก',
     genres: ['drama', 'historical'], tags: ['เจ้าหญิง', 'การเมือง', 'อำนาจ'],
-    authorId: 'c1', authorName: 'ปลายฝัน', status: 'completed',
+    authorId: 'c1', authorName: 'ปลายฝัน', status: 'completed', origin: 'translated',
     rating: 4.9, voteCount: 21000, viewCount: 1200000, readCount: 1480000, vipTopUpTotal: 562000, episodeCount: 200,
     latestEpisode: null, isFeatured: true, rankingScore: 99,
-    updatedAt: '2026-03-01T00:00:00Z',
+    updatedAt: '2026-03-01T00:00:00Z', weeklyVoteCount: 600,
   },
   {
     id: '4', type: 'novel', title: '红尘一梦', coverUrl: 'https://picsum.photos/seed/novel4/200/300',
     synopsis: 'สองวิญญาณที่พบกันซ้ำแล้วซ้ำเล่าในทุกชาติภพ ชะตากรรมนำพาให้พวกเขามาพบกัน แต่กลับพรากจากกันทุกครั้ง',
     genres: ['romance', 'fantasy'], tags: ['ชาติภพ', 'รักชั่วนิรันดร์', 'โลกวิญญาณ'],
-    authorId: 'c2', authorName: 'ลมดาว', status: 'ongoing',
+    authorId: 'c2', authorName: 'ลมดาว', status: 'ongoing', origin: 'original',
     rating: 4.7, voteCount: 9800, viewCount: 720000, readCount: 865000, vipTopUpTotal: 298000, episodeCount: 60,
     latestEpisode: 'ตอนที่ 60: ประตูแห่งความลืมเลือน', isFeatured: false, rankingScore: 88,
-    updatedAt: '2026-05-16T06:00:00Z',
+    updatedAt: '2026-05-16T06:00:00Z', weeklyVoteCount: 1100,
   },
   {
     id: '5', type: 'manga', title: '剑道独尊', coverUrl: 'https://picsum.photos/seed/manga1/200/300',
@@ -44,7 +49,7 @@ export const MOCK_WORKS: Work[] = [
     authorId: 'c3', authorName: 'ดาวเดือน', status: 'ongoing',
     rating: 4.5, voteCount: 6700, viewCount: 450000, readCount: 520000, vipTopUpTotal: 185000, episodeCount: 45,
     latestEpisode: 'บทที่ 45: มังกรเหล็ก', isFeatured: false, rankingScore: 82,
-    updatedAt: '2026-05-13T12:00:00Z',
+    updatedAt: '2026-05-13T12:00:00Z', weeklyVoteCount: 800,
   },
   {
     id: '6', type: 'manga', title: '花好月圆', coverUrl: 'https://picsum.photos/seed/manga2/200/300',
@@ -53,7 +58,7 @@ export const MOCK_WORKS: Work[] = [
     authorId: 'c3', authorName: 'ดาวเดือน', status: 'ongoing',
     rating: 4.4, voteCount: 5500, viewCount: 380000, readCount: 410000, vipTopUpTotal: 142000, episodeCount: 32,
     latestEpisode: 'บทที่ 32: บ้านต้นเมเปิ้ล', isFeatured: true, rankingScore: 78,
-    updatedAt: '2026-05-12T09:00:00Z',
+    updatedAt: '2026-05-12T09:00:00Z', weeklyVoteCount: 650,
   },
   {
     id: '7', type: 'audiobook', title: '江湖夜雨', coverUrl: 'https://picsum.photos/seed/audio1/200/300',
@@ -62,34 +67,34 @@ export const MOCK_WORKS: Work[] = [
     authorId: 'c1', authorName: 'ปลายฝัน', status: 'completed',
     rating: 4.8, voteCount: 3400, viewCount: 220000, readCount: 305000, vipTopUpTotal: 126000, episodeCount: 30,
     latestEpisode: null, isFeatured: false, rankingScore: 86,
-    updatedAt: '2026-02-14T00:00:00Z',
+    updatedAt: '2026-02-14T00:00:00Z', weeklyVoteCount: 200,
   },
   {
     id: '8', type: 'novel', title: '浮生若梦', coverUrl: 'https://picsum.photos/seed/novel5/200/300',
     synopsis: 'หมอสาวจากศตวรรษที่ 21 ข้ามเวลาไปในยุคราชวงศ์ชิง ต้องใช้ความรู้ทางการแพทย์สมัยใหม่เพื่อช่วยชีวิตผู้คน',
     genres: ['romance', 'historical'], tags: ['หมอ', 'ข้ามเวลา', 'ราชวงศ์ชิง'],
-    authorId: 'c2', authorName: 'ลมดาว', status: 'ongoing',
+    authorId: 'c2', authorName: 'ลมดาว', status: 'ongoing', origin: 'translated',
     rating: 4.6, voteCount: 7200, viewCount: 510000, readCount: 635000, vipTopUpTotal: 221000, episodeCount: 70,
     latestEpisode: 'ตอนที่ 70: ยาวิเศษโบราณ', isFeatured: false, rankingScore: 84,
-    updatedAt: '2026-05-10T14:00:00Z',
+    updatedAt: '2026-05-10T14:00:00Z', weeklyVoteCount: 850,
   },
   {
     id: '9', type: 'novel', title: '山河不忘', coverUrl: 'https://picsum.photos/seed/novel6/200/300',
     synopsis: 'แม่ทัพหญิงผู้นำกองทัพพิทักษ์ชาติ เผชิญหน้ากับศัตรูทั้งภายนอกและภายในราชสำนัก',
     genres: ['action', 'historical'], tags: ['แม่ทัพ', 'สงคราม', 'ความรักชาติ'],
-    authorId: 'c3', authorName: 'ดาวเดือน', status: 'hiatus',
+    authorId: 'c3', authorName: 'ดาวเดือน', status: 'hiatus', origin: 'translated',
     rating: 4.3, voteCount: 4100, viewCount: 290000, readCount: 360000, vipTopUpTotal: 109000, episodeCount: 55,
     latestEpisode: 'ตอนที่ 55: ดินแดนหิมะ', isFeatured: false, rankingScore: 70,
-    updatedAt: '2026-04-01T00:00:00Z',
+    updatedAt: '2026-04-01T00:00:00Z', weeklyVoteCount: 300,
   },
   {
     id: '10', type: 'novel', title: '缘来是你', coverUrl: 'https://picsum.photos/seed/novel7/200/300',
     synopsis: 'นักเขียนหนุ่มพบว่าตัวละครในนิยายของเขาออกมาจากหนังสือจริงๆ และกำลังเปลี่ยนแปลงโลกแห่งความเป็นจริง',
     genres: ['comedy', 'romance'], tags: ['ตัวละครมีชีวิต', 'โรแมนติก-คอมเมดี', 'เวทมนตร์'],
-    authorId: 'c1', authorName: 'ปลายฝัน', status: 'ongoing',
+    authorId: 'c1', authorName: 'ปลายฝัน', status: 'ongoing', origin: 'original',
     rating: 4.5, voteCount: 5800, viewCount: 400000, readCount: 455000, vipTopUpTotal: 176000, episodeCount: 40,
     latestEpisode: 'ตอนที่ 40: ตัวละครหลบหนี', isFeatured: false, rankingScore: 76,
-    updatedAt: '2026-05-08T11:00:00Z',
+    updatedAt: '2026-05-08T11:00:00Z', weeklyVoteCount: 700,
   },
   {
     id: '11', type: 'manga', title: '血月传说', coverUrl: 'https://picsum.photos/seed/manga3/200/300',
@@ -98,16 +103,16 @@ export const MOCK_WORKS: Work[] = [
     authorId: 'c2', authorName: 'ลมดาว', status: 'ongoing',
     rating: 4.4, voteCount: 3900, viewCount: 260000, readCount: 330000, vipTopUpTotal: 118000, episodeCount: 25,
     latestEpisode: 'บทที่ 25: ปีศาจดำ', isFeatured: false, rankingScore: 72,
-    updatedAt: '2026-05-11T07:00:00Z',
+    updatedAt: '2026-05-11T07:00:00Z', weeklyVoteCount: 450,
   },
   {
     id: '12', type: 'novel', title: '此情可待', coverUrl: 'https://picsum.photos/seed/novel8/200/300',
     synopsis: 'เรื่องราวของสองคนที่เติบโตมาด้วยกัน ห่างหายไปสิบปี และชะตาพัดพาให้กลับมาพบกันอีกครั้งในเมืองที่ไม่รู้จัก',
     genres: ['romance', 'slice-of-life'], tags: ['รักวัยรุ่น', 'ชีวิตสมัยใหม่', 'กลับมาพบกัน'],
-    authorId: 'c3', authorName: 'ดาวเดือน', status: 'ongoing',
+    authorId: 'c3', authorName: 'ดาวเดือน', status: 'ongoing', origin: 'original',
     rating: 4.6, voteCount: 6300, viewCount: 430000, readCount: 495000, vipTopUpTotal: 194000, episodeCount: 50,
     latestEpisode: 'ตอนที่ 50: ฝนหยดแรก', isFeatured: false, rankingScore: 80,
-    updatedAt: '2026-05-09T16:00:00Z',
+    updatedAt: '2026-05-09T16:00:00Z', weeklyVoteCount: 750,
   },
 ]
 
@@ -243,6 +248,19 @@ export const MOCK_REVIEWS: Record<string, Review[]> = {
     { id: 'r1-3', workId: '1', authorName: 'อ่านทุกวัน', avatarUrl: 'https://picsum.photos/seed/u3/40/40', rating: 4, text: 'เขียนได้ดีมาก แต่บางตอนนานเกินไปนิดหน่อย โดยรวมแนะนำเลยนะคะ', createdAt: '2026-05-05T10:00:00Z', likes: 28 },
     { id: 'r1-4', workId: '1', authorName: 'รักนิยายโรแมนติก', avatarUrl: 'https://picsum.photos/seed/u4/40/40', rating: 5, text: 'คู่พระนางน่ารักมาก เคมีดีสุดๆ อ่านแล้วอยากให้เร็วๆ ออกตอนใหม่เลยค่ะ', createdAt: '2026-05-01T09:00:00Z', likes: 61 },
     { id: 'r1-5', workId: '1', authorName: 'นักวิจารณ์หนังสือ', avatarUrl: 'https://picsum.photos/seed/u5/40/40', rating: 4, text: 'ภาษาที่ใช้สละสลวย ถ่ายทอดอารมณ์ได้ดีเยี่ยม แนะนำให้ทุกคนลองอ่านดูครับ', createdAt: '2026-04-28T16:00:00Z', likes: 19 },
+    { id: 'r1-6', workId: '1', authorName: 'หนอนหนังสือ', avatarUrl: 'https://picsum.photos/seed/u6/40/40', rating: 5, text: 'อ่านมาหลายเรื่องแล้ว แต่เรื่องนี้พล็อตแน่นที่สุด ไม่มีฉากที่รู้สึกว่าเสียเวลาเลย', createdAt: '2026-04-25T11:00:00Z', likes: 54 },
+    { id: 'r1-7', workId: '1', authorName: 'สาวกนิยายจีน', avatarUrl: 'https://picsum.photos/seed/u7/40/40', rating: 5, text: 'ตัวละครนางเอกแข็งแกร่งมาก ไม่ได้รอรับการช่วยเหลืออย่างเดียว ชอบมากเลยค่ะ ❤️', createdAt: '2026-04-22T09:30:00Z', likes: 47 },
+    { id: 'r1-8', workId: '1', authorName: 'อ่านทุกคืน', avatarUrl: 'https://picsum.photos/seed/u8/40/40', rating: 3, text: 'เนื้อเรื่องดีนะ แต่รู้สึกว่าตอนกลางๆ ยืดเกินไปหน่อย ถ้าตัดให้กระชับกว่านี้จะดีมากเลย', createdAt: '2026-04-18T20:00:00Z', likes: 12 },
+    { id: 'r1-9', workId: '1', authorName: 'นักแปลสมัครเล่น', avatarUrl: 'https://picsum.photos/seed/u9/40/40', rating: 5, text: 'การแปลภาษาดีมาก อ่านแล้วลื่นไหล ไม่มีสะดุด ผู้แปลทำงานได้ดีมากครับ', createdAt: '2026-04-14T13:00:00Z', likes: 33 },
+    { id: 'r1-10', workId: '1', authorName: 'ขาดนิยายไม่ได้', avatarUrl: 'https://picsum.photos/seed/u10/40/40', rating: 4, text: 'ฉากโรแมนติกเขียนได้ฟินมากๆ อ่านแล้วหัวใจละลาย รอตอนใหม่ทุกวันเลยค่ะ', createdAt: '2026-04-10T07:00:00Z', likes: 38 },
+    { id: 'r1-11', workId: '1', authorName: 'มิ้นท์_reader', avatarUrl: 'https://picsum.photos/seed/u11/40/40', rating: 5, text: 'ฉากแอ็กชั่นระทึกมาก อ่านแล้วลืมหายใจเลย พล็อตบิดตอนท้ายเล่ม 2 ทำให้ช็อคสุดๆ ครับ', createdAt: '2026-04-07T18:00:00Z', likes: 29 },
+    { id: 'r1-12', workId: '1', authorName: 'ปิ๊งรักนิยาย', avatarUrl: 'https://picsum.photos/seed/u12/40/40', rating: 5, text: 'อ่านจนดึกทุกคืน ไม่สามารถวางได้เลยค่ะ ตัวพระเอกน่ารักมากแถมฉลาดด้วย', createdAt: '2026-04-04T21:30:00Z', likes: 67 },
+    { id: 'r1-13', workId: '1', authorName: 'บุ๊คคลับออนไลน์', avatarUrl: 'https://picsum.photos/seed/u13/40/40', rating: 4, text: 'กลุ่มบุ๊คคลับของเราอ่านพร้อมกันแล้วถกเถียงกันได้อีกนานมาก เนื้อหาลุ่มลึกจริงๆ', createdAt: '2026-04-01T10:00:00Z', likes: 22 },
+    { id: 'r1-14', workId: '1', authorName: 'ดาวดวงน้อย', avatarUrl: 'https://picsum.photos/seed/u14/40/40', rating: 3, text: 'เรื่องดีนะคะ แต่รอนานมากกว่าจะออกตอนใหม่ หวังว่านักเขียนจะอัปเดตบ่อยขึ้น', createdAt: '2026-03-28T15:00:00Z', likes: 8 },
+    { id: 'r1-15', workId: '1', authorName: 'แมวส้มอ่านหนังสือ', avatarUrl: 'https://picsum.photos/seed/u15/40/40', rating: 5, text: 'เพิ่งเริ่มอ่านก็ติดเลย อ่านรวดเดียว 40 ตอน บอกเลยว่าคุ้มมากๆ แนะนำเพื่อนทุกคนมาอ่านแล้ว', createdAt: '2026-03-25T08:00:00Z', likes: 55 },
+    { id: 'r1-16', workId: '1', authorName: 'ไลบ์รารี่เลิฟเวอร์', avatarUrl: 'https://picsum.photos/seed/u16/40/40', rating: 4, text: 'โลกในเรื่องสร้างได้ละเอียดมาก รู้สึกเหมือนได้ไปอยู่ในราชสำนักโบราณจริงๆ เลยครับ', createdAt: '2026-03-20T14:00:00Z', likes: 44 },
+    { id: 'r1-17', workId: '1', authorName: 'ฟ้าใสวันสบาย', avatarUrl: 'https://picsum.photos/seed/u17/40/40', rating: 5, text: 'อ่านแล้วอินมากเลยค่ะ ร้องไห้หลายรอบ เขียนได้อารมณ์มาก ขอบคุณนักเขียนที่ทำให้ชีวิตมีความสุขขึ้น', createdAt: '2026-03-15T11:00:00Z', likes: 73 },
+    { id: 'r1-18', workId: '1', authorName: 'อ่านทุกแนว', avatarUrl: 'https://picsum.photos/seed/u18/40/40', rating: 4, text: 'ถ้าเทียบกับแนวเดียวกัน เรื่องนี้ถือว่าอยู่ในระดับ top 3 เลย บทสนทนาระหว่างตัวละครธรรมชาติมาก', createdAt: '2026-03-10T16:00:00Z', likes: 31 },
   ],
 }
 
@@ -837,6 +855,34 @@ export const POPULAR_SIDEBAR_ITEMS: SidebarItem[] = [
   { id: 'update24',  label: 'รายการอัปเดตตลอด 24 ชั่วโมง' },
 ]
 
+export const MOCK_NOVEL_RANKING_TOP: RankingBook[] = [
+  {
+    id: 'pop-1', rank: 1, title: 'จอมมารสะบั้นฟ้าสูงสุด', author: 'เทพพรชัย', category: 'แฟนตาซี',
+    description: 'นักรบผู้สูงสุดที่ฝ่าดวงดาวทะลุมิติ ต่อสู้กับมารร้ายที่ต้องการครอบครองสวรรค์และโลกมนุษย์ ด้วยพลังที่ไม่มีผู้ใดต้านทานได้',
+    coverUrl: 'https://picsum.photos/seed/popular-1/400/530',
+  },
+  {
+    id: 'pop-2', rank: 2, title: 'มังกรทองคำแห่งตะวันออก', author: 'แสงดาว', category: 'แอคชั่น',
+    description: 'มังกรโบราณตื่นขึ้นหลังหลับใหลนับพันปี พบว่าโลกเปลี่ยนแปลงไปอย่างสิ้นเชิง',
+    coverUrl: 'https://picsum.photos/seed/popular-2/400/530',
+  },
+  {
+    id: 'pop-3', rank: 3, title: 'หัวใจนางพญาหิมะ', author: 'ลมดาว', category: 'โรแมนติก',
+    description: 'นางพญาหิมะผู้เย็นชาพบกับนักรบไฟที่ทำให้หัวใจแข็งกระด้างของเธอละลาย',
+    coverUrl: 'https://picsum.photos/seed/popular-3/400/530',
+  },
+  {
+    id: 'pop-4', rank: 4, title: 'ราชันย์แห่งนิรันดร์', author: 'ปลายฝัน', category: 'เทพเซียน',
+    description: 'เซียนที่ฝึกฝนจนเกินระดับสูงสุด กลายเป็นราชันย์ที่ไม่มีใครกล้าท้าทาย',
+    coverUrl: 'https://picsum.photos/seed/popular-4/400/530',
+  },
+  {
+    id: 'pop-5', rank: 5, title: 'สาวน้อยข้ามมิติสู่จักรวาลใหม่', author: 'ดาวเดือน', category: 'ไซไฟ',
+    description: 'นักวิทยาศาสตร์หญิงสาวที่ถูกพาข้ามมิติไปยังจักรวาลคู่ขนาน ต้องหาทางกลับบ้าน',
+    coverUrl: 'https://picsum.photos/seed/popular-5/400/530',
+  },
+]
+
 export const MOCK_POPULAR_FEATURED: PopularRankingItem = {
   id: 'pop-1',
   rank: 1,
@@ -849,29 +895,104 @@ export const MOCK_POPULAR_FEATURED: PopularRankingItem = {
 
 export const MOCK_POPULAR_RANKING: PopularRankingItem[] = [
   {
-    id: 'pop-2', rank: 2, title: 'มังกรทองคำแห่งตะวันออก', author: 'แสงดาว', category: 'แอคชั่น',
-    description: 'มังกรโบราณตื่นขึ้นหลังหลับใหลนับพันปี พบว่าโลกเปลี่ยนแปลงไปอย่างสิ้นเชิง',
-    imageUrl: 'https://picsum.photos/seed/popular-2/400/530',
-  },
-  {
-    id: 'pop-3', rank: 3, title: 'หัวใจนางพญาหิมะ', author: 'ลมดาว', category: 'โรแมนติก',
-    description: 'นางพญาหิมะผู้เย็นชาพบกับนักรบไฟที่ทำให้หัวใจแข็งกระด้างของเธอละลาย',
-    imageUrl: 'https://picsum.photos/seed/popular-3/400/530',
-  },
-  {
-    id: 'pop-4', rank: 4, title: 'ราชันย์แห่งนิรันดร์', author: 'ปลายฝัน', category: 'เทพเซียน',
-    description: 'เซียนที่ฝึกฝนจนเกินระดับสูงสุด กลายเป็นราชันย์ที่ไม่มีใครกล้าท้าทาย',
-    imageUrl: 'https://picsum.photos/seed/popular-4/400/530',
-  },
-  {
-    id: 'pop-5', rank: 5, title: 'สาวน้อยข้ามมิติสู่จักรวาลใหม่', author: 'ดาวเดือน', category: 'ไซไฟ',
-    description: 'นักวิทยาศาสตร์หญิงสาวที่ถูกพาข้ามมิติไปยังจักรวาลคู่ขนาน ต้องหาทางกลับบ้าน',
-    imageUrl: 'https://picsum.photos/seed/popular-5/400/530',
-  },
-  {
     id: 'pop-6', rank: 6, title: 'ดาบอาถรรพ์และเจ้าชายหน้าเย็น', author: 'เพชรน้ำหนึ่ง', category: 'กระบี่',
     description: 'เจ้าชายผู้ครอบครองดาบต้องห้าม ต้องรับมือกับคำสาปและรักที่ไม่คาดคิด',
     imageUrl: 'https://picsum.photos/seed/popular-6/400/530',
+  },
+  {
+    id: 'pop-7', rank: 7, title: 'จอมเวทย์แห่งหอคอยมืด', author: 'แสงดาว', category: 'แฟนตาซี',
+    description: 'เด็กหนุ่มกำพร้าค้นพบพรสวรรค์ด้านเวทมนตร์ และก้าวสู่หอคอยที่ไม่มีใครกลับออกมา',
+    imageUrl: 'https://picsum.photos/seed/popular-7/400/530',
+  },
+  {
+    id: 'pop-8', rank: 8, title: 'รักวุ่นๆ ของประธานสุดเย็นชา', author: 'ลมดาว', category: 'โรแมนติก',
+    description: 'เลขาสาวสุดแกร่งต้องรับมือกับเจ้านายหนุ่มที่เย็นชาแต่ซ่อนความอบอุ่นไว้ภายใน',
+    imageUrl: 'https://picsum.photos/seed/popular-8/400/530',
+  },
+  {
+    id: 'pop-9', rank: 9, title: 'ตำนานนักดาบพเนจร', author: 'ปลายฝัน', category: 'กระบี่',
+    description: 'นักดาบไร้สังกัดออกเดินทางตามหาความจริงเบื้องหลังการล่มสลายของสำนักตน',
+    imageUrl: 'https://picsum.photos/seed/popular-9/400/530',
+  },
+  {
+    id: 'pop-10', rank: 10, title: 'จักรวรรดิใต้สมุทร', author: 'ดาวเดือน', category: 'แฟนตาซี',
+    description: 'อาณาจักรลึกลับใต้ท้องทะเลเปิดประตูสู่โลกมนุษย์เป็นครั้งแรกในรอบพันปี',
+    imageUrl: 'https://picsum.photos/seed/popular-10/400/530',
+  },
+  {
+    id: 'pop-11', rank: 11, title: 'หมอเทวดาข้ามภพ', author: 'เพชรน้ำหนึ่ง', category: 'เทพเซียน',
+    description: 'หมอหญิงยุคใหม่ข้ามเวลาไปเป็นคุณหนูไร้ค่า ก่อนพลิกชะตาด้วยวิชาแพทย์ล้ำสมัย',
+    imageUrl: 'https://picsum.photos/seed/popular-11/400/530',
+  },
+  {
+    id: 'pop-12', rank: 12, title: 'ราชาเกมแห่งโลกเสมือน', author: 'แสงดาว', category: 'ไซไฟ',
+    description: 'เกมเมอร์อันดับหนึ่งติดอยู่ในเกมเสมือนจริงที่ความตายในเกมหมายถึงความตายจริง',
+    imageUrl: 'https://picsum.photos/seed/popular-12/400/530',
+  },
+  {
+    id: 'pop-13', rank: 13, title: 'บันทึกรักนางสนม', author: 'ลมดาว', category: 'ดราม่า',
+    description: 'นางสนมผู้ต่ำต้อยต้องเอาตัวรอดท่ามกลางการชิงดีชิงเด่นในวังหลัง',
+    imageUrl: 'https://picsum.photos/seed/popular-13/400/530',
+  },
+  {
+    id: 'pop-14', rank: 14, title: 'อัศวินแห่งรุ่งอรุณ', author: 'ปลายฝัน', category: 'แอคชั่น',
+    description: 'อัศวินหนุ่มสาบานปกป้องอาณาจักรจากกองทัพปีศาจที่คืบคลานจากเงามืด',
+    imageUrl: 'https://picsum.photos/seed/popular-14/400/530',
+  },
+  {
+    id: 'pop-15', rank: 15, title: 'เจ้าสาวมังกรไฟ', author: 'ดาวเดือน', category: 'โรแมนติก',
+    description: 'หญิงสาวถูกเลือกเป็นเจ้าสาวบรรณาการให้มังกร แต่กลับพบรักที่ไม่มีใครคาดคิด',
+    imageUrl: 'https://picsum.photos/seed/popular-15/400/530',
+  },
+  {
+    id: 'pop-16', rank: 16, title: 'เซียนเพาะปลูกผู้ยิ่งใหญ่', author: 'เพชรน้ำหนึ่ง', category: 'เทพเซียน',
+    description: 'ชายหนุ่มธรรมดาได้ครอบครองสวนวิเศษที่ปลูกได้ทุกสิ่งแม้กระทั่งสมุนไพรเซียน',
+    imageUrl: 'https://picsum.photos/seed/popular-16/400/530',
+  },
+  {
+    id: 'pop-17', rank: 17, title: 'นักสืบเงาราตรี', author: 'แสงดาว', category: 'ลึกลับ',
+    description: 'นักสืบหนุ่มไขคดีฆาตกรรมต่อเนื่องที่เชื่อมโยงกับความลับในอดีตของตัวเขาเอง',
+    imageUrl: 'https://picsum.photos/seed/popular-17/400/530',
+  },
+  {
+    id: 'pop-18', rank: 18, title: 'ทายาทตระกูลพยัคฆ์', author: 'ลมดาว', category: 'แอคชั่น',
+    description: 'ทายาทตระกูลศิลปะการต่อสู้เก่าแก่ต้องกอบกู้ชื่อเสียงวงศ์ตระกูลที่ตกต่ำ',
+    imageUrl: 'https://picsum.photos/seed/popular-18/400/530',
+  },
+  {
+    id: 'pop-19', rank: 19, title: 'ดวงดาวที่หายไป', author: 'ปลายฝัน', category: 'ไซไฟ',
+    description: 'ทีมสำรวจอวกาศค้นพบสัญญาณลึกลับจากดาวที่ควรจะดับสูญไปแล้วนับล้านปี',
+    imageUrl: 'https://picsum.photos/seed/popular-19/400/530',
+  },
+  {
+    id: 'pop-20', rank: 20, title: 'รักแรกในฤดูใบไม้ผลิ', author: 'ดาวเดือน', category: 'โรแมนติก',
+    description: 'เรื่องราวความรักวัยเรียนที่ผลิบานอีกครั้งเมื่อสองคนกลับมาพบกันในวัยผู้ใหญ่',
+    imageUrl: 'https://picsum.photos/seed/popular-20/400/530',
+  },
+  {
+    id: 'pop-21', rank: 21, title: 'ปรมาจารย์ยาพิษ', author: 'เพชรน้ำหนึ่ง', category: 'เทพเซียน',
+    description: 'หญิงสาวผู้เชี่ยวชาญยาพิษกลับมาแก้แค้นผู้ที่ทรยศและสังหารครอบครัวของเธอ',
+    imageUrl: 'https://picsum.photos/seed/popular-21/400/530',
+  },
+  {
+    id: 'pop-22', rank: 22, title: 'สงครามเหล่าทวยเทพ', author: 'แสงดาว', category: 'แฟนตาซี',
+    description: 'มนุษย์คนหนึ่งถูกลิขิตให้เป็นตัวแปรในสงครามระหว่างเทพเจ้าที่ดำเนินมานับชั่วกาล',
+    imageUrl: 'https://picsum.photos/seed/popular-22/400/530',
+  },
+  {
+    id: 'pop-23', rank: 23, title: 'คฤหาสน์แห่งความลับ', author: 'ลมดาว', category: 'ลึกลับ',
+    description: 'หญิงสาวรับงานเป็นแม่บ้านในคฤหาสน์เก่า และค่อยๆ เปิดเผยความลับอันน่าขนลุก',
+    imageUrl: 'https://picsum.photos/seed/popular-23/400/530',
+  },
+  {
+    id: 'pop-24', rank: 24, title: 'นักรบสายฟ้า', author: 'ปลายฝัน', category: 'แอคชั่น',
+    description: 'ชายหนุ่มผู้ควบคุมพลังสายฟ้าลุกขึ้นต่อกรกับจอมเผด็จการที่กดขี่แผ่นดิน',
+    imageUrl: 'https://picsum.photos/seed/popular-24/400/530',
+  },
+  {
+    id: 'pop-25', rank: 25, title: 'พรหมลิขิตข้ามกาลเวลา', author: 'ดาวเดือน', category: 'ดราม่า',
+    description: 'จดหมายเก่าพาหญิงสาวย้อนเวลากลับไปพบรักที่ถูกลิขิตไว้ตั้งแต่อดีตชาติ',
+    imageUrl: 'https://picsum.photos/seed/popular-25/400/530',
   },
 ]
 
@@ -912,4 +1033,186 @@ export const MOCK_POPULAR_SECTIONS: PopularRankingSection[] = [
       { id: 'sa-6', rank: 6, title: 'บันทึกจากยอดเขา', author: 'ปลายฝัน', category: 'ลึกลับ', description: 'บันทึกลึกลับจากยอดเขาที่ไม่มีใครกลับมา', imageUrl: 'https://picsum.photos/seed/sec-a6/400/530' },
     ],
   },
+]
+
+export const BOOK_CATEGORIES = [
+  'ทำอาหาร',
+  'ปรัชญา',
+  'ระบบ',
+  'คลั่งรัก',
+  'ต่อสู้',
+  'มหาลัย',
+  'เทพเซียน',
+  'กระบี่',
+  'เกม',
+  'วันสิ้นโลก',
+]
+
+export const MOCK_BOOKS: Book[] = [
+  { id: 'b1', title: 'ตำรับอาหารแห่งราชสำนัก', publisher: 'สำนักพิมพ์รสเลิศ', translator: 'แปลโดย มณีนุช', coverUrl: 'https://picsum.photos/seed/book-cook1/300/400', category: 'ทำอาหาร' },
+  { id: 'b2', title: 'ครัวลับของเชฟพเนจร', publisher: 'สำนักพิมพ์รสเลิศ', translator: 'แปลโดย ธีระ', coverUrl: 'https://picsum.photos/seed/book-cook2/300/400', category: 'ทำอาหาร' },
+  { id: 'b3', title: 'ว่าด้วยความหมายของชีวิต', publisher: 'สำนักพิมพ์ปัญญา', translator: 'แปลโดย สรรพสิทธิ์', coverUrl: 'https://picsum.photos/seed/book-phil1/300/400', category: 'ปรัชญา' },
+  { id: 'b4', title: 'สนทนากับนักปราชญ์', publisher: 'สำนักพิมพ์ปัญญา', translator: 'แปลโดย ลลิตา', coverUrl: 'https://picsum.photos/seed/book-phil2/300/400', category: 'ปรัชญา' },
+  { id: 'b5', title: 'ระบบเลเวลอัปในต่างโลก', publisher: 'สำนักพิมพ์มิติใหม่', translator: 'แปลโดย วิชิต', coverUrl: 'https://picsum.photos/seed/book-sys1/300/400', category: 'ระบบ' },
+  { id: 'b6', title: 'ผู้เล่นผู้ถือระบบสูงสุด', publisher: 'สำนักพิมพ์มิติใหม่', translator: 'แปลโดย มณีนุช', coverUrl: 'https://picsum.photos/seed/book-sys2/300/400', category: 'ระบบ' },
+  { id: 'b7', title: 'รักนี้คลั่งเกินห้ามใจ', publisher: 'สำนักพิมพ์ดอกรัก', translator: 'แปลโดย ลลิตา', coverUrl: 'https://picsum.photos/seed/book-love1/300/400', category: 'คลั่งรัก' },
+  { id: 'b8', title: 'หัวใจที่ถูกครอบครอง', publisher: 'สำนักพิมพ์ดอกรัก', translator: 'แปลโดย ธีระ', coverUrl: 'https://picsum.photos/seed/book-love2/300/400', category: 'คลั่งรัก' },
+  { id: 'b9', title: 'จอมยุทธ์ไร้พ่าย', publisher: 'สำนักพิมพ์บูรพา', translator: 'แปลโดย วิชิต', coverUrl: 'https://picsum.photos/seed/book-fight1/300/400', category: 'ต่อสู้' },
+  { id: 'b10', title: 'สังเวียนเลือดแห่งนักรบ', publisher: 'สำนักพิมพ์บูรพา', translator: 'แปลโดย สรรพสิทธิ์', coverUrl: 'https://picsum.photos/seed/book-fight2/300/400', category: 'ต่อสู้' },
+  { id: 'b11', title: 'วันวานในรั้วมหาลัย', publisher: 'สำนักพิมพ์วัยใส', translator: 'แปลโดย มณีนุช', coverUrl: 'https://picsum.photos/seed/book-univ1/300/400', category: 'มหาลัย' },
+  { id: 'b12', title: 'รุ่นพี่ที่ฉันแอบรัก', publisher: 'สำนักพิมพ์วัยใส', translator: 'แปลโดย ลลิตา', coverUrl: 'https://picsum.photos/seed/book-univ2/300/400', category: 'มหาลัย' },
+  { id: 'b13', title: 'เส้นทางสู่เทพเซียน', publisher: 'สำนักพิมพ์เซียนยุทธ์', translator: 'แปลโดย ธีระ', coverUrl: 'https://picsum.photos/seed/book-immortal1/300/400', category: 'เทพเซียน' },
+  { id: 'b14', title: 'จอมเซียนผู้พลิกฟ้า', publisher: 'สำนักพิมพ์เซียนยุทธ์', translator: 'แปลโดย วิชิต', coverUrl: 'https://picsum.photos/seed/book-immortal2/300/400', category: 'เทพเซียน' },
+  { id: 'b15', title: 'กระบี่เดียวดายใต้หล้า', publisher: 'สำนักพิมพ์บูรพา', translator: 'แปลโดย สรรพสิทธิ์', coverUrl: 'https://picsum.photos/seed/book-sword1/300/400', category: 'กระบี่' },
+  { id: 'b16', title: 'ตำนานกระบี่เทวดา', publisher: 'สำนักพิมพ์บูรพา', translator: 'แปลโดย มณีนุช', coverUrl: 'https://picsum.photos/seed/book-sword2/300/400', category: 'กระบี่' },
+  { id: 'b17', title: 'ติดอยู่ในเกมเอาชีวิตรอด', publisher: 'สำนักพิมพ์มิติใหม่', translator: 'แปลโดย ลลิตา', coverUrl: 'https://picsum.photos/seed/book-game1/300/400', category: 'เกม' },
+  { id: 'b18', title: 'เกมเมอร์อันดับหนึ่งของโลก', publisher: 'สำนักพิมพ์มิติใหม่', translator: 'แปลโดย ธีระ', coverUrl: 'https://picsum.photos/seed/book-game2/300/400', category: 'เกม' },
+  { id: 'b19', title: 'วันสิ้นโลกที่ยังไม่จบ', publisher: 'สำนักพิมพ์มิติใหม่', translator: 'แปลโดย วิชิต', coverUrl: 'https://picsum.photos/seed/book-apoc1/300/400', category: 'วันสิ้นโลก' },
+  { id: 'b20', title: 'ผู้รอดชีวิตคนสุดท้าย', publisher: 'สำนักพิมพ์มิติใหม่', translator: 'แปลโดย สรรพสิทธิ์', coverUrl: 'https://picsum.photos/seed/book-apoc2/300/400', category: 'วันสิ้นโลก' },
+]
+
+export const MOCK_LATEST_NOVELS: Novel[] = [
+  {
+    id: '1',
+    title: 'ใช้รักจนสุดใจ',
+    category: 'แฟนตาซี · แปล',
+    description: 'เรื่องราวของหญิงสาวผู้เดินทางข้ามมิติเพื่อตามหาชายที่เธอรัก ผจญภัยในอาณาจักรโบราณท่ามกลางสงครามและการทรยศ',
+    coverUrl: 'https://picsum.photos/seed/novel1/200/300',
+    badgeText: 'เพิ่มตอนฟรี 11 วัน',
+    views: '6K',
+    episodes: 382,
+    comments: 13,
+  },
+  {
+    id: '2',
+    title: 'โชคชะตาที่ฝ่าฝืนไม่ได้',
+    category: 'แอ็กชัน · แปล',
+    description: 'นักฆ่าจากโลกสมัยใหม่ถูกส่งย้อนกลับไปสู่ราชวงศ์ถัง ต้องใช้ความรู้ล้ำสมัยเพื่อเอาตัวรอดและปกป้องคนที่รัก',
+    coverUrl: 'https://picsum.photos/seed/novel2/200/300',
+    badgeText: 'อัปเดตใหม่',
+    views: '4.2K',
+    episodes: 85,
+    comments: 9,
+  },
+  {
+    id: '4',
+    title: 'หนึ่งฝันในโลกีย์',
+    category: 'โรแมนซ์ · แต่งเอง',
+    description: 'สองวิญญาณที่พบกันซ้ำแล้วซ้ำเล่าในทุกชาติภพ ชะตากรรมนำพาให้พวกเขามาพบกัน แต่กลับพรากจากกันทุกครั้ง',
+    coverUrl: 'https://picsum.photos/seed/novel4/200/300',
+    views: '3.8K',
+    episodes: 60,
+    comments: 21,
+  },
+  {
+    id: '8',
+    title: 'ชีวิตลอยล่องดั่งความฝัน',
+    category: 'อิงประวัติศาสตร์ · แปล',
+    description: 'หมอสาวจากศตวรรษที่ 21 ข้ามเวลาไปในยุคราชวงศ์ชิง ต้องใช้ความรู้ทางการแพทย์สมัยใหม่เพื่อช่วยชีวิตผู้คน',
+    coverUrl: 'https://picsum.photos/seed/novel5/200/300',
+    badgeText: 'เพิ่มตอนฟรี 7 วัน',
+    views: '2.9K',
+    episodes: 70,
+    comments: 7,
+  },
+  {
+    id: '10',
+    title: 'พรหมลิขิตคือเธอ',
+    category: 'คอเมดี้ · แต่งเอง',
+    description: 'นักเขียนหนุ่มพบว่าตัวละครในนิยายของเขาออกมาจากหนังสือจริงๆ และกำลังเปลี่ยนแปลงโลกแห่งความเป็นจริง',
+    coverUrl: 'https://picsum.photos/seed/novel7/200/300',
+    views: '2.1K',
+    episodes: 40,
+    comments: 15,
+  },
+  {
+    id: '12',
+    title: 'รักนี้ยังรอคอย',
+    category: 'โรแมนซ์ · แต่งเอง',
+    description: 'เรื่องราวของสองคนที่เติบโตมาด้วยกัน ห่างหายไปสิบปี และชะตาพัดพาให้กลับมาพบกันอีกครั้งในเมืองที่ไม่รู้จัก',
+    coverUrl: 'https://picsum.photos/seed/novel8/200/300',
+    badgeText: 'อัปเดตใหม่',
+    views: '1.8K',
+    episodes: 50,
+    comments: 11,
+  },
+]
+
+export const POPULAR_STORY_CATEGORIES = [
+  'โรแมนซ์',
+  'โรแมนซ์แฟนตาซี',
+  'ดราม่า',
+  'แอคชั่น',
+  'แฟนตาซี',
+  'LGBTQ+ / Y',
+  'ตลก',
+  'ระทึกขวัญ',
+]
+
+export const MOCK_POPULAR_STORIES: Story[] = [
+  { id: 'p1', title: 'รักแรกใต้แสงจันทร์', category: 'โรแมนซ์', coverUrl: 'https://picsum.photos/seed/pop-rom1/320/240', views: '39M', isNew: true },
+  { id: 'p2', title: 'สัญญารักนิรันดร์', category: 'โรแมนซ์', coverUrl: 'https://picsum.photos/seed/pop-rom2/320/240', views: '24M' },
+  { id: 'p3', title: 'หัวใจสองดวง', category: 'โรแมนซ์', coverUrl: 'https://picsum.photos/seed/pop-rom3/320/240', views: '12M' },
+  { id: 'p4', title: 'ราชินีแห่งดินแดนเวทมนตร์', category: 'โรแมนซ์แฟนตาซี', coverUrl: 'https://picsum.photos/seed/pop-rf1/320/240', views: '31M', isNew: true },
+  { id: 'p5', title: 'เจ้าหญิงกับมังกรเงิน', category: 'โรแมนซ์แฟนตาซี', coverUrl: 'https://picsum.photos/seed/pop-rf2/320/240', views: '18M' },
+  { id: 'p6', title: 'คำสาปแห่งราตรี', category: 'โรแมนซ์แฟนตาซี', coverUrl: 'https://picsum.photos/seed/pop-rf3/320/240', views: '9.2M' },
+  { id: 'p7', title: 'น้ำตาในสายฝน', category: 'ดราม่า', coverUrl: 'https://picsum.photos/seed/pop-dra1/320/240', views: '15M' },
+  { id: 'p8', title: 'บทเพลงของครอบครัว', category: 'ดราม่า', coverUrl: 'https://picsum.photos/seed/pop-dra2/320/240', views: '8.7M', isNew: true },
+  { id: 'p9', title: 'นักรบเงาพิฆาต', category: 'แอคชั่น', coverUrl: 'https://picsum.photos/seed/pop-act1/320/240', views: '27M' },
+  { id: 'p10', title: 'สมรภูมิเหล็กกล้า', category: 'แอคชั่น', coverUrl: 'https://picsum.photos/seed/pop-act2/320/240', views: '13M', isNew: true },
+  { id: 'p11', title: 'ดินแดนเหนือสายลม', category: 'แฟนตาซี', coverUrl: 'https://picsum.photos/seed/pop-fan1/320/240', views: '33M' },
+  { id: 'p12', title: 'ตำนานศิลาทั้งเจ็ด', category: 'แฟนตาซี', coverUrl: 'https://picsum.photos/seed/pop-fan2/320/240', views: '21M', isNew: true },
+  { id: 'p13', title: 'รักนี้ไม่มีกรอบ', category: 'LGBTQ+ / Y', coverUrl: 'https://picsum.photos/seed/pop-y1/320/240', views: '17M' },
+  { id: 'p14', title: 'หัวใจสีรุ้ง', category: 'LGBTQ+ / Y', coverUrl: 'https://picsum.photos/seed/pop-y2/320/240', views: '10M', isNew: true },
+  { id: 'p15', title: 'ป่วนรักวุ่นใจ', category: 'ตลก', coverUrl: 'https://picsum.photos/seed/pop-com1/320/240', views: '14M' },
+  { id: 'p16', title: 'เพื่อนซี้สี่ขา', category: 'ตลก', coverUrl: 'https://picsum.photos/seed/pop-com2/320/240', views: '6M' },
+  { id: 'p17', title: 'คฤหาสน์เงียบงัน', category: 'ระทึกขวัญ', coverUrl: 'https://picsum.photos/seed/pop-thr1/320/240', views: '22M', isNew: true },
+  { id: 'p18', title: 'เสียงกระซิบยามวิกาล', category: 'ระทึกขวัญ', coverUrl: 'https://picsum.photos/seed/pop-thr2/320/240', views: '11M' },
+]
+
+export const DAILY_MANGA_DAYS = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์', 'อาทิตย์']
+
+export const MOCK_DAILY_MANGA: DailyManga[] = [
+  // จันทร์ (11 เรื่อง → 2 หน้า)
+  { id: 'dm1', title: 'ดาบเทพสังหาร', author: 'ดาวเดือน', coverUrl: 'https://picsum.photos/seed/dm1/300/400', day: 'จันทร์' },
+  { id: 'dm2', title: 'จอมเวทย์พลิกฟ้า', author: 'ลมดาว', coverUrl: 'https://picsum.photos/seed/dm2/300/400', day: 'จันทร์' },
+  { id: 'dm3', title: 'นักรบเงาราตรี', author: 'ปลายฝัน', coverUrl: 'https://picsum.photos/seed/dm3/300/400', day: 'จันทร์' },
+  { id: 'dm4', title: 'ราชันมังกรดำ', author: 'ดาวเดือน', coverUrl: 'https://picsum.photos/seed/dm4/300/400', day: 'จันทร์' },
+  { id: 'dm5', title: 'เทพศาสตรา', author: 'ลมดาว', coverUrl: 'https://picsum.photos/seed/dm5/300/400', day: 'จันทร์' },
+  { id: 'dm6', title: 'ยอดยุทธ์ไร้เทียมทาน', author: 'ปลายฝัน', coverUrl: 'https://picsum.photos/seed/dm6/300/400', day: 'จันทร์' },
+  { id: 'dm7', title: 'ผนึกมารโบราณ', author: 'ดาวเดือน', coverUrl: 'https://picsum.photos/seed/dm7/300/400', day: 'จันทร์' },
+  { id: 'dm8', title: 'ดินแดนเซียนกลับชาติ', author: 'ลมดาว', coverUrl: 'https://picsum.photos/seed/dm8/300/400', day: 'จันทร์' },
+  { id: 'dm9', title: 'จันทราสีเลือด', author: 'ปลายฝัน', coverUrl: 'https://picsum.photos/seed/dm9/300/400', day: 'จันทร์' },
+  { id: 'dm10', title: 'ศึกชิงบัลลังก์สวรรค์', author: 'ดาวเดือน', coverUrl: 'https://picsum.photos/seed/dm10/300/400', day: 'จันทร์' },
+  { id: 'dm11', title: 'ตำนานกระบี่นิรันดร์', author: 'ลมดาว', coverUrl: 'https://picsum.photos/seed/dm11/300/400', day: 'จันทร์' },
+  // อังคาร
+  { id: 'dm12', title: 'อสูรกายแห่งรัตติกาล', author: 'ปลายฝัน', coverUrl: 'https://picsum.photos/seed/dm12/300/400', day: 'อังคาร' },
+  { id: 'dm13', title: 'ผู้พิทักษ์ธาตุไฟ', author: 'ดาวเดือน', coverUrl: 'https://picsum.photos/seed/dm13/300/400', day: 'อังคาร' },
+  { id: 'dm14', title: 'จิ้งจอกเก้าหาง', author: 'ลมดาว', coverUrl: 'https://picsum.photos/seed/dm14/300/400', day: 'อังคาร' },
+  { id: 'dm15', title: 'เจ้าสาวปีศาจ', author: 'ปลายฝัน', coverUrl: 'https://picsum.photos/seed/dm15/300/400', day: 'อังคาร' },
+  { id: 'dm16', title: 'หมัดทำลายล้าง', author: 'ดาวเดือน', coverUrl: 'https://picsum.photos/seed/dm16/300/400', day: 'อังคาร' },
+  // พุธ
+  { id: 'dm17', title: 'นักษัตรพิฆาต', author: 'ลมดาว', coverUrl: 'https://picsum.photos/seed/dm17/300/400', day: 'พุธ' },
+  { id: 'dm18', title: 'เวทมนตร์ต้องห้าม', author: 'ปลายฝัน', coverUrl: 'https://picsum.photos/seed/dm18/300/400', day: 'พุธ' },
+  { id: 'dm19', title: 'อัศวินดวงดาว', author: 'ดาวเดือน', coverUrl: 'https://picsum.photos/seed/dm19/300/400', day: 'พุธ' },
+  { id: 'dm20', title: 'ปริศนาหอคอยมรณะ', author: 'ลมดาว', coverUrl: 'https://picsum.photos/seed/dm20/300/400', day: 'พุธ' },
+  // พฤหัสบดี
+  { id: 'dm21', title: 'จอมโจรสะท้านปฐพี', author: 'ปลายฝัน', coverUrl: 'https://picsum.photos/seed/dm21/300/400', day: 'พฤหัสบดี' },
+  { id: 'dm22', title: 'มนตราแห่งสายลม', author: 'ดาวเดือน', coverUrl: 'https://picsum.photos/seed/dm22/300/400', day: 'พฤหัสบดี' },
+  { id: 'dm23', title: 'ราชาแห่งท้องทะเล', author: 'ลมดาว', coverUrl: 'https://picsum.photos/seed/dm23/300/400', day: 'พฤหัสบดี' },
+  // ศุกร์
+  { id: 'dm24', title: 'เซียนกระบี่จอมขมังเวทย์', author: 'ปลายฝัน', coverUrl: 'https://picsum.photos/seed/dm24/300/400', day: 'ศุกร์' },
+  { id: 'dm25', title: 'นักล่าอสูร', author: 'ดาวเดือน', coverUrl: 'https://picsum.photos/seed/dm25/300/400', day: 'ศุกร์' },
+  { id: 'dm26', title: 'ดวงตาแห่งหายนะ', author: 'ลมดาว', coverUrl: 'https://picsum.photos/seed/dm26/300/400', day: 'ศุกร์' },
+  { id: 'dm27', title: 'อาณาจักรใต้พิภพ', author: 'ปลายฝัน', coverUrl: 'https://picsum.photos/seed/dm27/300/400', day: 'ศุกร์' },
+  { id: 'dm28', title: 'เพลิงสงครามเทพ', author: 'ดาวเดือน', coverUrl: 'https://picsum.photos/seed/dm28/300/400', day: 'ศุกร์' },
+  // เสาร์
+  { id: 'dm29', title: 'ภูตน้อยกับจอมเวท', author: 'ลมดาว', coverUrl: 'https://picsum.photos/seed/dm29/300/400', day: 'เสาร์' },
+  { id: 'dm30', title: 'ตำนานเก้ามังกร', author: 'ปลายฝัน', coverUrl: 'https://picsum.photos/seed/dm30/300/400', day: 'เสาร์' },
+  { id: 'dm31', title: 'ราตรีล่าสังหาร', author: 'ดาวเดือน', coverUrl: 'https://picsum.photos/seed/dm31/300/400', day: 'เสาร์' },
+  { id: 'dm32', title: 'แดนสนธยา', author: 'ลมดาว', coverUrl: 'https://picsum.photos/seed/dm32/300/400', day: 'เสาร์' },
+  // อาทิตย์
+  { id: 'dm33', title: 'ผู้สืบทอดเทพอสนี', author: 'ปลายฝัน', coverUrl: 'https://picsum.photos/seed/dm33/300/400', day: 'อาทิตย์' },
+  { id: 'dm34', title: 'จักรพรรดิอมตะ', author: 'ดาวเดือน', coverUrl: 'https://picsum.photos/seed/dm34/300/400', day: 'อาทิตย์' },
+  { id: 'dm35', title: 'วิหคเพลิงคืนชีพ', author: 'ลมดาว', coverUrl: 'https://picsum.photos/seed/dm35/300/400', day: 'อาทิตย์' },
 ]

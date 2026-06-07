@@ -1,12 +1,25 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Noto_Sans, Noto_Sans_Mono, Noto_Sans_Thai } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/layout/Providers'
 import { SiteHeader } from '@/components/layout/SiteHeader'
 import { SiteFooter } from '@/components/layout/SiteFooter'
 
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
+const notoSans = Noto_Sans({
+  variable: '--font-noto-sans',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+})
+const notoSansThai = Noto_Sans_Thai({
+  variable: '--font-noto-sans-thai',
+  subsets: ['thai'],
+  weight: ['400', '500', '600', '700'],
+})
+const notoSansMono = Noto_Sans_Mono({
+  variable: '--font-noto-sans-mono',
+  subsets: ['latin'],
+  weight: ['400', '700'],
+})
 
 export const metadata: Metadata = {
   title: 'ReadLead · 阅先 — นิยายจีนออนไลน์',
@@ -15,7 +28,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="th" className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="th" className={`${notoSans.variable} ${notoSansThai.variable} ${notoSansMono.variable} antialiased`}>
       <body className="min-h-screen flex flex-col bg-background">
         <Providers>
           <SiteHeader />

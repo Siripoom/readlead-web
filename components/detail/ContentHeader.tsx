@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Star, Eye, ThumbsUp, BookOpen, Bookmark, Bell, Heart } from 'lucide-react'
+import { Eye, ThumbsUp, BookOpen, Bookmark, Bell, Heart, Calendar } from 'lucide-react'
 import { useRole } from '@/contexts/RoleContext'
 import DonateModal from '@/components/modals/DonateModal'
 import type { Work } from '@/lib/types'
@@ -55,9 +55,6 @@ export default function ContentHeader({ work }: Props) {
           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[work.status]}`}>
             {STATUS_LABELS[work.status]}
           </span>
-          {work.genres.map(g => (
-            <Badge key={g} variant="outline" className="text-xs">{GENRE_LABELS[g]}</Badge>
-          ))}
         </div>
 
         <div>
@@ -65,32 +62,37 @@ export default function ContentHeader({ work }: Props) {
           <p className="text-sm text-muted-foreground mt-1">โดย <span className="text-primary font-medium">{work.authorName}</span></p>
         </div>
 
+        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+          <Calendar className="h-4 w-4" />
+          <span>อัพเดต {new Date(work.updatedAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+        </div>
+
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-            <span className="font-semibold text-foreground">{work.rating.toFixed(1)}</span>
-            <span>({fmt(work.voteCount)} โหวต)</span>
-          </span>
           <span className="flex items-center gap-1">
             <Eye className="h-4 w-4" />{fmt(work.viewCount)} ครั้ง
           </span>
           <span className="flex items-center gap-1">
             <BookOpen className="h-4 w-4" />{work.episodeCount} ตอน
           </span>
+        </div>
+
+        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
-            <ThumbsUp className="h-4 w-4" />{fmt(work.voteCount)} โหวต
+            <ThumbsUp className="h-4 w-4" />{fmt(work.voteCount)} คำแนะนำทั้งหมด
+          </span>
+          <span className="flex items-center gap-1">
+            <ThumbsUp className="h-4 w-4 text-primary" />{fmt(work.weeklyVoteCount)} รายสัปดาห์
           </span>
         </div>
 
-        <p className="text-sm text-muted-foreground leading-relaxed">{work.synopsis}</p>
-
-        {work.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {work.tags.map(tag => (
-              <span key={tag} className="text-xs bg-accent/50 text-accent-foreground rounded-full px-2 py-0.5">{tag}</span>
-            ))}
-          </div>
-        )}
+        <div className="flex flex-wrap gap-1">
+          {work.genres.map(g => (
+            <Badge key={g} variant="outline" className="text-xs">{GENRE_LABELS[g]}</Badge>
+          ))}
+          {work.tags.map(tag => (
+            <span key={tag} className="text-xs bg-accent/50 text-accent-foreground rounded-full px-2 py-0.5">{tag}</span>
+          ))}
+        </div>
 
         <div className="flex flex-wrap gap-2">
           <Button

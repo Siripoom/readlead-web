@@ -37,6 +37,7 @@ export interface Work {
   authorId: string
   authorName: string
   status: WorkStatus
+  origin?: 'original' | 'translated'
   rating: number
   voteCount: number
   viewCount: number
@@ -47,6 +48,7 @@ export interface Work {
   isFeatured: boolean
   rankingScore: number
   updatedAt: string
+  weeklyVoteCount: number
 }
 
 export interface HomePromotionBanner {

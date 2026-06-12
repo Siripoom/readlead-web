@@ -1,6 +1,8 @@
 'use client'
 
-import { CalendarDays, Ticket, CircleHelp } from 'lucide-react'
+import { useState } from 'react'
+import { CalendarDays, Ticket, CircleHelp, Heart } from 'lucide-react'
+import DonateModal from '@/components/modals/DonateModal'
 
 export interface TicketCardInfo {
   title: string
@@ -15,6 +17,7 @@ export interface TicketCardInfo {
 interface Props {
   daily: TicketCardInfo
   monthly: TicketCardInfo
+  authorName: string
   onDailyClick?: () => void
   onMonthlyClick?: () => void
 }
@@ -84,19 +87,36 @@ function TicketCard({
   )
 }
 
-export default function NovelSupportStats({ daily, monthly, onDailyClick, onMonthlyClick }: Props) {
+export default function NovelSupportStats({ daily, monthly, authorName, onDailyClick, onMonthlyClick }: Props) {
+  const [donateOpen, setDonateOpen] = useState(false)
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-16 py-6">
-      <TicketCard
-        info={daily}
-        icon={<Ticket className="h-4 w-4" />}
-        onClick={onDailyClick}
-      />
-      <TicketCard
-        info={monthly}
-        icon={<CalendarDays className="h-4 w-4" />}
-        onClick={onMonthlyClick}
-      />
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-16 py-6">
+        <TicketCard
+          info={daily}
+          icon={<Ticket className="h-4 w-4" />}
+          onClick={onDailyClick}
+        />
+        <TicketCard
+          info={monthly}
+          icon={<CalendarDays className="h-4 w-4" />}
+          onClick={onMonthlyClick}
+        />
+      </div>
+
+      <div className="flex justify-center border-t border-dashed border-gray-200 pt-6">
+        <button
+          type="button"
+          onClick={() => setDonateOpen(true)}
+          className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-red-50 text-red-500 text-sm font-medium hover:bg-red-100 active:scale-95 transition-all"
+        >
+          <Heart className="h-4 w-4" />
+          บริจาค
+        </button>
+      </div>
+
+      <DonateModal authorName={authorName} open={donateOpen} onOpenChange={setDonateOpen} />
     </div>
   )
 }

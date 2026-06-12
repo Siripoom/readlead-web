@@ -98,7 +98,7 @@ export function HeroSlider({ slides }: Props) {
               style={{ width: `${CARD_PCT}%` }}
             >
               <Link href={banner.href} className="group block">
-                <div className="relative aspect-video overflow-hidden rounded-3xl bg-muted/30">
+                <div className="relative aspect-3/1 overflow-hidden rounded-3xl bg-muted/30">
                   <Image
                     src={banner.imageUrl}
                     alt={banner.title}

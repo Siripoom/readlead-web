@@ -2,7 +2,7 @@ import type { Work, Episode, Creator, TopUpOption, Review, UserProfile, HomeProm
 import type { Book } from '@/components/BookCategorySection'
 import type { Novel } from '@/components/LatestNovelUpdatesSection'
 import type { Story } from '@/components/PopularByCategorySection'
-import type { DailyManga } from '@/components/DailyMangaSection'
+import type { DailyManga, DailyMangaEpisode } from '@/components/DailyMangaSection'
 import type { RankingBook } from '@/components/NovelRankingSection'
 
 export const MOCK_WORKS: Work[] = [
@@ -1172,7 +1172,7 @@ export const MOCK_POPULAR_STORIES: Story[] = [
 
 export const DAILY_MANGA_DAYS = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์', 'อาทิตย์']
 
-export const MOCK_DAILY_MANGA: DailyManga[] = [
+const RAW_DAILY_MANGA: Omit<DailyManga, 'episodes'>[] = [
   // จันทร์ (11 เรื่อง → 2 หน้า)
   { id: 'dm1', title: 'ดาบเทพสังหาร', author: 'ดาวเดือน', coverUrl: 'https://picsum.photos/seed/dm1/300/400', day: 'จันทร์' },
   { id: 'dm2', title: 'จอมเวทย์พลิกฟ้า', author: 'ลมดาว', coverUrl: 'https://picsum.photos/seed/dm2/300/400', day: 'จันทร์' },
@@ -1216,3 +1216,28 @@ export const MOCK_DAILY_MANGA: DailyManga[] = [
   { id: 'dm34', title: 'จักรพรรดิอมตะ', author: 'ดาวเดือน', coverUrl: 'https://picsum.photos/seed/dm34/300/400', day: 'อาทิตย์' },
   { id: 'dm35', title: 'วิหคเพลิงคืนชีพ', author: 'ลมดาว', coverUrl: 'https://picsum.photos/seed/dm35/300/400', day: 'อาทิตย์' },
 ]
+
+// ระยะเวลาที่อัพโหลด เรียงจากใหม่สุดไปเก่า (ใช้สร้างตอนล่าสุด 3 ตอน)
+const UPLOAD_AGO = [
+  '30 นาทีที่แล้ว',
+  '3 ชม. ที่แล้ว',
+  '12 ชม. ที่แล้ว',
+  '1 วันที่แล้ว',
+  '2 วันที่แล้ว',
+  '4 วันที่แล้ว',
+]
+
+function makeDailyMangaEpisodes(id: string, seed: number): DailyMangaEpisode[] {
+  const latest = 40 + ((seed * 7) % 160) // เลขตอนล่าสุดต่างกันไปในแต่ละเรื่อง
+  const freshness = seed % 3 // ความสดของตอนล่าสุด
+  return [0, 1, 2].map((k) => ({
+    id: `${id}-ep${latest - k}`,
+    label: `ตอนที่ ${latest - k}`,
+    uploadedAt: UPLOAD_AGO[Math.min(freshness + k, UPLOAD_AGO.length - 1)],
+  }))
+}
+
+export const MOCK_DAILY_MANGA: DailyManga[] = RAW_DAILY_MANGA.map((m, i) => ({
+  ...m,
+  episodes: makeDailyMangaEpisodes(m.id, i + 1),
+}))

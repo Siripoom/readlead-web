@@ -43,19 +43,24 @@ function FeaturedRankCard({ work, filter }: FeaturedCardProps) {
       href={`/detail?bookId=${work.id}`}
       className="group block overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition-shadow hover:shadow-md"
     >
-      <div className="relative aspect-3/4 overflow-hidden">
-        <Image
-          src={work.coverUrl}
-          alt={work.title}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          sizes="(max-width: 768px) 100vw, 240px"
-        />
-        <span className="absolute left-3 top-3 rounded-full bg-amber-400 px-2.5 py-1 text-xs font-black text-white shadow">
-          อันดับ 1
-        </span>
+      {/* ปกซ่อนไว้ ค่อย ๆ เผยปกแนวตั้งขนาดเล็กตอน hover */}
+      <div className="max-h-0 overflow-hidden opacity-0 transition-all duration-700 ease-in-out group-hover:max-h-64 group-hover:opacity-100">
+        <div className="flex justify-center px-3 pt-3">
+          <div className="relative aspect-3/4 w-32 translate-y-2 overflow-hidden rounded-lg shadow-sm transition-transform duration-700 ease-in-out group-hover:translate-y-0">
+            <Image
+              src={work.coverUrl}
+              alt={work.title}
+              fill
+              className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-[1.03]"
+              sizes="128px"
+            />
+          </div>
+        </div>
       </div>
       <div className="space-y-1.5 p-3">
+        <span className="inline-block rounded-full bg-amber-400 px-2.5 py-1 text-xs font-black text-white shadow">
+          อันดับ 1
+        </span>
         <p className="line-clamp-2 text-base font-black leading-tight text-foreground">{work.title}</p>
         <p className="truncate text-xs text-muted-foreground">
           {GENRE_LABELS[work.genres[0]] ?? work.genres[0]} · {work.authorName}

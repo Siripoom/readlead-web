@@ -1,5 +1,5 @@
-import { BookCategorySection } from '@/components/BookCategorySection'
-import { MOCK_BOOKS, BOOK_CATEGORIES } from '@/lib/mock-data'
+import { BookCategorySection } from "@/components/BookCategorySection";
+import { MOCK_BOOKS, BOOK_CATEGORIES } from "@/lib/mock-data";
 
 export default function BooksPage() {
   return (
@@ -7,5 +7,5 @@ export default function BooksPage() {
       <h1 className="text-2xl font-bold text-foreground">หมวดหมู่หนังสือ</h1>
       <BookCategorySection books={MOCK_BOOKS} categories={BOOK_CATEGORIES} />
     </main>
-  )
+  );
 }

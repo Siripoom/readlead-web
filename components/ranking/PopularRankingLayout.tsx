@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Flame, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -116,6 +116,7 @@ interface Props {
   sidebarItems: SidebarItem[]
   activeSidebarId: string
   rankingItems: PopularRankingItem[]
+  topContent?: ReactNode
   itemsPerPage?: number
   onSidebarChange?: (id: string) => void
   onItemClick?: (item: PopularRankingItem) => void
@@ -126,6 +127,7 @@ export function PopularRankingLayout({
   sidebarItems,
   activeSidebarId,
   rankingItems,
+  topContent,
   itemsPerPage = 8,
   onSidebarChange,
   onItemClick,
@@ -148,7 +150,7 @@ export function PopularRankingLayout({
   const handleSidebar = (id: string) => onSidebarChange?.(id)
 
   const content = (
-    <main className="min-w-0 flex-1 space-y-8">
+    <main className="min-w-0 space-y-8">
       {/* Ranking list */}
       <div className="grid grid-cols-1 content-start gap-1 sm:grid-cols-2">
         {paginatedItems.map(item => (
@@ -201,24 +203,26 @@ export function PopularRankingLayout({
 
   return (
     <>
-      {/* Mobile: horizontal tabs */}
-      <div className="mb-4 lg:hidden">
+      {/* Mobile: horizontal tabs above ranking content */}
+      <div className="space-y-8 lg:hidden">
         <SidebarTabs items={sidebarItems} activeId={activeSidebarId} onSelect={handleSidebar} />
+        {page === 1 && topContent}
+        {content}
       </div>
 
-      {/* Desktop: side-by-side */}
-      <div className="hidden lg:flex lg:gap-8">
+      {/* Desktop: sidebar beside all ranking content */}
+      <div className="hidden lg:grid lg:grid-cols-[270px_minmax(0,1fr)] lg:items-start lg:gap-8">
         <Sidebar
           title={sidebarTitle}
           items={sidebarItems}
           activeId={activeSidebarId}
           onSelect={handleSidebar}
         />
-        {content}
+        <div className="min-w-0 space-y-8">
+          {page === 1 && topContent}
+          {content}
+        </div>
       </div>
-
-      {/* Mobile content */}
-      <div className="lg:hidden">{content}</div>
     </>
   )
 }

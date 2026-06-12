@@ -5,13 +5,12 @@ import ContentHeader from "@/components/detail/ContentHeader";
 import NovelAuthorIntroSection from "@/components/detail/NovelAuthorIntroSection";
 import EpisodeList from "@/components/detail/EpisodeList";
 import NovelSupportStats from "@/components/detail/NovelSupportStats";
-import ReviewSection from "@/components/detail/ReviewSection";
+import ReaderReviewsSection from "@/components/detail/ReaderReviewsSection";
 import RelatedWorks from "@/components/detail/RelatedWorks";
 import OrnamentalDivider from "@/components/shared/OrnamentalDivider";
 import {
   MOCK_WORKS,
   MOCK_EPISODES,
-  MOCK_REVIEWS,
   MOCK_EPISODE_STATS,
   MOCK_CREATORS,
   GENRE_LABELS,
@@ -31,7 +30,6 @@ export default async function DetailPage({ searchParams }: Props) {
   if (!work) notFound();
 
   const episodes = MOCK_EPISODES[work.id] ?? [];
-  const reviews = MOCK_REVIEWS[work.id] ?? [];
   const relatedWorks = MOCK_WORKS.filter(
     (w) => w.id !== work.id && w.genres.some((g) => work.genres.includes(g)),
   ).slice(0, 6);
@@ -121,22 +119,38 @@ export default async function DetailPage({ searchParams }: Props) {
       </div>
 
       <div className="container mx-auto px-8 md:px-16 py-8 space-y-8">
-        <ContentHeader work={work} />
+        <section className="rounded-2xl border border-border/60 bg-white p-6 md:p-8">
+          <ContentHeader work={work} />
+        </section>
 
-        <NovelAuthorIntroSection author={authorInfo} intro={introInfo} />
+        <section className="rounded-2xl border border-border/60 bg-white p-6 md:p-8">
+          <NovelAuthorIntroSection author={authorInfo} intro={introInfo} />
+        </section>
 
-        <NovelSupportStats daily={dailyTicket} monthly={monthlyTicket} />
+        <section className="rounded-2xl border border-border/60 bg-white p-6 md:p-8">
+          <NovelSupportStats
+            daily={dailyTicket}
+            monthly={monthlyTicket}
+            authorName={work.authorName}
+          />
+        </section>
 
-        <ReviewSection workId={work.id} initialReviews={reviews} />
+        <section className="rounded-2xl border border-border/60 bg-white p-6 md:p-8">
+          <ReaderReviewsSection />
+        </section>
 
-        <EpisodeList
-          episodes={episodes}
-          workId={work.id}
-          workTitle={work.title}
-          episodeStats={MOCK_EPISODE_STATS}
-        />
+        <section className="rounded-2xl border border-border/60 bg-white p-6 md:p-8">
+          <EpisodeList
+            episodes={episodes}
+            workId={work.id}
+            workTitle={work.title}
+            episodeStats={MOCK_EPISODE_STATS}
+          />
+        </section>
 
-        <RelatedWorks works={relatedWorks} />
+        <section className="rounded-2xl border border-border/60 bg-white p-6 md:p-8">
+          <RelatedWorks works={relatedWorks} />
+        </section>
       </div>
     </main>
   );

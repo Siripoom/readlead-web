@@ -13,17 +13,19 @@ export default function RankingPage() {
   const [activeSidebar, setActiveSidebar] = useState(POPULAR_SIDEBAR_ITEMS[0].id)
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 px-4 py-6">
-      <NovelRankingSection
-        title="อันดับนิยายยอดนิยม"
-        books={MOCK_NOVEL_RANKING_TOP}
-      />
+    <div className="mx-auto max-w-7xl px-4 py-6">
       <PopularRankingLayout
         sidebarTitle="รายการความนิยม"
         sidebarItems={POPULAR_SIDEBAR_ITEMS}
         activeSidebarId={activeSidebar}
         rankingItems={MOCK_POPULAR_RANKING}
         onSidebarChange={setActiveSidebar}
+        topContent={
+          <NovelRankingSection
+            title="อันดับนิยายยอดนิยม"
+            books={MOCK_NOVEL_RANKING_TOP}
+          />
+        }
       />
     </div>
   )

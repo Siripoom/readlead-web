@@ -4,9 +4,8 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Eye, ThumbsUp, BookOpen, Bookmark, Bell, Heart, Calendar } from 'lucide-react'
+import { Eye, ThumbsUp, BookOpen, Bookmark, Bell, Calendar } from 'lucide-react'
 import { useRole } from '@/contexts/RoleContext'
-import DonateModal from '@/components/modals/DonateModal'
 import type { Work } from '@/lib/types'
 import { GENRE_LABELS } from '@/lib/mock-data'
 import { useRouter } from 'next/navigation'
@@ -28,7 +27,6 @@ export default function ContentHeader({ work }: Props) {
   const router = useRouter()
   const [bookmarked, setBookmarked] = useState(false)
   const [following, setFollowing] = useState(false)
-  const [donateOpen, setDonateOpen] = useState(false)
 
   function requireLogin(action: () => void) {
     if (!isLoggedIn) { router.push('/login'); return }
@@ -44,8 +42,10 @@ export default function ContentHeader({ work }: Props) {
   return (
     <div className="flex flex-col md:flex-row gap-6">
       <div className="shrink-0 mx-auto md:mx-0">
-        <div className="relative w-40 h-56 md:w-48 rounded-lg overflow-hidden shadow-lg border border-border-gold/30">
-          <Image src={work.coverUrl} alt={work.title} fill className="object-cover" />
+        <div className="rounded-2xl bg-linear-to-b from-muted to-muted/30 p-3 shadow-sm">
+          <div className="relative w-52 h-72 md:w-60 md:h-80 rounded-xl overflow-hidden shadow-lg border border-border-gold/30">
+            <Image src={work.coverUrl} alt={work.title} fill className="object-cover" />
+          </div>
         </div>
       </div>
 
@@ -113,19 +113,8 @@ export default function ContentHeader({ work }: Props) {
             <Bell className={`h-4 w-4 mr-1 ${following ? 'fill-current' : ''}`} />
             {following ? 'ติดตามแล้ว' : 'ติดตาม'}
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => requireLogin(() => setDonateOpen(true))}
-            className="border-primary/30 text-primary hover:bg-primary/5"
-          >
-            <Heart className="h-4 w-4 mr-1" />
-            บริจาค
-          </Button>
         </div>
       </div>
-
-      <DonateModal authorName={work.authorName} open={donateOpen} onOpenChange={setDonateOpen} />
     </div>
   )
 }

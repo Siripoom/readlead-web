@@ -6,12 +6,21 @@ import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+export interface DailyMangaEpisode {
+  id: string
+  label: string
+  /** ระยะเวลาที่อัพโหลด เช่น "5 ชม. ที่แล้ว" */
+  uploadedAt: string
+}
+
 export interface DailyManga {
   id: string
   title: string
   author: string
   coverUrl: string
   day: string
+  /** ตอนล่าสุด (เรียงจากใหม่ไปเก่า) */
+  episodes?: DailyMangaEpisode[]
 }
 
 interface Props {
@@ -95,6 +104,24 @@ export function DailyMangaSection({
                 <p className="line-clamp-1 text-sm text-muted-foreground">
                   {manga.author}
                 </p>
+
+                {manga.episodes && manga.episodes.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {manga.episodes.slice(0, 3).map((ep) => (
+                      <li
+                        key={ep.id}
+                        className="flex items-center justify-between gap-2 rounded-md px-1.5 py-1 text-xs transition-colors group-hover:bg-[#f5f5f5]"
+                      >
+                        <span className="line-clamp-1 font-medium text-foreground/80">
+                          {ep.label}
+                        </span>
+                        <span className="shrink-0 text-muted-foreground">
+                          {ep.uploadedAt}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </Link>
             ))}
           </div>

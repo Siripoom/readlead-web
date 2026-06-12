@@ -8,6 +8,8 @@ import { LatestNovelUpdatesSection } from "@/components/LatestNovelUpdatesSectio
 import { PopularByCategorySection } from "@/components/PopularByCategorySection";
 import { DailyMangaSection } from "@/components/DailyMangaSection";
 import { NovelRankingShowcase } from "@/components/home/NovelRankingShowcase";
+import { RecommendedByWebsiteSection } from "@/components/home/RecommendedByWebsiteSection";
+import { LatestUpdatedNovelsSection } from "@/components/home/LatestUpdatedNovelsSection";
 import { HomeContentTypeSelector } from "@/components/home/HomeContentTypeSelector";
 import { BookCarousel } from "@/components/home/BookCarousel";
 import { RankingList } from "@/components/home/RankingList";
@@ -162,7 +164,7 @@ export default async function HomePage({ searchParams }: Props) {
       <main className="mx-auto max-w-7xl space-y-10 px-4 py-6 md:space-y-12">
         <HomePromotionCards slides={MOCK_HOME_PROMOTION_SLIDES} />
 
-        {activeType !== "manga" && (
+        {activeType !== "manga" && activeType !== "novel" && (
           <DiscountNovelCarousel
             title="โปรโมชั่นลดราคา"
             items={MOCK_DISCOUNT_NOVELS}
@@ -192,12 +194,20 @@ export default async function HomePage({ searchParams }: Props) {
             viewMoreHref="/ranking"
           />
         )}
+        {activeType === "novel" && <RecommendedByWebsiteSection />}
         {activeType !== "manga" && (
-          <AllTimeRankingCarousel
-            title="ยอดนิยม"
-            works={popularRanking}
-            viewMoreHref="/ranking"
-          />
+          <>
+            <AllTimeRankingCarousel
+              title="ยอดนิยม"
+              works={popularRanking}
+              viewMoreHref="/ranking"
+            />
+            {/* <NovelRankingShowcase
+              title="จัดอันดับมังงะยอดนิยม"
+              categories={RANKING_SHOWCASE_CATEGORIES}
+              items={MOCK_RANKING_SHOWCASE}
+            /> */}
+          </>
         )}
         {activeType === "novel" && (
           <>
@@ -215,23 +225,16 @@ export default async function HomePage({ searchParams }: Props) {
             />
             <LatestNovelUpdatesSection novels={MOCK_LATEST_NOVELS} />
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">
+              {/* <h2 className="text-2xl font-bold text-foreground">
                 หมวดหมู่หนังสือ
-              </h2>
+              </h2> */}
               <BookCategorySection
                 books={MOCK_BOOKS}
                 categories={BOOK_CATEGORIES}
               />
             </section>
+            <LatestUpdatedNovelsSection />
           </>
-        )}
-
-        {activeType === "novel" && (
-          <NovelRankingShowcase
-            title="จัดอันดับมังงะยอดนิยม"
-            categories={RANKING_SHOWCASE_CATEGORIES}
-            items={MOCK_RANKING_SHOWCASE}
-          />
         )}
       </main>
     </>

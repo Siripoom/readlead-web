@@ -23,7 +23,7 @@ function BannerCard({ banner, gradientDir = 'left', priority, className }: Banne
         className,
       )}
     >
-      <div className="relative aspect-16/7 min-h-48">
+      <div className="relative aspect-5/2 min-h-32">
         <Image
           src={banner.imageUrl}
           alt={banner.title}

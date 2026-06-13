@@ -11,6 +11,7 @@ import { NovelRankingShowcase } from "@/components/home/NovelRankingShowcase";
 import { RecommendedByWebsiteSection } from "@/components/home/RecommendedByWebsiteSection";
 import { LatestUpdatedNovelsSection } from "@/components/home/LatestUpdatedNovelsSection";
 import { HomeContentTypeSelector } from "@/components/home/HomeContentTypeSelector";
+import { HomeLanding } from "@/components/home/landing/HomeLanding";
 import { BookCarousel } from "@/components/home/BookCarousel";
 import { RankingList } from "@/components/home/RankingList";
 import { MangaRankingSection } from "@/components/home/MangaRankingSection";
@@ -126,6 +127,14 @@ function renderContentSections(activeType: ContentType, works: Work[]) {
 
 export default async function HomePage({ searchParams }: Props) {
   const { type, genre } = await searchParams;
+
+  // No ?type= → the mixed-type "หน้าหลัก" landing (index_78 mockup).
+  // An explicit type keeps the existing per-type sections below, untouched.
+  const rawType = Array.isArray(type) ? type[0] : type;
+  if (!rawType) {
+    return <HomeLanding />;
+  }
+
   const activeType = parseHomeContentType(type);
   const activeGenre =
     typeof genre === "string" ? genre : Array.isArray(genre) ? genre[0] : null;

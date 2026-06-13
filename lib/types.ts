@@ -183,3 +183,17 @@ export interface PopularRankingSection {
   title: string
   items: PopularRankingItem[]
 }
+
+export interface HomeUpdateItem {
+  id: string
+  type: ContentType
+  title: string
+  author: string
+  genreLabel: string
+  originLabel: string
+  description: string
+  coverUrl: string
+  views: string
+  episodeLabel: string
+  updatedAtLabel: string
+}

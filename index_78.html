@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReadLead — นิยายจีนออนไลน์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;700;900&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FFF6F2;
+    --cream-deep:#FCE9E4;
+    --red:#E63950;
+    --red-deep:#C22641;
+    --pink:#FF9EB5;
+    --gold:#F2C879;
+    --ink:#3A1F24;
+    --ink-soft:#7A5560;
+    --line:#F4D9D6;
+    --radius:14px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:'Noto Sans Thai',sans-serif;
+    background:#fff;
+    color:var(--ink);
+    line-height:1.6;
+  }
+  h1,h2,h3,.brand{font-family:'Noto Serif Thai',serif;}
+
+  /* ===== Header ===== */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+  }
+  .nav-wrap{
+    max-width:1200px; margin:0 auto; padding:6px 24px;
+    display:flex; align-items:center; gap:32px;
+  }
+  .brand{
+    display:flex; align-items:center; gap:8px;
+    font-size:20px; font-weight:900; color:var(--red);
+    text-decoration:none; white-space:nowrap;
+    font-family:'Noto Sans Thai',sans-serif;
+  }
+  .seal{
+    width:30px; height:30px; border-radius:8px;
+    background:var(--red);
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; flex-shrink:0;
+  }
+  .seal svg{width:17px; height:17px;}
+  nav.main-links{display:flex; align-items:center; gap:20px; flex:1;}
+  nav.main-links a{
+    color:var(--ink); text-decoration:none; font-weight:600; font-size:13px;
+    padding:6px 4px; position:relative;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  nav.main-links a.active{color:var(--red-deep);}
+  .nav-icon{width:15px; height:15px; flex-shrink:0;}
+  .nav-sep{
+    width:1px; height:20px; background:var(--line); flex-shrink:0;
+  }
+  .search-box{
+    display:flex; align-items:center; gap:8px;
+    background:var(--cream-deep); border-radius:999px;
+    padding:8px 16px; color:var(--ink-soft); font-size:13px;
+    flex:0 1 260px; margin:0 16px;
+  }
+  .search-box svg{width:15px; height:15px; flex-shrink:0;}
+  .auth-links{display:flex; gap:14px; align-items:center; flex-shrink:0;}
+  .login-link{
+    color:var(--ink); text-decoration:none; font-weight:600; font-size:13px;
+  }
+  .btn{
+    padding:7px 18px; border-radius:999px; font-weight:700; font-size:13px;
+    text-decoration:none; transition:transform .15s ease, box-shadow .15s ease;
+    display:inline-block; border:none; cursor:pointer;
+  }
+  .btn-primary{background:var(--red); color:#fff;}
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:0 6px 16px rgba(230,57,80,.35);}
+
+  /* ===== Hero ===== */
+  .hero{
+    margin:32px 0 0; padding:0;
+  }
+  .hero-carousel-wrap{
+    position:relative; overflow:hidden;
+    padding:0 24px;
+  }
+  .hero-track{
+    display:flex; gap:16px; transition:transform .6s ease;
+  }
+  .hero-slide-unit{
+    position:relative; flex:0 0 78%; height:310px;
+    border-radius:20px; overflow:hidden;
+    background-size:cover; background-position:center; color:#fff;
+    transition:opacity .6s ease;
+  }
+  .hero-slide-unit:not(.is-center){
+    opacity:.35;
+  }
+  .hero-slide-unit::before{
+    content:'';
+    position:absolute; inset:0;
+    background:linear-gradient(to top, rgba(58,31,36,.75) 0%, rgba(58,31,36,.15) 55%, rgba(58,31,36,.05) 100%);
+  }
+  .hero-slide-content{
+    position:absolute; inset:0; z-index:1;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    padding:36px;
+  }
+  .hero-badge{
+    position:relative; z-index:1;
+    display:inline-block; background:var(--red); color:#fff;
+    font-size:12px; font-weight:800; padding:5px 14px; border-radius:6px;
+    margin-bottom:14px; width:fit-content;
+  }
+  .hero-slide-content h1{
+    position:relative; z-index:1;
+    font-size:26px; font-weight:900; line-height:1.35; max-width:90%;
+    text-shadow:0 2px 12px rgba(0,0,0,.3); color:#fff;
+  }
+  .hero-slide-content p{
+    position:relative; z-index:1;
+    margin-top:8px; font-size:13px; color:rgba(255,255,255,.85); max-width:85%;
+  }
+  .hero-cta{
+    position:relative; z-index:1; margin-top:16px;
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--red); color:#fff; font-weight:700; font-size:14px;
+    padding:10px 22px; border-radius:999px; text-decoration:none;
+    width:fit-content; transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .hero-cta:hover{transform:translateY(-2px); box-shadow:0 6px 16px rgba(230,57,80,.35);}
+  .hero-arrow{
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:38px; height:38px; border-radius:50%; border:none;
+    background:rgba(58,31,36,.35); color:#fff; font-size:22px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; z-index:5; backdrop-filter:blur(3px);
+    transition:background .15s ease;
+  }
+  .hero-arrow:hover{background:rgba(58,31,36,.55);}
+  .hero-arrow.prev{left:14px;}
+  .hero-arrow.next{right:14px;}
+  .hero-dots{
+    position:relative; margin-top:14px; display:flex; justify-content:center; gap:8px;
+  }
+  .hero-dots .dot{
+    width:9px; height:9px; border-radius:5px;
+    background:var(--line); cursor:pointer; transition:all .3s ease;
+  }
+  .hero-dots .dot.active{width:28px; background:var(--red-deep);}
+
+  /* Activity row: two independent carousels side by side */
+  .activity-container{
+    max-width:1200px; margin:0 auto; padding:0 24px;
+  }
+  .activity-row{
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:16px; margin-top:18px;
+  }
+  .activity-item{
+    position:relative;
+  }
+  .activity-carousel{
+    position:relative; border-radius:18px; overflow:hidden;
+    height:200px; color:#fff;
+  }
+  .activity-slide{
+    position:absolute; inset:0; background-size:cover; background-position:center;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    padding:24px; opacity:0; transition:opacity .6s ease; pointer-events:none;
+  }
+  .activity-slide.active{opacity:1; pointer-events:auto;}
+  .activity-slide::before{
+    content:'';
+    position:absolute; inset:0;
+    background:linear-gradient(to top, rgba(58,31,36,.78) 0%, rgba(58,31,36,.1) 60%);
+  }
+  .activity-badge{
+    position:relative; z-index:1;
+    display:inline-block; background:rgba(255,255,255,.22);
+    border:1px solid rgba(255,255,255,.4); backdrop-filter:blur(4px);
+    color:#fff; font-size:11px; font-weight:700; padding:4px 12px;
+    border-radius:6px; margin-bottom:10px; width:fit-content;
+  }
+  .activity-slide h3{
+    position:relative; z-index:1;
+    font-size:18px; font-weight:800; line-height:1.4; max-width:70%;
+    text-shadow:0 2px 10px rgba(0,0,0,.3); color:#fff;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .activity-slide p{
+    position:relative; z-index:1;
+    margin-top:6px; font-size:13px; color:rgba(255,255,255,.85); max-width:65%;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .activity-cta{
+    position:relative; z-index:1; margin-top:12px;
+    display:inline-flex; align-items:center; gap:6px;
+    background:rgba(255,255,255,.95); color:var(--red-deep); font-weight:700; font-size:13px;
+    padding:8px 18px; border-radius:999px; text-decoration:none; width:fit-content;
+  }
+  .activity-arrow{
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:22px; height:22px; border-radius:50%; border:none;
+    background:rgba(58,31,36,.35); color:#fff; font-size:13px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; z-index:5; backdrop-filter:blur(3px);
+    transition:background .15s ease;
+  }
+  .activity-arrow:hover{background:rgba(58,31,36,.55);}
+  .activity-arrow.prev{left:4px;}
+  .activity-arrow.next{right:4px;}
+  .activity-dots{
+    position:relative; margin-top:10px; display:flex; justify-content:center; gap:6px;
+  }
+  .activity-dots .dot{
+    width:8px; height:8px; border-radius:4px;
+    background:var(--line); cursor:pointer; transition:all .3s ease;
+  }
+  .activity-dots .dot.active{width:22px; background:var(--red-deep);}
+
+  /* ===== Section shared ===== */
+  .section{max-width:1200px; margin:0 auto; padding:48px 24px 0;}
+  .section-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:22px;
+  }
+  .section-head h2{
+    font-size:24px; font-weight:900; color:var(--ink);
+    display:flex; align-items:center; gap:10px;
+  }
+  .section-head h2::before{
+    content:''; display:inline-block; width:4px; height:24px;
+    background:var(--red); border-radius:2px;
+  }
+  .section-head h2.no-bar::before{
+    content:none;
+  }
+  .see-more{
+    font-size:14px; font-weight:600; color:var(--red-deep); text-decoration:none;
+    display:flex; align-items:center; gap:4px;
+  }
+  .see-more:hover{text-decoration:underline;}
+
+  /* ===== Top 8 ranking strip ===== */
+  .rank-strip-wrap{
+    position:relative;
+  }
+  .rank-strip{
+    display:flex; gap:14px; overflow-x:auto; padding:6px 4px 4px;
+    scroll-behavior:smooth;
+    scrollbar-width:none;
+  }
+  .rank-strip::-webkit-scrollbar{display:none;}
+  .rank-arrow{
+    position:absolute; top:40%; transform:translateY(-50%);
+    width:36px; height:36px; border-radius:50%; border:none;
+    background:#fff; color:var(--red-deep); font-size:20px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; z-index:5; box-shadow:0 4px 14px rgba(58,31,36,.15);
+    transition:transform .15s ease;
+  }
+  .rank-arrow:hover{transform:translateY(-50%) scale(1.08);}
+  .rank-arrow.prev{left:-18px;}
+  .rank-arrow.next{right:-18px;}
+  .rank-arrow.hidden{display:none;}
+  .rank-card{
+    background:transparent; border-radius:var(--radius);
+    overflow:hidden; text-decoration:none; color:var(--ink);
+    transition:transform .15s ease, box-shadow .15s ease;
+    display:flex; flex-direction:column;
+    flex:0 0 160px;
+  }
+  .rank-card:hover{transform:translateY(-4px);}
+  .rank-cover{
+    position:relative; aspect-ratio:3/4; overflow:hidden; border-radius:var(--radius);
+    background:linear-gradient(135deg,var(--cream-deep),var(--pink));
+  }
+  .rank-cover img{width:100%; height:100%; object-fit:cover; display:block;}
+  .rank-num{
+    position:absolute; top:8px; left:8px;
+    width:28px; height:28px; border-radius:50%;
+    background:var(--red); color:#fff; font-weight:900; font-size:13px;
+    display:flex; align-items:center; justify-content:center;
+    border:2px solid var(--gold);
+  }
+  .rank-num.gold{background:var(--gold); color:var(--ink); border-color:var(--red);}
+  .rank-info{padding:10px 2px 0;}
+  .rank-title{font-size:13px; font-weight:700; color:#000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .rank-author{font-size:11px; color:var(--ink-soft); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .rank-meta{font-size:12px; color:var(--ink-soft); margin-top:3px;}
+  .rank-stats{
+    display:flex; align-items:center; gap:10px; margin-top:4px;
+    font-size:11px; font-weight:700; color:var(--red-deep); line-height:1;
+  }
+  .rank-stats span{display:inline-flex; align-items:center; gap:3px; line-height:1;}
+  .rank-stats svg{width:12px; height:12px; flex-shrink:0; display:block; overflow:visible;}
+
+  /* ===== Three-column ranking tables ===== */
+  .rank-tables{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:12px;
+  }
+  .rank-table{
+    background:#fff; border-radius:var(--radius);
+    padding:12px 12px 12px 16px; min-width:0;
+  }
+  .rank-table h3{
+    font-size:14px; font-weight:700; margin-bottom:10px;
+    display:flex; align-items:center; gap:6px; color:#000;
+    font-family:'Noto Sans Thai',sans-serif;
+  }
+  .rank-table h3 svg{width:16px; height:16px; color:var(--red-deep); flex-shrink:0;}
+  .rank-table h3::before{content:none;}
+  .rank-feature{
+    position:relative; border-radius:10px;
+    background:transparent;
+    padding:10px 0 10px 8px; margin-bottom:10px; text-decoration:none; display:flex; gap:8px;
+    align-items:flex-start; color:var(--ink);
+  }
+  .rank-feature-cover{
+    position:relative;
+    width:72px; height:100px; border-radius:6px; flex-shrink:0;
+    background:var(--cream-deep);
+  }
+  .rank-feature-cover img{width:100%; height:100%; object-fit:cover; display:block; border-radius:6px;}
+  .rank-feature-body{flex:1; min-width:0; padding-top:22px;}
+  .rank-feature-badge{
+    position:absolute; top:-10px; left:-10px; z-index:2;
+    width:34px; height:34px;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.25));
+  }
+  .rank-feature-title{font-size:12px; font-weight:800; color:#000; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .rank-feature-author{font-size:10px; color:var(--ink-soft); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .rank-feature-meta{font-size:10px; color:var(--ink-soft); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .rank-feature-value{font-size:13px; font-weight:900; color:var(--red-deep);}
+  .rank-row{
+    position:relative;
+    display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:7px 0;
+    border-bottom:1px solid var(--line); text-decoration:none; color:var(--ink);
+    transition:background .15s ease;
+  }
+  .rank-row:last-child{border-bottom:none;}
+  .rank-row .pos{
+    width:24px; height:24px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:800; color:var(--ink-soft);
+  }
+  .rank-row .pos svg{width:24px; height:24px; filter:drop-shadow(0 1px 3px rgba(0,0,0,.2));}
+  .rank-row .rt{flex:1; font-size:12px; font-weight:600; color:#000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;}
+  .rank-row .rv{font-size:11px; color:var(--ink-soft); font-weight:600; flex-shrink:0;}
+  .rank-expand{
+    width:100%; overflow:hidden;
+    max-height:0; opacity:0;
+    transition:max-height .25s ease, opacity .25s ease;
+    display:flex; gap:10px; align-items:center;
+    padding:0 0 0 32px;
+  }
+  .rank-row:hover .rank-expand{
+    max-height:90px; opacity:1; padding:6px 0 6px 32px;
+  }
+  .rank-expand img{width:48px; height:66px; border-radius:6px; object-fit:cover; flex-shrink:0;}
+  .rank-expand-info{display:flex; flex-direction:column; gap:3px;}
+  .rank-expand-author{font-size:11px; color:var(--ink-soft);}
+  .rank-expand-tag{
+    display:inline-block; font-size:10px; font-weight:700; color:var(--red-deep);
+    background:var(--cream-deep); padding:2px 8px; border-radius:999px; width:fit-content;
+  }
+
+  /* ===== Genre chips ===== */
+  .chips{display:flex; gap:10px; flex-wrap:wrap;}
+  .chip{
+    padding:7px 18px; border-radius:999px; background:#fff;
+    border:1.5px solid var(--line); font-size:13px; font-weight:600;
+    color:var(--ink-soft); text-decoration:none; transition:.15s;
+  }
+  .chip.active, .chip:hover{
+    background:var(--red); color:#fff; border-color:var(--red);
+  }
+
+  /* ===== Book grid ===== */
+  .book-grid{
+    display:grid; grid-template-columns:repeat(6,1fr); gap:18px;
+  }
+  .book-card{text-decoration:none; color:var(--ink); display:block;}
+  .book-cover{
+    aspect-ratio:3/4; border-radius:12px; overflow:hidden;
+    background:linear-gradient(135deg,var(--cream-deep),var(--pink));
+    margin-bottom:10px; position:relative;
+  }
+  .book-cover img{width:100%; height:100%; object-fit:cover; display:block; transition:transform .3s ease;}
+  .book-card:hover .book-cover img{transform:scale(1.05);}
+  .book-badge{
+    position:absolute; top:8px; right:8px;
+    background:var(--gold); color:var(--ink);
+    font-size:11px; font-weight:800; padding:3px 9px; border-radius:6px;
+  }
+  .book-title{font-size:14px; font-weight:700; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .book-sub{font-size:12px; color:var(--ink-soft);}
+
+  /* ===== Latest updates list ===== */
+  .update-list{
+    display:grid; grid-template-columns:1fr 1fr; gap:14px;
+  }
+  .update-item{
+    display:flex; gap:14px; background:#fff; border:1px solid var(--line);
+    border-radius:var(--radius); padding:14px; text-decoration:none; color:var(--ink);
+    transition:.15s; align-items:flex-start;
+  }
+  .update-item:hover{box-shadow:0 8px 20px rgba(230,57,80,.12); transform:translateY(-2px);}
+  .update-cover{
+    width:100px; height:130px; border-radius:8px; overflow:hidden; flex-shrink:0;
+    background:linear-gradient(135deg,var(--cream-deep),var(--pink));
+  }
+  .update-cover img{width:100%; height:100%; object-fit:cover;}
+  .update-body{flex:1; min-width:0;}
+  .update-title{font-size:15px; font-weight:700; margin-bottom:3px; color:#000;}
+  .update-author{font-size:12px; color:var(--ink-soft); margin-bottom:5px;}
+  .update-tag{
+    display:inline-block; font-size:11px; font-weight:700; color:var(--red-deep);
+    background:var(--cream-deep); padding:2px 8px; border-radius:5px; margin-right:6px;
+  }
+  .update-desc{
+    font-size:13px; color:var(--ink-soft); margin-top:6px;
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .update-stats{
+    font-size:12px; color:var(--ink-soft); margin-top:10px;
+    display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+  }
+  .update-stat{display:inline-flex; align-items:center; gap:4px;}
+  .update-stat svg{width:13px; height:13px; flex-shrink:0;}
+  .update-time{font-size:11px; color:var(--red-deep); font-weight:600;}
+
+  /* ===== Footer ===== */
+  footer{
+    margin-top:64px; border-top:1px solid var(--line);
+    background:var(--cream-deep);
+  }
+  .footer-inner{
+    max-width:1200px; margin:0 auto; padding:36px 24px;
+    text-align:center;
+  }
+  .footer-inner .brand{justify-content:center; margin-bottom:8px;}
+  .footer-inner p{color:var(--ink-soft); font-size:13px;}
+
+  /* ===== Responsive ===== */
+  @media (max-width:1024px){
+    .hero-grid{grid-template-columns:1fr;}
+    .rank-tables{grid-template-columns:repeat(2,1fr);}
+    .book-grid{grid-template-columns:repeat(3,1fr);}
+  }
+  @media (max-width:640px){
+    nav.main-links{display:none;}
+    .rank-tables{grid-template-columns:1fr;}
+    .book-grid{grid-template-columns:repeat(2,1fr);}
+    .hero-main h1{font-size:26px; max-width:100%;}
+    .hero-main p{max-width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute;" aria-hidden="true">
+  <defs>
+    <linearGradient id="medalGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE9A8"/>
+      <stop offset="50%" stop-color="#F2C879"/>
+      <stop offset="100%" stop-color="#D49A3D"/>
+    </linearGradient>
+    <linearGradient id="medalGoldRing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF5D0"/>
+      <stop offset="100%" stop-color="#C8872E"/>
+    </linearGradient>
+    <linearGradient id="medalSilver" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="50%" stop-color="#E3E6E9"/>
+      <stop offset="100%" stop-color="#AFB6BD"/>
+    </linearGradient>
+    <linearGradient id="medalSilverRing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#9AA1A8"/>
+    </linearGradient>
+    <linearGradient id="medalBronze" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F0BE8C"/>
+      <stop offset="50%" stop-color="#D6915A"/>
+      <stop offset="100%" stop-color="#A85F30"/>
+    </linearGradient>
+    <linearGradient id="medalBronzeRing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FAD9B8"/>
+      <stop offset="100%" stop-color="#8C4E22"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<header>
+  <div class="nav-wrap">
+    <a href="#" class="brand">
+      <span class="seal">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 4.5C4 3.67 4.67 3 5.5 3H11V21H5.5C4.67 21 4 20.33 4 19.5V4.5Z" fill="currentColor" opacity="0.9"/>
+          <path d="M20 4.5C20 3.67 19.33 3 18.5 3H13V21H18.5C19.33 21 20 20.33 20 19.5V4.5Z" fill="currentColor" opacity="0.6"/>
+        </svg>
+      </span>
+      ReadLead
+    </a>
+    <nav class="main-links">
+      <a href="#" class="active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 4l9 8"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+        หน้าหลัก
+      </a>
+      <span class="nav-sep"></span>
+      <a href="#">นิยาย</a>
+      <a href="#">มังงะ</a>
+      <a href="#">หนังสือเสียง</a>
+    </nav>
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      <span>ค้นหานิยาย, นักเขียน...</span>
+    </div>
+    <div class="auth-links">
+      <a href="#" class="login-link">เข้าสู่ระบบ</a>
+      <a href="#" class="btn btn-primary">สมัครสมาชิก</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-carousel-wrap">
+    <button class="hero-arrow prev" onclick="moveSlide(-1)" aria-label="ก่อนหน้า">‹</button>
+    <div class="hero-track" id="heroTrack">
+      <div class="hero-slide-unit" style="background-image:linear-gradient(135deg, #B8336A 0%, var(--red-deep) 55%, #4a1622 100%);">
+        <div class="hero-slide-content">
+          <span class="hero-badge">มาใหม่</span>
+          <h1>จอมยุทธ์สาวพันธุ์เอก ภาคต่อมาแล้ว</h1>
+          <p>กลับมาพร้อมการต่อสู้ครั้งใหม่ในแดนเหนือ ตามต่อได้แล้ววันนี้</p>
+          <a href="#" class="hero-cta">อ่านเลย ›</a>
+        </div>
+      </div>
+      <div class="hero-slide-unit" style="background-image:linear-gradient(135deg, var(--red) 0%, var(--red-deep) 55%, #8c1f33 100%);">
+        <div class="hero-slide-content">
+          <span class="hero-badge">อัปเดตใหม่</span>
+          <h1>ซีรีส์มาแรง อ่านต่อเนื่องทุกสัปดาห์</h1>
+          <p>ติดตามตอนใหม่ของนิยายจีนชั้นนำ อัปเดตทุกวันอังคารและศุกร์</p>
+          <a href="#" class="hero-cta">ติดตามเลย ›</a>
+        </div>
+      </div>
+      <div class="hero-slide-unit" style="background-image:linear-gradient(135deg, #FF7A96 0%, var(--red) 55%, #8c1f33 100%);">
+        <div class="hero-slide-content">
+          <span class="hero-badge">โปรโมชัน</span>
+          <h1>สมัครสมาชิกวันนี้ รับเหรียญฟรี 100 เหรียญ</h1>
+          <p>ใช้แลกตอนพิเศษได้ทันที สำหรับนิยายเรื่องใหม่และเรื่องดังประจำสัปดาห์</p>
+          <a href="#" class="hero-cta">สมัครเลย ›</a>
+        </div>
+      </div>
+      <div class="hero-slide-unit" style="background-image:linear-gradient(135deg, #B8336A 0%, var(--red-deep) 55%, #4a1622 100%);">
+        <div class="hero-slide-content">
+          <span class="hero-badge">มาใหม่</span>
+          <h1>จอมยุทธ์สาวพันธุ์เอก ภาคต่อมาแล้ว</h1>
+          <p>กลับมาพร้อมการต่อสู้ครั้งใหม่ในแดนเหนือ ตามต่อได้แล้ววันนี้</p>
+          <a href="#" class="hero-cta">อ่านเลย ›</a>
+        </div>
+      </div>
+      <div class="hero-slide-unit" style="background-image:linear-gradient(135deg, var(--red) 0%, var(--red-deep) 55%, #8c1f33 100%);">
+        <div class="hero-slide-content">
+          <span class="hero-badge">อัปเดตใหม่</span>
+          <h1>ซีรีส์มาแรง อ่านต่อเนื่องทุกสัปดาห์</h1>
+          <p>ติดตามตอนใหม่ของนิยายจีนชั้นนำ อัปเดตทุกวันอังคารและศุกร์</p>
+          <a href="#" class="hero-cta">ติดตามเลย ›</a>
+        </div>
+      </div>
+    </div>
+    <button class="hero-arrow next" onclick="moveSlide(1)" aria-label="ถัดไป">›</button>
+  </div>
+  <div class="hero-dots">
+    <span class="dot active" onclick="goToSlide(0)"></span>
+    <span class="dot" onclick="goToSlide(1)"></span>
+    <span class="dot" onclick="goToSlide(2)"></span>
+  </div>
+
+  <div class="activity-container">
+  <div class="activity-row">
+    <div class="activity-item">
+      <div class="activity-carousel">
+        <button class="activity-arrow prev" onclick="moveActivity(0,-1)" aria-label="ก่อนหน้า">‹</button>
+        <div class="activity-slide active" style="background-image:linear-gradient(135deg,#3A1F24,#7A5560);">
+          <span class="activity-badge">นิยายแนะนำ</span>
+          <h3>ฝ่าดาวเคราะห์ทะลุมิติ — มหากาพย์แห่งปี</h3>
+          <p>ผจญภัยในอาณาจักรแฟนตาซีจีนโบราณ พร้อมพล็อตพลิกผันที่คุณคาดไม่ถึง</p>
+          <a href="#" class="activity-cta">อ่านเลย ›</a>
+        </div>
+        <div class="activity-slide" style="background-image:linear-gradient(135deg,#8C6BD8,#3A1F24);">
+          <span class="activity-badge">นิยายแนะนำ</span>
+          <h3>จักรพรรดินีดาวดิน — มหากาพย์โรแมนติก</h3>
+          <p>เรื่องราวความรักของจักรพรรดินีผู้กุมชะตาแผ่นดิน ท่ามกลางแผนการในวังหลวง</p>
+          <a href="#" class="activity-cta">อ่านเลย ›</a>
+        </div>
+        <button class="activity-arrow next" onclick="moveActivity(0,1)" aria-label="ถัดไป">›</button>
+      </div>
+      <div class="activity-dots">
+        <span class="dot active" onclick="goToActivity(0,0)"></span>
+        <span class="dot" onclick="goToActivity(0,1)"></span>
+      </div>
+    </div>
+
+    <div class="activity-item">
+      <div class="activity-carousel">
+        <button class="activity-arrow prev" onclick="moveActivity(1,-1)" aria-label="ก่อนหน้า">‹</button>
+        <div class="activity-slide active" style="background-image:linear-gradient(135deg,#4a2e6e,#3A1F24);">
+          <span class="activity-badge">สินค้าใหม่</span>
+          <h3>คอลเลกชั่นโปสการ์ด &amp; หนังสือนิยายสุดพิเศษ</h3>
+          <p>สะสมสินค้าลิขสิทธิ์จากนิยายดังในแพลตฟอร์ม มีจำนวนจำกัด</p>
+          <a href="#" class="activity-cta">ช็อปเลย ›</a>
+        </div>
+        <div class="activity-slide" style="background-image:linear-gradient(135deg,#7A5560,#8c1f33);">
+          <span class="activity-badge">กิจกรรม</span>
+          <h3>ร่วมสนุกชิงเหรียญฟรี 1,000 เหรียญ</h3>
+          <p>เพียงแชร์นิยายที่คุณชื่นชอบ ลุ้นรับเหรียญสะสมไปแลกตอนพิเศษ</p>
+          <a href="#" class="activity-cta">ร่วมกิจกรรม ›</a>
+        </div>
+        <button class="activity-arrow next" onclick="moveActivity(1,1)" aria-label="ถัดไป">›</button>
+      </div>
+      <div class="activity-dots">
+        <span class="dot active" onclick="goToActivity(1,0)"></span>
+        <span class="dot" onclick="goToActivity(1,1)"></span>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+
+
+<!-- TOP 8 RANKING STRIP -->
+<section class="section">
+  <div class="section-head">
+    <h2 class="no-bar" style="color:#000; font-family:'Noto Sans Thai',sans-serif;">ความนิยมสูงสุด</h2>
+    <a href="#" class="see-more">ดูเพิ่มเติม ›</a>
+  </div>
+  <div class="rank-strip-wrap">
+    <button class="rank-arrow prev hidden" id="rankPrev" onclick="scrollRankStrip(-1)" aria-label="ก่อนหน้า">‹</button>
+    <div class="rank-strip" id="rankStrip">
+    <a href="#" class="rank-card">
+      <div class="rank-cover"><img src="https://picsum.photos/seed/yh-r1/300/400" alt=""><span class="rank-num gold">1</span></div>
+      <div class="rank-info">
+        <div class="rank-title">เคียงข้างเธอทุกชาติภพ</div>
+        <div class="rank-author">มณีนุช</div>
+        <div class="rank-meta">นิยาย · โรแมนซ์</div>
+        <div class="rank-stats">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3" y2="6"/><line x1="3" y1="12" x2="3" y2="12"/><line x1="3" y1="18" x2="3" y2="18"/></svg>38</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>1.5M</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="rank-card">
+      <div class="rank-cover"><img src="https://picsum.photos/seed/yh-r2/300/400" alt=""><span class="rank-num">2</span></div>
+      <div class="rank-info">
+        <div class="rank-title">จอมยุทธ์สาวพันธุ์เอก</div>
+        <div class="rank-author">ธีระ</div>
+        <div class="rank-meta">นิยาย · กำลังภายใน</div>
+        <div class="rank-stats">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3" y2="6"/><line x1="3" y1="12" x2="3" y2="12"/><line x1="3" y1="18" x2="3" y2="18"/></svg>59</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>1.1M</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="rank-card">
+      <div class="rank-cover"><img src="https://picsum.photos/seed/yh-r3/300/400" alt=""><span class="rank-num">3</span></div>
+      <div class="rank-info">
+        <div class="rank-title">เกิดใหม่ในวังหลัง</div>
+        <div class="rank-author">ลลิตา</div>
+        <div class="rank-meta">มังงะ · ดราม่า</div>
+        <div class="rank-stats">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3" y2="6"/><line x1="3" y1="12" x2="3" y2="12"/><line x1="3" y1="18" x2="3" y2="18"/></svg>21</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>865K</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="rank-card">
+      <div class="rank-cover"><img src="https://picsum.photos/seed/yh-r4/300/400" alt=""><span class="rank-num">4</span></div>
+      <div class="rank-info">
+        <div class="rank-title">รักนี้ข้ามภพชาติ</div>
+        <div class="rank-author">วิชิต</div>
+        <div class="rank-meta">นิยาย · โรแมนซ์</div>
+        <div class="rank-stats">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3" y2="6"/><line x1="3" y1="12" x2="3" y2="12"/><line x1="3" y1="18" x2="3" y2="18"/></svg>47</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>790K</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="rank-card">
+      <div class="rank-cover"><img src="https://picsum.photos/seed/yh-r5/300/400" alt=""><span class="rank-num">5</span></div>
+      <div class="rank-info">
+        <div class="rank-title">นางพญาเงาราตรี</div>
+        <div class="rank-author">สรรพสิทธิ์</div>
+        <div class="rank-meta">หนังสือเสียง · แอ็กชัน</div>
+        <div class="rank-stats">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3" y2="6"/><line x1="3" y1="12" x2="3" y2="12"/><line x1="3" y1="18" x2="3" y2="18"/></svg>34</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>635K</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="rank-card">
+      <div class="rank-cover"><img src="https://picsum.photos/seed/yh-r6/300/400" alt=""><span class="rank-num">6</span></div>
+      <div class="rank-info">
+        <div class="rank-title">ใต้ร่มต้นท้อแห่งรัก</div>
+        <div class="rank-author">มณีนุช</div>
+        <div class="rank-meta">นิยาย · โรแมนซ์</div>
+        <div class="rank-stats">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3" y2="6"/><line x1="3" y1="12" x2="3" y2="12"/><line x1="3" y1="18" x2="3" y2="18"/></svg>29</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>510K</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="rank-card">
+      <div class="rank-cover"><img src="https://picsum.photos/seed/yh-r7/300/400" alt=""><span class="rank-num">7</span></div>
+      <div class="rank-info">
+        <div class="rank-title">เกมรักของเจ้าชายมังกร</div>
+        <div class="rank-author">ธีระ</div>
+        <div class="rank-meta">มังงะ · คอเมดี้</div>
+        <div class="rank-stats">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3" y2="6"/><line x1="3" y1="12" x2="3" y2="12"/><line x1="3" y1="18" x2="3" y2="18"/></svg>18</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>455K</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="rank-card">
+      <div class="rank-cover"><img src="https://picsum.photos/seed/yh-r8/300/400" alt=""><span class="rank-num">8</span></div>
+      <div class="rank-info">
+        <div class="rank-title">เจ้าสาวจำเป็นของท่านเสนาบดี</div>
+        <div class="rank-author">ลลิตา</div>
+        <div class="rank-meta">นิยาย · ดราม่า</div>
+        <div class="rank-stats">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3" y2="6"/><line x1="3" y1="12" x2="3" y2="12"/><line x1="3" y1="18" x2="3" y2="18"/></svg>26</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>360K</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="rank-card">
+      <div class="rank-cover"><img src="https://picsum.photos/seed/yh-r9/300/400" alt=""><span class="rank-num">9</span></div>
+      <div class="rank-info">
+        <div class="rank-title">บุปผาในม่านไหม</div>
+        <div class="rank-author">วิชิต</div>
+        <div class="rank-meta">หนังสือเสียง · โรแมนซ์</div>
+        <div class="rank-stats">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3" y2="6"/><line x1="3" y1="12" x2="3" y2="12"/><line x1="3" y1="18" x2="3" y2="18"/></svg>15</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>240K</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="rank-card">
+      <div class="rank-cover"><img src="https://picsum.photos/seed/yh-r10/300/400" alt=""><span class="rank-num">10</span></div>
+      <div class="rank-info">
+        <div class="rank-title">ระบบรักนี้ต้องชนะ</div>
+        <div class="rank-author">สรรพสิทธิ์</div>
+        <div class="rank-meta">นิยาย · ระบบ</div>
+        <div class="rank-stats">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3" y2="6"/><line x1="3" y1="12" x2="3" y2="12"/><line x1="3" y1="18" x2="3" y2="18"/></svg>59</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>210K</span>
+        </div>
+      </div>
+    </a>
+    </div>
+    <button class="rank-arrow next" id="rankNext" onclick="scrollRankStrip(1)" aria-label="ถัดไป">›</button>
+  </div>
+</section>
+
+<!-- THREE COLUMN RANKING -->
+<section class="section">
+  <div class="section-head" style="justify-content:flex-start; gap:12px;">
+    <h2 class="no-bar" style="color:#000; font-family:'Noto Sans Thai',sans-serif;">อันดับรวมยอดนิยมสูงสุด</h2>
+    <a href="#" class="see-more">ดูเพิ่มเติม ›</a>
+  </div>
+  <div class="rank-tables">
+    <div class="rank-table">
+      <h3>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></svg>
+        ตั๋วรายวัน
+      </h3>
+      <a href="#" class="rank-feature">
+        <div class="rank-feature-cover"><span class="rank-feature-badge"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="20" cy="20" r="19" fill="url(#medalGoldRing)"/>
+  <circle cx="20" cy="20" r="15.5" fill="url(#medalGold)"/>
+  <g fill="#C8872E" opacity="0.85">
+    <path d="M6 14 q3 -1 4 2 q-3 1 -4 -2z"/>
+    <path d="M4.5 18 q3.2 -0.5 3.8 2.6 q-3.2 0.6 -3.8 -2.6z"/>
+    <path d="M4.5 22.5 q3.2 0.5 2.8 3.6 q-3.2 -0.4 -2.8 -3.6z"/>
+    <path d="M6.5 27 q3 1 1.8 4 q-3 -1 -1.8 -4z"/>
+    <path d="M34 14 q-3 -1 -4 2 q3 1 4 -2z"/>
+    <path d="M35.5 18 q-3.2 -0.5 -3.8 2.6 q3.2 0.6 3.8 -2.6z"/>
+    <path d="M35.5 22.5 q-3.2 0.5 -2.8 3.6 q3.2 -0.4 2.8 -3.6z"/>
+    <path d="M33.5 27 q-3 1 -1.8 4 q3 -1 1.8 -4z"/>
+  </g>
+  <text x="20" y="26" font-family="Noto Sans Thai,sans-serif" font-size="15" font-weight="900" fill="#8a5a00" text-anchor="middle">1</text>
+</svg></span><img src="https://picsum.photos/seed/yh-r1/120/160" alt=""></div>
+        <div class="rank-feature-body">
+          <div class="rank-feature-title">เคียงข้างเธอทุกชาติภพ</div>
+          <div class="rank-feature-author">มณีนุช</div>
+          <div class="rank-feature-meta">นิยาย · โรแมนซ์</div>
+          <div class="rank-feature-value">2,043 ตั๋ว</div>
+        </div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="20" cy="20" r="19" fill="url(#medalSilverRing)"/>
+  <circle cx="20" cy="20" r="15.5" fill="url(#medalSilver)"/>
+  <g fill="#9AA1A8" opacity="0.85">
+    <path d="M6 14 q3 -1 4 2 q-3 1 -4 -2z"/>
+    <path d="M4.5 18 q3.2 -0.5 3.8 2.6 q-3.2 0.6 -3.8 -2.6z"/>
+    <path d="M4.5 22.5 q3.2 0.5 2.8 3.6 q-3.2 -0.4 -2.8 -3.6z"/>
+    <path d="M6.5 27 q3 1 1.8 4 q-3 -1 -1.8 -4z"/>
+    <path d="M34 14 q-3 -1 -4 2 q3 1 4 -2z"/>
+    <path d="M35.5 18 q-3.2 -0.5 -3.8 2.6 q3.2 0.6 3.8 -2.6z"/>
+    <path d="M35.5 22.5 q-3.2 0.5 -2.8 3.6 q3.2 -0.4 2.8 -3.6z"/>
+    <path d="M33.5 27 q-3 1 -1.8 4 q3 -1 1.8 -4z"/>
+  </g>
+  <text x="20" y="26" font-family="Noto Sans Thai,sans-serif" font-size="15" font-weight="900" fill="#6b7177" text-anchor="middle">2</text>
+</svg></span><span class="rt">จอมยุทธ์สาวพันธุ์เอก</span><span class="rv">1,820</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r2/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">ธีระ</div><span class="rank-expand-tag">นิยาย · กำลังภายใน</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="20" cy="20" r="19" fill="url(#medalBronzeRing)"/>
+  <circle cx="20" cy="20" r="15.5" fill="url(#medalBronze)"/>
+  <g fill="#8C4E22" opacity="0.8">
+    <path d="M20 2.5 l1.6 3.4 3.7 0.5 -2.7 2.6 0.6 3.7 -3.2 -1.8 -3.2 1.8 0.6 -3.7 -2.7 -2.6 3.7 -0.5z"/>
+    <path d="M6 9 l1.3 2.7 3 0.4 -2.2 2.1 0.5 3 -2.6 -1.5 -2.6 1.5 0.5 -3 -2.2 -2.1 3 -0.4z"/>
+    <path d="M34 9 l1.3 2.7 3 0.4 -2.2 2.1 0.5 3 -2.6 -1.5 -2.6 1.5 0.5 -3 -2.2 -2.1 3 -0.4z"/>
+    <path d="M5 25 l1.3 2.7 3 0.4 -2.2 2.1 0.5 3 -2.6 -1.5 -2.6 1.5 0.5 -3 -2.2 -2.1 3 -0.4z"/>
+    <path d="M35 25 l1.3 2.7 3 0.4 -2.2 2.1 0.5 3 -2.6 -1.5 -2.6 1.5 0.5 -3 -2.2 -2.1 3 -0.4z"/>
+  </g>
+  <text x="20" y="26" font-family="Noto Sans Thai,sans-serif" font-size="15" font-weight="900" fill="#6b3a1a" text-anchor="middle">3</text>
+</svg></span><span class="rt">เกิดใหม่ในวังหลัง</span><span class="rv">1,540</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r3/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">ลลิตา</div><span class="rank-expand-tag">มังงะ · ดราม่า</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">4</span><span class="rt">รักนี้ข้ามภพชาติ</span><span class="rv">1,290</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r4/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">วิชิต</div><span class="rank-expand-tag">นิยาย · โรแมนซ์</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">5</span><span class="rt">นางพญาเงาราตรี</span><span class="rv">1,105</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r5/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">สรรพสิทธิ์</div><span class="rank-expand-tag">หนังสือเสียง · แอ็กชัน</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">6</span><span class="rt">ใต้ร่มต้นท้อแห่งรัก</span><span class="rv">980</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r6/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">มณีนุช</div><span class="rank-expand-tag">นิยาย · โรแมนซ์</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">7</span><span class="rt">เกมรักของเจ้าชายมังกร</span><span class="rv">845</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r7/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">ธีระ</div><span class="rank-expand-tag">มังงะ · คอเมดี้</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">8</span><span class="rt">เจ้าสาวจำเป็นของท่านเสนาบดี</span><span class="rv">700</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r8/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">ลลิตา</div><span class="rank-expand-tag">นิยาย · ดราม่า</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">9</span><span class="rt">บุปผาในม่านไหม</span><span class="rv">620</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r9/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">วิชิต</div><span class="rank-expand-tag">หนังสือเสียง · โรแมนซ์</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">10</span><span class="rt">ระบบรักนี้ต้องชนะ</span><span class="rv">540</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r10/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">สรรพสิทธิ์</div><span class="rank-expand-tag">นิยาย · ระบบ</span></div></div>
+      </a>
+    </div>
+    <div class="rank-table">
+      <h3>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+        ตั๋วรายเดือน
+      </h3>
+      <a href="#" class="rank-feature">
+        <div class="rank-feature-cover"><span class="rank-feature-badge"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="20" cy="20" r="19" fill="url(#medalGoldRing)"/>
+  <circle cx="20" cy="20" r="15.5" fill="url(#medalGold)"/>
+  <g fill="#C8872E" opacity="0.85">
+    <path d="M6 14 q3 -1 4 2 q-3 1 -4 -2z"/>
+    <path d="M4.5 18 q3.2 -0.5 3.8 2.6 q-3.2 0.6 -3.8 -2.6z"/>
+    <path d="M4.5 22.5 q3.2 0.5 2.8 3.6 q-3.2 -0.4 -2.8 -3.6z"/>
+    <path d="M6.5 27 q3 1 1.8 4 q-3 -1 -1.8 -4z"/>
+    <path d="M34 14 q-3 -1 -4 2 q3 1 4 -2z"/>
+    <path d="M35.5 18 q-3.2 -0.5 -3.8 2.6 q3.2 0.6 3.8 -2.6z"/>
+    <path d="M35.5 22.5 q-3.2 0.5 -2.8 3.6 q3.2 -0.4 2.8 -3.6z"/>
+    <path d="M33.5 27 q-3 1 -1.8 4 q3 -1 1.8 -4z"/>
+  </g>
+  <text x="20" y="26" font-family="Noto Sans Thai,sans-serif" font-size="15" font-weight="900" fill="#8a5a00" text-anchor="middle">1</text>
+</svg></span><img src="https://picsum.photos/seed/yh-r1/120/160" alt=""></div>
+        <div class="rank-feature-body">
+          <div class="rank-feature-title">เคียงข้างเธอทุกชาติภพ</div>
+          <div class="rank-feature-author">มณีนุช</div>
+          <div class="rank-feature-meta">นิยาย · โรแมนซ์</div>
+          <div class="rank-feature-value">6,535 ตั๋ว</div>
+        </div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="20" cy="20" r="19" fill="url(#medalSilverRing)"/>
+  <circle cx="20" cy="20" r="15.5" fill="url(#medalSilver)"/>
+  <g fill="#9AA1A8" opacity="0.85">
+    <path d="M6 14 q3 -1 4 2 q-3 1 -4 -2z"/>
+    <path d="M4.5 18 q3.2 -0.5 3.8 2.6 q-3.2 0.6 -3.8 -2.6z"/>
+    <path d="M4.5 22.5 q3.2 0.5 2.8 3.6 q-3.2 -0.4 -2.8 -3.6z"/>
+    <path d="M6.5 27 q3 1 1.8 4 q-3 -1 -1.8 -4z"/>
+    <path d="M34 14 q-3 -1 -4 2 q3 1 4 -2z"/>
+    <path d="M35.5 18 q-3.2 -0.5 -3.8 2.6 q3.2 0.6 3.8 -2.6z"/>
+    <path d="M35.5 22.5 q-3.2 0.5 -2.8 3.6 q3.2 -0.4 2.8 -3.6z"/>
+    <path d="M33.5 27 q-3 1 -1.8 4 q3 -1 1.8 -4z"/>
+  </g>
+  <text x="20" y="26" font-family="Noto Sans Thai,sans-serif" font-size="15" font-weight="900" fill="#6b7177" text-anchor="middle">2</text>
+</svg></span><span class="rt">จอมยุทธ์สาวพันธุ์เอก</span><span class="rv">5,021</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r2/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">ธีระ</div><span class="rank-expand-tag">นิยาย · กำลังภายใน</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="20" cy="20" r="19" fill="url(#medalBronzeRing)"/>
+  <circle cx="20" cy="20" r="15.5" fill="url(#medalBronze)"/>
+  <g fill="#8C4E22" opacity="0.8">
+    <path d="M20 2.5 l1.6 3.4 3.7 0.5 -2.7 2.6 0.6 3.7 -3.2 -1.8 -3.2 1.8 0.6 -3.7 -2.7 -2.6 3.7 -0.5z"/>
+    <path d="M6 9 l1.3 2.7 3 0.4 -2.2 2.1 0.5 3 -2.6 -1.5 -2.6 1.5 0.5 -3 -2.2 -2.1 3 -0.4z"/>
+    <path d="M34 9 l1.3 2.7 3 0.4 -2.2 2.1 0.5 3 -2.6 -1.5 -2.6 1.5 0.5 -3 -2.2 -2.1 3 -0.4z"/>
+    <path d="M5 25 l1.3 2.7 3 0.4 -2.2 2.1 0.5 3 -2.6 -1.5 -2.6 1.5 0.5 -3 -2.2 -2.1 3 -0.4z"/>
+    <path d="M35 25 l1.3 2.7 3 0.4 -2.2 2.1 0.5 3 -2.6 -1.5 -2.6 1.5 0.5 -3 -2.2 -2.1 3 -0.4z"/>
+  </g>
+  <text x="20" y="26" font-family="Noto Sans Thai,sans-serif" font-size="15" font-weight="900" fill="#6b3a1a" text-anchor="middle">3</text>
+</svg></span><span class="rt">เกิดใหม่ในวังหลัง</span><span class="rv">3,838</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r3/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">ลลิตา</div><span class="rank-expand-tag">มังงะ · ดราม่า</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">4</span><span class="rt">รักนี้ข้ามภพชาติ</span><span class="rv">2,759</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r4/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">วิชิต</div><span class="rank-expand-tag">นิยาย · โรแมนซ์</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">5</span><span class="rt">นางพญาเงาราตรี</span><span class="rv">2,070</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r5/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">สรรพสิทธิ์</div><span class="rank-expand-tag">หนังสือเสียง · แอ็กชัน</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">6</span><span class="rt">ใต้ร่มต้นท้อแห่งรัก</span><span class="rv">1,611</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r6/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">มณีนุช</div><span class="rank-expand-tag">นิยาย · โรแมนซ์</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">7</span><span class="rt">เกมรักของเจ้าชายมังกร</span><span class="rv">1,477</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r7/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">ธีระ</div><span class="rank-expand-tag">มังงะ · คอเมดี้</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">8</span><span class="rt">เจ้าสาวจำเป็นของท่านเสนาบดี</span><span class="rv">1,292</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r8/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">ลลิตา</div><span class="rank-expand-tag">นิยาย · ดราม่า</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">9</span><span class="rt">บุปผาในม่านไหม</span><span class="rv">1,108</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r9/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">วิชิต</div><span class="rank-expand-tag">หนังสือเสียง · โรแมนซ์</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">10</span><span class="rt">ระบบรักนี้ต้องชนะ</span><span class="rv">980</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r10/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">สรรพสิทธิ์</div><span class="rank-expand-tag">นิยาย · ระบบ</span></div></div>
+      </a>
+    </div>
+    <div class="rank-table">
+      <h3>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        ยอดดู
+      </h3>
+      <a href="#" class="rank-feature">
+        <div class="rank-feature-cover"><span class="rank-feature-badge"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="20" cy="20" r="19" fill="url(#medalGoldRing)"/>
+  <circle cx="20" cy="20" r="15.5" fill="url(#medalGold)"/>
+  <g fill="#C8872E" opacity="0.85">
+    <path d="M6 14 q3 -1 4 2 q-3 1 -4 -2z"/>
+    <path d="M4.5 18 q3.2 -0.5 3.8 2.6 q-3.2 0.6 -3.8 -2.6z"/>
+    <path d="M4.5 22.5 q3.2 0.5 2.8 3.6 q-3.2 -0.4 -2.8 -3.6z"/>
+    <path d="M6.5 27 q3 1 1.8 4 q-3 -1 -1.8 -4z"/>
+    <path d="M34 14 q-3 -1 -4 2 q3 1 4 -2z"/>
+    <path d="M35.5 18 q-3.2 -0.5 -3.8 2.6 q3.2 0.6 3.8 -2.6z"/>
+    <path d="M35.5 22.5 q-3.2 0.5 -2.8 3.6 q3.2 -0.4 2.8 -3.6z"/>
+    <path d="M33.5 27 q-3 1 -1.8 4 q3 -1 1.8 -4z"/>
+  </g>
+  <text x="20" y="26" font-family="Noto Sans Thai,sans-serif" font-size="15" font-weight="900" fill="#8a5a00" text-anchor="middle">1</text>
+</svg></span><img src="https://picsum.photos/seed/yh-r1/120/160" alt=""></div>
+        <div class="rank-feature-body">
+          <div class="rank-feature-title">เคียงข้างเธอทุกชาติภพ</div>
+          <div class="rank-feature-author">มณีนุช</div>
+          <div class="rank-feature-meta">นิยาย · โรแมนซ์</div>
+          <div class="rank-feature-value">1.2M ครั้ง</div>
+        </div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="20" cy="20" r="19" fill="url(#medalSilverRing)"/>
+  <circle cx="20" cy="20" r="15.5" fill="url(#medalSilver)"/>
+  <g fill="#9AA1A8" opacity="0.85">
+    <path d="M6 14 q3 -1 4 2 q-3 1 -4 -2z"/>
+    <path d="M4.5 18 q3.2 -0.5 3.8 2.6 q-3.2 0.6 -3.8 -2.6z"/>
+    <path d="M4.5 22.5 q3.2 0.5 2.8 3.6 q-3.2 -0.4 -2.8 -3.6z"/>
+    <path d="M6.5 27 q3 1 1.8 4 q-3 -1 -1.8 -4z"/>
+    <path d="M34 14 q-3 -1 -4 2 q3 1 4 -2z"/>
+    <path d="M35.5 18 q-3.2 -0.5 -3.8 2.6 q3.2 0.6 3.8 -2.6z"/>
+    <path d="M35.5 22.5 q-3.2 0.5 -2.8 3.6 q3.2 -0.4 2.8 -3.6z"/>
+    <path d="M33.5 27 q-3 1 -1.8 4 q3 -1 1.8 -4z"/>
+  </g>
+  <text x="20" y="26" font-family="Noto Sans Thai,sans-serif" font-size="15" font-weight="900" fill="#6b7177" text-anchor="middle">2</text>
+</svg></span><span class="rt">จอมยุทธ์สาวพันธุ์เอก</span><span class="rv">890K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r2/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">ธีระ</div><span class="rank-expand-tag">นิยาย · กำลังภายใน</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="20" cy="20" r="19" fill="url(#medalBronzeRing)"/>
+  <circle cx="20" cy="20" r="15.5" fill="url(#medalBronze)"/>
+  <g fill="#8C4E22" opacity="0.8">
+    <path d="M20 2.5 l1.6 3.4 3.7 0.5 -2.7 2.6 0.6 3.7 -3.2 -1.8 -3.2 1.8 0.6 -3.7 -2.7 -2.6 3.7 -0.5z"/>
+    <path d="M6 9 l1.3 2.7 3 0.4 -2.2 2.1 0.5 3 -2.6 -1.5 -2.6 1.5 0.5 -3 -2.2 -2.1 3 -0.4z"/>
+    <path d="M34 9 l1.3 2.7 3 0.4 -2.2 2.1 0.5 3 -2.6 -1.5 -2.6 1.5 0.5 -3 -2.2 -2.1 3 -0.4z"/>
+    <path d="M5 25 l1.3 2.7 3 0.4 -2.2 2.1 0.5 3 -2.6 -1.5 -2.6 1.5 0.5 -3 -2.2 -2.1 3 -0.4z"/>
+    <path d="M35 25 l1.3 2.7 3 0.4 -2.2 2.1 0.5 3 -2.6 -1.5 -2.6 1.5 0.5 -3 -2.2 -2.1 3 -0.4z"/>
+  </g>
+  <text x="20" y="26" font-family="Noto Sans Thai,sans-serif" font-size="15" font-weight="900" fill="#6b3a1a" text-anchor="middle">3</text>
+</svg></span><span class="rt">รักนี้ข้ามภพชาติ</span><span class="rv">720K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r4/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">วิชิต</div><span class="rank-expand-tag">นิยาย · โรแมนซ์</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">4</span><span class="rt">เกิดใหม่ในวังหลัง</span><span class="rv">650K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r3/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">ลลิตา</div><span class="rank-expand-tag">มังงะ · ดราม่า</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">5</span><span class="rt">นางพญาเงาราตรี</span><span class="rv">510K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r5/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">สรรพสิทธิ์</div><span class="rank-expand-tag">หนังสือเสียง · แอ็กชัน</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">6</span><span class="rt">ใต้ร่มต้นท้อแห่งรัก</span><span class="rv">430K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r6/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">มณีนุช</div><span class="rank-expand-tag">นิยาย · โรแมนซ์</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">7</span><span class="rt">เกมรักของเจ้าชายมังกร</span><span class="rv">400K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r7/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">ธีระ</div><span class="rank-expand-tag">มังงะ · คอเมดี้</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">8</span><span class="rt">เจ้าสาวจำเป็นของท่านเสนาบดี</span><span class="rv">290K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r8/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">ลลิตา</div><span class="rank-expand-tag">นิยาย · ดราม่า</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">9</span><span class="rt">บุปผาในม่านไหม</span><span class="rv">240K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r9/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">วิชิต</div><span class="rank-expand-tag">หนังสือเสียง · โรแมนซ์</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">10</span><span class="rt">ระบบรักนี้ต้องชนะ</span><span class="rv">198K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r10/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">สรรพสิทธิ์</div><span class="rank-expand-tag">นิยาย · ระบบ</span></div></div>
+      </a>
+    </div>
+    <div class="rank-table">
+      <h3>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6"/><path d="M5 9l7-7 7 7"/><rect x="4" y="11" width="16" height="10" rx="1"/></svg>
+        อันดับเรื่องใหม่
+      </h3>
+      <a href="#" class="rank-feature">
+        <div class="rank-feature-cover"><span class="rank-feature-badge"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="20" cy="20" r="19" fill="url(#medalGoldRing)"/>
+  <circle cx="20" cy="20" r="15.5" fill="url(#medalGold)"/>
+  <g fill="#C8872E" opacity="0.85">
+    <path d="M6 14 q3 -1 4 2 q-3 1 -4 -2z"/>
+    <path d="M4.5 18 q3.2 -0.5 3.8 2.6 q-3.2 0.6 -3.8 -2.6z"/>
+    <path d="M4.5 22.5 q3.2 0.5 2.8 3.6 q-3.2 -0.4 -2.8 -3.6z"/>
+    <path d="M6.5 27 q3 1 1.8 4 q-3 -1 -1.8 -4z"/>
+    <path d="M34 14 q-3 -1 -4 2 q3 1 4 -2z"/>
+    <path d="M35.5 18 q-3.2 -0.5 -3.8 2.6 q3.2 0.6 3.8 -2.6z"/>
+    <path d="M35.5 22.5 q-3.2 0.5 -2.8 3.6 q3.2 -0.4 2.8 -3.6z"/>
+    <path d="M33.5 27 q-3 1 -1.8 4 q3 -1 1.8 -4z"/>
+  </g>
+  <text x="20" y="26" font-family="Noto Sans Thai,sans-serif" font-size="15" font-weight="900" fill="#8a5a00" text-anchor="middle">1</text>
+</svg></span><img src="https://picsum.photos/seed/yh-b1/120/160" alt=""></div>
+        <div class="rank-feature-body">
+          <div class="rank-feature-title">บุปผาในม่านไหม</div>
+          <div class="rank-feature-author">มณีนุช</div>
+          <div class="rank-feature-meta">นิยาย · โรแมนซ์</div>
+          <div class="rank-feature-value">38K วิว</div>
+        </div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="20" cy="20" r="19" fill="url(#medalSilverRing)"/>
+  <circle cx="20" cy="20" r="15.5" fill="url(#medalSilver)"/>
+  <g fill="#9AA1A8" opacity="0.85">
+    <path d="M6 14 q3 -1 4 2 q-3 1 -4 -2z"/>
+    <path d="M4.5 18 q3.2 -0.5 3.8 2.6 q-3.2 0.6 -3.8 -2.6z"/>
+    <path d="M4.5 22.5 q3.2 0.5 2.8 3.6 q-3.2 -0.4 -2.8 -3.6z"/>
+    <path d="M6.5 27 q3 1 1.8 4 q-3 -1 -1.8 -4z"/>
+    <path d="M34 14 q-3 -1 -4 2 q3 1 4 -2z"/>
+    <path d="M35.5 18 q-3.2 -0.5 -3.8 2.6 q3.2 0.6 3.8 -2.6z"/>
+    <path d="M35.5 22.5 q-3.2 0.5 -2.8 3.6 q3.2 -0.4 2.8 -3.6z"/>
+    <path d="M33.5 27 q-3 1 -1.8 4 q3 -1 1.8 -4z"/>
+  </g>
+  <text x="20" y="26" font-family="Noto Sans Thai,sans-serif" font-size="15" font-weight="900" fill="#6b7177" text-anchor="middle">2</text>
+</svg></span><span class="rt">ระบบรักนี้ต้องชนะ</span><span class="rv">29K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-b5/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">สรรพสิทธิ์</div><span class="rank-expand-tag">นิยาย · ระบบ</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="20" cy="20" r="19" fill="url(#medalBronzeRing)"/>
+  <circle cx="20" cy="20" r="15.5" fill="url(#medalBronze)"/>
+  <g fill="#8C4E22" opacity="0.8">
+    <path d="M20 2.5 l1.6 3.4 3.7 0.5 -2.7 2.6 0.6 3.7 -3.2 -1.8 -3.2 1.8 0.6 -3.7 -2.7 -2.6 3.7 -0.5z"/>
+    <path d="M6 9 l1.3 2.7 3 0.4 -2.2 2.1 0.5 3 -2.6 -1.5 -2.6 1.5 0.5 -3 -2.2 -2.1 3 -0.4z"/>
+    <path d="M34 9 l1.3 2.7 3 0.4 -2.2 2.1 0.5 3 -2.6 -1.5 -2.6 1.5 0.5 -3 -2.2 -2.1 3 -0.4z"/>
+    <path d="M5 25 l1.3 2.7 3 0.4 -2.2 2.1 0.5 3 -2.6 -1.5 -2.6 1.5 0.5 -3 -2.2 -2.1 3 -0.4z"/>
+    <path d="M35 25 l1.3 2.7 3 0.4 -2.2 2.1 0.5 3 -2.6 -1.5 -2.6 1.5 0.5 -3 -2.2 -2.1 3 -0.4z"/>
+  </g>
+  <text x="20" y="26" font-family="Noto Sans Thai,sans-serif" font-size="15" font-weight="900" fill="#6b3a1a" text-anchor="middle">3</text>
+</svg></span><span class="rt">หมั้นซ้อนรักของเสนาบดี</span><span class="rv">22K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-b6/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">มณีนุช</div><span class="rank-expand-tag">วังหลัง · แต่งเอง</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">4</span><span class="rt">รักแรกในม่านหมอก</span><span class="rv">18K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-b4/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">ลลิตา</div><span class="rank-expand-tag">โรแมนซ์ · แต่งเอง</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">5</span><span class="rt">เกราะทองของนางพญา</span><span class="rv">14K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-b3/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">วิชิต</div><span class="rank-expand-tag">แอ็กชัน · แปล</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">6</span><span class="rt">ใต้เงาจันทร์ ณ วังหลวง</span><span class="rv">11K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-b2/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">ธีระ</div><span class="rank-expand-tag">ดราม่า · แปล</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">7</span><span class="rt">รักนี้ยังรอคอย</span><span class="rv">8.5K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r12/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">มณีนุช</div><span class="rank-expand-tag">นิยาย · โรแมนซ์</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">8</span><span class="rt">โชคชะตาที่ฝ่าฝืนไม่ได้</span><span class="rv">6.2K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r2/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">ธีระ</div><span class="rank-expand-tag">นิยาย · กำลังภายใน</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">9</span><span class="rt">ชีวิตลอยล่องดั่งความฝัน</span><span class="rv">4.8K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r8/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">ลลิตา</div><span class="rank-expand-tag">นิยาย · ดราม่า</span></div></div>
+      </a>
+      <a href="#" class="rank-row"><span class="pos">10</span><span class="rt">หนึ่งฝันในโลกีย์</span><span class="rv">3.6K</span>
+        <div class="rank-expand"><img src="https://picsum.photos/seed/yh-r4/120/160" alt=""><div class="rank-expand-info"><div class="rank-expand-author">วิชิต</div><span class="rank-expand-tag">นิยาย · โรแมนซ์</span></div></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- BOOK GRID -->
+<section class="section">
+  <div class="section-head" style="justify-content:flex-start; gap:12px;">
+    <h2 class="no-bar" style="color:#000; font-family:'Noto Sans Thai',sans-serif;">แนะนำสำหรับคุณ</h2>
+    <a href="#" class="see-more">ดูเพิ่มเติม ›</a>
+  </div>
+  <div class="book-grid">
+    <a href="#" class="book-card">
+      <div class="book-cover"><img src="https://picsum.photos/seed/yh-b1/300/400" alt=""><span class="book-badge">ใหม่</span></div>
+      <div class="book-title">บุปผาในม่านไหม</div>
+      <div class="book-sub">โรแมนซ์ · แต่งเอง</div>
+    </a>
+    <a href="#" class="book-card">
+      <div class="book-cover"><img src="https://picsum.photos/seed/yh-b2/300/400" alt=""></div>
+      <div class="book-title">ใต้เงาจันทร์ ณ วังหลวง</div>
+      <div class="book-sub">ดราม่า · แปล</div>
+    </a>
+    <a href="#" class="book-card">
+      <div class="book-cover"><img src="https://picsum.photos/seed/yh-b3/300/400" alt=""><span class="book-badge">จบแล้ว</span></div>
+      <div class="book-title">เกราะทองของนางพญา</div>
+      <div class="book-sub">แอ็กชัน · แปล</div>
+    </a>
+    <a href="#" class="book-card">
+      <div class="book-cover"><img src="https://picsum.photos/seed/yh-b4/300/400" alt=""></div>
+      <div class="book-title">รักแรกในม่านหมอก</div>
+      <div class="book-sub">โรแมนซ์ · แต่งเอง</div>
+    </a>
+    <a href="#" class="book-card">
+      <div class="book-cover"><img src="https://picsum.photos/seed/yh-b5/300/400" alt=""><span class="book-badge">ฮิต</span></div>
+      <div class="book-title">ระบบรักนี้ต้องชนะ</div>
+      <div class="book-sub">ระบบ · แปล</div>
+    </a>
+    <a href="#" class="book-card">
+      <div class="book-cover"><img src="https://picsum.photos/seed/yh-b6/300/400" alt=""></div>
+      <div class="book-title">หมั้นซ้อนรักของเสนาบดี</div>
+      <div class="book-sub">วังหลัง · แต่งเอง</div>
+    </a>
+  </div>
+</section>
+
+<!-- GENRE CHIPS -->
+<section class="section">
+  <div class="section-head" style="justify-content:flex-start; gap:12px;">
+    <h2 class="no-bar" style="color:#000; font-family:'Noto Sans Thai',sans-serif;">อัปเดตล่าสุด</h2>
+  </div>
+  <div class="chips">
+    <a href="#" class="chip active">ทั้งหมด</a>
+    <a href="#" class="chip">นิยาย</a>
+    <a href="#" class="chip">หนังสือเสียง</a>
+    <a href="#" class="chip">มังงะ</a>
+  </div>
+</section>
+
+<!-- LATEST UPDATES -->
+<section class="section" style="padding-bottom:48px;">
+  <div class="update-list">
+    <a href="#" class="update-item">
+      <div class="update-cover"><img src="https://picsum.photos/seed/yh-u1/120/160" alt=""></div>
+      <div class="update-body">
+        <div class="update-title">บุปผาในม่านไหม</div>
+        <div class="update-author">มณีนุช</div>
+        <span class="update-tag">โรแมนซ์</span><span class="update-tag">แต่งเอง</span>
+        <div class="update-desc">หญิงสาวช่างปักผ้าในวังถูกเลือกให้ถวายงานองค์ชายที่ไม่มีใครกล้าเข้าใกล้ แต่ทำไมเขาถึงมองเธอด้วยสายตาที่อบอุ่นเช่นนี้...</div>
+        <div class="update-stats">
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>6K</span>
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>ตอนที่ 38</span>
+          <span class="update-time">13-06-2026 08:24</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="update-item">
+      <div class="update-cover"><img src="https://picsum.photos/seed/yh-u2/120/160" alt=""></div>
+      <div class="update-body">
+        <div class="update-title">ระบบรักนี้ต้องชนะ</div>
+        <div class="update-author">สรรพสิทธิ์</div>
+        <span class="update-tag">ระบบ</span><span class="update-tag">แปล</span>
+        <div class="update-desc">เกมจำลองความรักที่เธอไม่เคยอยากเล่น กลับกลายเป็นเดิมพันชีวิตจริง เมื่อทุกตัวเลือกส่งผลต่อโชคชะตาของเมืองทั้งเมือง</div>
+        <div class="update-stats">
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>4.2K</span>
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>ตอนที่ 59</span>
+          <span class="update-time">13-06-2026 05:41</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="update-item">
+      <div class="update-cover"><img src="https://picsum.photos/seed/yh-u3/120/160" alt=""></div>
+      <div class="update-body">
+        <div class="update-title">หมั้นซ้อนรักของเสนาบดี</div>
+        <div class="update-author">มณีนุช</div>
+        <span class="update-tag">วังหลัง</span><span class="update-tag">แต่งเอง</span>
+        <div class="update-desc">สองตระกูลใหญ่ผูกมัดด้วยสัญญาหมั้นที่ไม่มีใครต้องการ แต่เมื่อทั้งคู่เริ่มรู้จักกันจริง ความรักที่ไม่ได้เลือกอาจกลายเป็นสิ่งที่ขาดไม่ได้</div>
+        <div class="update-stats">
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>3.8K</span>
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>ตอนที่ 21</span>
+          <span class="update-time">13-06-2026 02:18</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="update-item">
+      <div class="update-cover"><img src="https://picsum.photos/seed/yh-b4/120/160" alt=""></div>
+      <div class="update-body">
+        <div class="update-title">รักแรกในม่านหมอก</div>
+        <div class="update-author">ลลิตา</div>
+        <span class="update-tag">โรแมนซ์</span><span class="update-tag">แต่งเอง</span>
+        <div class="update-desc">เมื่อสายหมอกยามเช้าบังสายตา เธอกลับพบว่าชายที่เธอหลีกเลี่ยงมาตลอดนั้น คือคนที่เข้าใจเธอมากที่สุดในโลก</div>
+        <div class="update-stats">
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>2.1K</span>
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>ตอนที่ 14</span>
+          <span class="update-time">12-06-2026 21:45</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="update-item">
+      <div class="update-cover"><img src="https://picsum.photos/seed/yh-r5/120/160" alt=""></div>
+      <div class="update-body">
+        <div class="update-title">นางพญาเงาราตรี</div>
+        <div class="update-author">สรรพสิทธิ์</div>
+        <span class="update-tag">แอ็กชัน</span><span class="update-tag">แปล</span>
+        <div class="update-desc">จากองค์หญิงผู้ถูกลืม สู่นักรบผู้ยิ่งใหญ่แห่งยามค่ำคืน เธอจะพิสูจน์ให้โลกรู้ว่าความมืดไม่ใช่ศัตรู แต่คือพลังของเธอ</div>
+        <div class="update-stats">
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>5.6K</span>
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>ตอนที่ 34</span>
+          <span class="update-time">12-06-2026 22:33</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="update-item">
+      <div class="update-cover"><img src="https://picsum.photos/seed/yh-r3/120/160" alt=""></div>
+      <div class="update-body">
+        <div class="update-title">เกิดใหม่ในวังหลัง</div>
+        <div class="update-author">ลลิตา</div>
+        <span class="update-tag">ดราม่า</span><span class="update-tag">มังงะ</span>
+        <div class="update-desc">เธอย้อนเวลากลับมาพร้อมความทรงจำจากชาติที่แล้ว คราวนี้เธอจะไม่ยอมให้ใครมาทำลายชีวิตของเธออีกต่อไป</div>
+        <div class="update-stats">
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>7.3K</span>
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>ตอนที่ 47</span>
+          <span class="update-time">13-06-2026 07:09</span>
+        </div>
+      </div>
+    </a>
+    <!-- items 7-12 -->
+    <a href="#" class="update-item">
+      <div class="update-cover"><img src="https://picsum.photos/seed/yh-b2/120/160" alt=""></div>
+      <div class="update-body">
+        <div class="update-title">ใต้เงาจันทร์ ณ วังหลวง</div>
+        <div class="update-author">ธีระ</div>
+        <span class="update-tag">ดราม่า</span><span class="update-tag">แปล</span>
+        <div class="update-desc">คืนพระจันทร์เต็มดวงเป็นคืนที่อันตรายที่สุดในวังหลวง เธอต้องหาทางรอดชีวิตท่ามกลางแผนการของเหล่าขุนนาง</div>
+        <div class="update-stats">
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>2.8K</span>
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>ตอนที่ 28</span>
+          <span class="update-time">13-06-2026 06:55</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="update-item">
+      <div class="update-cover"><img src="https://picsum.photos/seed/yh-b3/120/160" alt=""></div>
+      <div class="update-body">
+        <div class="update-title">เกราะทองของนางพญา</div>
+        <div class="update-author">วิชิต</div>
+        <span class="update-tag">แอ็กชัน</span><span class="update-tag">แปล</span>
+        <div class="update-desc">นางพญาผู้สวมเกราะทองออกรบเพื่อปกป้องอาณาจักร แต่เบื้องหลังเกราะนั้นคือหัวใจที่เจ็บปวด</div>
+        <div class="update-stats">
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>4.1K</span>
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>ตอนที่ 52</span>
+          <span class="update-time">13-06-2026 05:30</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="update-item">
+      <div class="update-cover"><img src="https://picsum.photos/seed/yh-r4/120/160" alt=""></div>
+      <div class="update-body">
+        <div class="update-title">รักนี้ข้ามภพชาติ</div>
+        <div class="update-author">วิชิต</div>
+        <span class="update-tag">โรแมนซ์</span><span class="update-tag">นิยาย</span>
+        <div class="update-desc">ทุกชาติภพที่พบกัน โชคชะตาพัดพาให้ห่างกัน แต่ดวงวิญญาณสองดวงนี้ยังคงค้นหากันไม่หยุด</div>
+        <div class="update-stats">
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>9.2K</span>
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>ตอนที่ 67</span>
+          <span class="update-time">13-06-2026 04:12</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="update-item">
+      <div class="update-cover"><img src="https://picsum.photos/seed/yh-r6/120/160" alt=""></div>
+      <div class="update-body">
+        <div class="update-title">ใต้ร่มต้นท้อแห่งรัก</div>
+        <div class="update-author">มณีนุช</div>
+        <span class="update-tag">โรแมนซ์</span><span class="update-tag">นิยาย</span>
+        <div class="update-desc">ต้นท้อพันปีเป็นพยานรักของสองคน เธอรอคอยใต้ร่มนั้นทุกปี แต่เขากลับไม่เคยมา</div>
+        <div class="update-stats">
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>3.4K</span>
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>ตอนที่ 19</span>
+          <span class="update-time">13-06-2026 03:47</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="update-item">
+      <div class="update-cover"><img src="https://picsum.photos/seed/yh-r7/120/160" alt=""></div>
+      <div class="update-body">
+        <div class="update-title">เกมรักของเจ้าชายมังกร</div>
+        <div class="update-author">ธีระ</div>
+        <span class="update-tag">คอเมดี้</span><span class="update-tag">มังงะ</span>
+        <div class="update-desc">เจ้าชายมังกรที่ไม่เคยแพ้ใคร กลับพบว่าหัวใจของตัวเองแพ้สาวธรรมดาคนหนึ่ง</div>
+        <div class="update-stats">
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>5.1K</span>
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>ตอนที่ 23</span>
+          <span class="update-time">13-06-2026 02:20</span>
+        </div>
+      </div>
+    </a>
+    <a href="#" class="update-item">
+      <div class="update-cover"><img src="https://picsum.photos/seed/yh-r8/120/160" alt=""></div>
+      <div class="update-body">
+        <div class="update-title">เจ้าสาวจำเป็นของท่านเสนาบดี</div>
+        <div class="update-author">ลลิตา</div>
+        <span class="update-tag">วังหลัง</span><span class="update-tag">นิยาย</span>
+        <div class="update-desc">การแต่งงานที่ไม่มีใครเลือก กลายเป็นจุดเริ่มต้นของความรักที่ไม่คาดฝัน</div>
+        <div class="update-stats">
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>6.8K</span>
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>ตอนที่ 41</span>
+          <span class="update-time">13-06-2026 01:05</span>
+        </div>
+      </div>
+    </a>
+    <!-- hidden items 13-50 (loaded on click) -->
+    <div id="moreUpdates" style="display:contents;"></div>
+  </div>
+  <div style="text-align:center; margin-top:28px;">
+    <button id="loadMoreBtn" onclick="loadMoreUpdates()" style="
+      background:#fff; color:var(--red-deep); border:1.5px solid var(--red);
+      padding:12px 40px; border-radius:999px; font-size:14px; font-weight:700;
+      cursor:pointer; transition:.15s; font-family:'Noto Sans Thai',sans-serif;
+    " onmouseover="this.style.background='var(--red)';this.style.color='#fff'"
+       onmouseout="this.style.background='#fff';this.style.color='var(--red-deep)'">
+      แสดงเพิ่มเติม
+    </button>
+  </div>
+
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="brand" style="justify-content:center;">
+      <span class="seal">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 4.5C4 3.67 4.67 3 5.5 3H11V21H5.5C4.67 21 4 20.33 4 19.5V4.5Z" fill="currentColor" opacity="0.9"/>
+          <path d="M20 4.5C20 3.67 19.33 3 18.5 3H13V21H18.5C19.33 21 20 20.33 20 19.5V4.5Z" fill="currentColor" opacity="0.6"/>
+        </svg>
+      </span>
+      ReadLead
+    </div>
+    <p>แพลตฟอร์มนิยายจีนและคอนเทนต์ดิจิทัล สำหรับผู้ที่หลงรักเรื่องราวความรัก</p>
+  </div>
+</footer>
+
+<script>
+  // Rank strip horizontal scroll
+  const rankStrip = document.getElementById('rankStrip');
+  const rankPrev = document.getElementById('rankPrev');
+  const rankNext = document.getElementById('rankNext');
+  function scrollRankStrip(dir){
+    const cardWidth = 160 + 14; // card width + gap
+    rankStrip.scrollBy({ left: dir * cardWidth * 3, behavior: 'smooth' });
+  }
+  function updateRankArrows(){
+    const maxScroll = rankStrip.scrollWidth - rankStrip.clientWidth;
+    rankPrev.classList.toggle('hidden', rankStrip.scrollLeft <= 4);
+    rankNext.classList.toggle('hidden', rankStrip.scrollLeft >= maxScroll - 4);
+  }
+  rankStrip.addEventListener('scroll', updateRankArrows);
+  window.addEventListener('resize', updateRankArrows);
+  updateRankArrows();
+
+  // Hero sliding track (with clone slides for infinite loop)
+  const heroTrack = document.getElementById('heroTrack');
+  const heroSlideUnits = document.querySelectorAll('.hero-slide-unit');
+  const dots = document.querySelectorAll('.hero-dots .dot');
+  const realCount = dots.length; // 3 real slides
+  const totalCount = heroSlideUnits.length; // 5 with clones
+  let current = 1; // start at first real slide (index 1, after leading clone)
+  let autoTimer;
+  let isTransitioning = false;
+
+  function setTrackPosition(i, animate){
+    heroTrack.style.transition = animate ? 'transform .6s ease' : 'none';
+    heroTrack.style.transform = `translateX(calc(11% - ${i} * (78% + 16px)))`;
+  }
+  function updateCenter(i){
+    heroSlideUnits.forEach((s,idx)=> s.classList.toggle('is-center', idx===i));
+  }
+  function updateDots(i){
+    // map track index to real slide index (0-based among 3)
+    let realIdx = ((i - 1) % realCount + realCount) % realCount;
+    dots.forEach((d,idx)=> d.classList.toggle('active', idx===realIdx));
+  }
+  function showSlide(i, animate=true){
+    isTransitioning = true;
+    setTrackPosition(i, animate);
+    updateCenter(i);
+    updateDots(i);
+    current = i;
+  }
+  heroTrack.addEventListener('transitionend', () => {
+    isTransitioning = false;
+    if(current === 0){ showSlide(realCount, false); }
+    else if(current === totalCount - 1){ showSlide(1, false); }
+  });
+  function moveSlide(dir){
+    if(isTransitioning) return;
+    showSlide(current + dir);
+    restartAuto();
+  }
+  function goToSlide(realIdx){
+    if(isTransitioning) return;
+    showSlide(realIdx + 1);
+    restartAuto();
+  }
+  function restartAuto(){
+    clearInterval(autoTimer);
+    autoTimer = setInterval(()=> { if(!isTransitioning) showSlide(current+1); }, 5000);
+  }
+  // initialize position without animation
+  setTrackPosition(current, false);
+  updateCenter(current);
+  updateDots(current);
+  restartAuto();
+
+  // Activity carousels (two independent ones)
+  const activityCarousels = document.querySelectorAll('.activity-carousel');
+  const activityState = [];
+  const activityTimers = [];
+
+  activityCarousels.forEach((carousel, ci) => {
+    const aSlides = carousel.querySelectorAll('.activity-slide');
+    const aDots = carousel.parentElement.querySelectorAll('.activity-dots .dot');
+    activityState[ci] = 0;
+
+    function showActivity(i){
+      aSlides.forEach((s,idx)=> s.classList.toggle('active', idx===i));
+      aDots.forEach((d,idx)=> d.classList.toggle('active', idx===i));
+      activityState[ci] = i;
+    }
+    function restartActivityAuto(){
+      clearInterval(activityTimers[ci]);
+      activityTimers[ci] = setInterval(()=> showActivity((activityState[ci]+1)%aSlides.length), 6000);
+    }
+    carousel._show = showActivity;
+    carousel._restart = restartActivityAuto;
+    restartActivityAuto();
+  });
+
+  function moveActivity(ci, dir){
+    const carousel = activityCarousels[ci];
+    const aSlides = carousel.querySelectorAll('.activity-slide');
+    const next = (activityState[ci] + dir + aSlides.length) % aSlides.length;
+    carousel._show(next);
+    carousel._restart();
+  }
+  function goToActivity(ci, i){
+    const carousel = activityCarousels[ci];
+    carousel._show(i);
+    carousel._restart();
+  }
+
+  // Load more updates
+  const moreData = [
+    {seed:'yh-b5', title:'ระบบรักนี้ต้องชนะ ภาค 2', author:'สรรพสิทธิ์', tag1:'ระบบ', tag2:'แปล', desc:'หลังจากผ่านด่านทั้งหมดมาแล้ว เกมรักภาค 2 เริ่มต้นด้วยปริศนาที่ยากกว่าเดิม', ep:'ตอนที่ 12', time:'12-06-2026 23:50'},
+    {seed:'yh-r9', title:'บุปผาในม่านไหม ตอนพิเศษ', author:'มณีนุช', tag1:'โรแมนซ์', tag2:'แต่งเอง', desc:'เรื่องราวพิเศษที่เล่าถึงวันก่อนที่เธอจะก้าวเข้าสู่วัง', ep:'ตอนพิเศษ 3', time:'12-06-2026 21:15'},
+    {seed:'yh-r10', title:'จอมเซียนผู้พลิกฟ้า', author:'ธีระ', tag1:'เทพเซียน', tag2:'แปล', desc:'จากสาวกระจอกสู่จอมเซียนสูงสุด เส้นทางแห่งการพิสูจน์ตัวเองที่ไม่มีใครคาดถึง', ep:'ตอนที่ 88', time:'12-06-2026 20:30'},
+    {seed:'yh-b1', title:'ชีวิตลอยล่องดั่งความฝัน', author:'ลลิตา', tag1:'อิงประวัติศาสตร์', tag2:'แปล', desc:'หมอสาวจากศตวรรษที่ 21 ข้ามเวลาไปในยุคราชวงศ์ชิง', ep:'ตอนที่ 44', time:'12-06-2026 19:22'},
+    {seed:'yh-b2', title:'เส้นทางสู่เทพเซียน', author:'วิชิต', tag1:'เทพเซียน', tag2:'แปล', desc:'ชายหนุ่มผู้ไม่มีพรสวรรค์ แต่มีใจที่ไม่ยอมแพ้', ep:'ตอนที่ 156', time:'12-06-2026 18:45'},
+    {seed:'yh-b3', title:'โชคชะตาที่ฝ่าฝืนไม่ได้', author:'สรรพสิทธิ์', tag1:'แอ็กชัน', tag2:'แปล', desc:'นักฆ่าจากโลกสมัยใหม่ถูกส่งย้อนกลับไปสู่ราชวงศ์ถัง', ep:'ตอนที่ 73', time:'12-06-2026 17:10'},
+    {seed:'yh-b4', title:'ย้อนเวลาพร้อมมือถือเทพ', author:'ธีระ', tag1:'แฟนตาซี', tag2:'แปล', desc:'ย้อนเวลากลับไปพร้อมโทรศัพท์จากอนาคต เขาจะเปลี่ยนแปลงประวัติศาสตร์ได้ไหม', ep:'ตอนที่ 201', time:'12-06-2026 16:33'},
+    {seed:'yh-b5', title:'พรหมลิขิตคือเธอ', author:'มณีนุช', tag1:'คอเมดี้', tag2:'แต่งเอง', desc:'นักเขียนหนุ่มพบว่าตัวละครในนิยายของเขาออกมาจากหนังสือจริงๆ', ep:'ตอนที่ 35', time:'12-06-2026 15:58'},
+    {seed:'yh-b6', title:'รักนี้ยังรอคอย', author:'ลลิตา', tag1:'โรแมนซ์', tag2:'แต่งเอง', desc:'สิบปีที่ห่างกัน แต่ความรักไม่เคยจางหาย', ep:'ตอนที่ 18', time:'12-06-2026 14:20'},
+    {seed:'yh-r1', title:'เคียงข้างเธอทุกชาติภพ ตอนพิเศษ', author:'มณีนุช', tag1:'โรแมนซ์', tag2:'แต่งเอง', desc:'บทพิเศษเล่าถึงชีวิตหลังการแต่งงานของทั้งคู่', ep:'ตอนพิเศษ 7', time:'12-06-2026 12:44'},
+    {seed:'yh-r2', title:'จอมยุทธ์สาวพันธุ์เอก ภาค 3', author:'ธีระ', tag1:'กำลังภายใน', tag2:'แปล', desc:'ศึกครั้งใหม่ที่ยิ่งใหญ่กว่าเดิม เธอต้องรวบรวมพลังทั้งหมดเพื่อปกป้องคนที่รัก', ep:'ตอนที่ 8', time:'12-06-2026 11:30'},
+    {seed:'yh-r3', title:'สงครามดาวเคราะห์มรณะ', author:'วิชิต', tag1:'แฟนตาซี', tag2:'แปล', desc:'เมื่อดาวเคราะห์สองดวงชนกัน มีเพียงผู้ที่แข็งแกร่งพอเท่านั้นที่จะรอดชีวิต', ep:'ตอนที่ 95', time:'12-06-2026 10:05'},
+    {seed:'yh-r4', title:'ราชินีหัวใจมังกร', author:'มณีนุช', tag1:'แฟนตาซี', tag2:'นิยาย', desc:'เธอถูกโชคชะตาเลือกให้เป็นราชินีมังกร แต่หัวใจของเธอยังเป็นของมนุษย์', ep:'ตอนที่ 62', time:'12-06-2026 09:15'},
+    {seed:'yh-r5', title:'ตำนานกระบี่เทวดา', author:'สรรพสิทธิ์', tag1:'กำลังภายใน', tag2:'แปล', desc:'กระบี่ที่สืบทอดมาร้อยชั่วอายุคน ในมือของเขา มันจะกลายเป็นตำนานใหม่', ep:'ตอนที่ 133', time:'12-06-2026 08:30'},
+    {seed:'yh-r6', title:'หัวใจที่ถูกครอบครอง', author:'ลลิตา', tag1:'โรแมนซ์', tag2:'นิยาย', desc:'เธอบอกตัวเองว่าไม่ได้รัก แต่ทำไมหัวใจถึงเต้นแรงทุกครั้งที่เห็นเขา', ep:'ตอนที่ 29', time:'12-06-2026 07:48'},
+    {seed:'yh-r7', title:'ติดอยู่ในเกมเอาชีวิตรอด', author:'ธีระ', tag1:'ระบบ', tag2:'แปล', desc:'เกมเมอร์ที่ติดอยู่ในเกมสุดอันตราย ทุกชีวิตที่เสียไปคือจริง', ep:'ตอนที่ 77', time:'12-06-2026 06:20'},
+    {seed:'yh-r8', title:'รักนี้คลั่งเกินห้ามใจ', author:'มณีนุช', tag1:'โรแมนซ์', tag2:'แต่งเอง', desc:'ความรักแบบนี้ไม่มีใครสั่งหัวใจได้ แม้กระทั่งตัวเธอเอง', ep:'ตอนที่ 45', time:'12-06-2026 05:10'},
+    {seed:'yh-r9', title:'วันวานในรั้วมหาลัย', author:'วิชิต', tag1:'โรแมนซ์', tag2:'แปล', desc:'ความทรงจำในรั้วมหาลัยที่ทั้งคู่พยายามลืม แต่กลับไม่มีวันลืมได้', ep:'ตอนที่ 16', time:'12-06-2026 03:55'},
+    {seed:'yh-r10', title:'จักรพรรดินีดาวดิน', author:'ลลิตา', tag1:'วังหลัง', tag2:'แปล', desc:'จากองค์หญิงชั้นต่ำสู่จักรพรรดินีผู้กุมชะตาแผ่นดิน', ep:'ตอนที่ 189', time:'12-06-2026 02:40'},
+    {seed:'yh-b1', title:'ระบบเลเวลอัปในต่างโลก', author:'สรรพสิทธิ์', tag1:'ระบบ', tag2:'แปล', desc:'เมื่อชีวิตจริงกลายเป็นเกม เขาต้องเลเวลอัปให้เร็วที่สุด', ep:'ตอนที่ 244', time:'12-06-2026 01:15'},
+    {seed:'yh-b2', title:'สังเวียนเลือดแห่งนักรบ', author:'ธีระ', tag1:'แอ็กชัน', tag2:'แปล', desc:'ในสังเวียนที่ไม่มีกฎ มีแค่แข็งแรงเท่านั้นที่รอดชีวิต', ep:'ตอนที่ 88', time:'11-06-2026 23:30'},
+    {seed:'yh-b3', title:'ครัวลับของเชฟพเนจร', author:'มณีนุช', tag1:'โรแมนติก', tag2:'แปล', desc:'เชฟที่พเนจรไปทั่วโลก ค้นพบความหมายของบ้านในครัวลับแห่งหนึ่ง', ep:'ตอนที่ 33', time:'11-06-2026 22:10'},
+    {seed:'yh-b4', title:'ว่าด้วยความหมายของชีวิต', author:'วิชิต', tag1:'ปรัชญา', tag2:'แปล', desc:'การเดินทางค้นหาความหมายที่แท้จริงของการมีชีวิตอยู่', ep:'ตอนที่ 55', time:'11-06-2026 20:45'},
+    {seed:'yh-b5', title:'ผู้รอดชีวิตคนสุดท้าย', author:'ลลิตา', tag1:'วันสิ้นโลก', tag2:'แปล', desc:'เมื่อโลกล่มสลาย เขาคือคนสุดท้ายที่ยังมีชีวิตอยู่', ep:'ตอนที่ 112', time:'11-06-2026 19:20'},
+    {seed:'yh-b6', title:'เกมเมอร์อันดับหนึ่งของโลก', author:'สรรพสิทธิ์', tag1:'เกม', tag2:'แปล', desc:'เขาพิชิตเกมทุกอย่างได้ ยกเว้นเกมของหัวใจตัวเอง', ep:'ตอนที่ 67', time:'11-06-2026 17:55'},
+    {seed:'yh-r1', title:'วันสิ้นโลกที่ยังไม่จบ', author:'ธีระ', tag1:'วันสิ้นโลก', tag2:'แปล', desc:'วันสิ้นโลกเกิดขึ้นแล้ว แต่ชีวิตยังคงดำเนินต่อไป', ep:'ตอนที่ 78', time:'11-06-2026 16:30'},
+    {seed:'yh-r2', title:'สนทนากับนักปราชญ์', author:'มณีนุช', tag1:'ปรัชญา', tag2:'แปล', desc:'บทสนทนาระหว่างคนรุ่นใหม่กับนักปราชญ์โบราณ', ep:'ตอนที่ 21', time:'11-06-2026 15:00'},
+    {seed:'yh-r3', title:'รุ่นพี่ที่ฉันแอบรัก', author:'ลลิตา', tag1:'โรแมนซ์', tag2:'แต่งเอง', desc:'รักแรกที่ซ่อนอยู่ในใจมาเนิ่นนาน จะมีวันที่เธอกล้าบอกได้ไหม', ep:'ตอนที่ 24', time:'11-06-2026 13:45'},
+    {seed:'yh-r4', title:'ตำรับอาหารแห่งราชสำนัก', author:'วิชิต', tag1:'ทำอาหาร', tag2:'แปล', desc:'สูตรอาหารลับแห่งราชสำนักที่เก็บซ่อนมาร้อยปี ถูกค้นพบโดยบังเอิญ', ep:'ตอนที่ 48', time:'11-06-2026 12:20'},
+    {seed:'yh-r5', title:'จอมเซียนผู้พลิกฟ้า ภาค 2', author:'ธีระ', tag1:'เทพเซียน', tag2:'แปล', desc:'หลังจากพิชิตสวรรค์ชั้นที่เก้า ศัตรูใหม่ที่แข็งแกร่งกว่าเดิมปรากฏตัว', ep:'ตอนที่ 34', time:'11-06-2026 10:55'},
+    {seed:'yh-r6', title:'คณิตศาสตร์แห่งรัก', author:'สรรพสิทธิ์', tag1:'คอเมดี้', tag2:'แต่งเอง', desc:'อาจารย์คณิตศาสตร์หัวเย็นกับนักเรียนซนที่ทำให้สมการทุกอย่างพัง', ep:'ตอนที่ 19', time:'11-06-2026 09:30'},
+    {seed:'yh-r7', title:'เจ้าหน้าที่พิทักษ์มิติ', author:'มณีนุช', tag1:'แฟนตาซี', tag2:'แปล', desc:'หน่วยพิเศษที่ดูแลรอยแตกระหว่างมิติ เพื่อป้องกันสิ่งชั่วร้ายเข้ามา', ep:'ตอนที่ 56', time:'11-06-2026 08:15'},
+    {seed:'yh-r8', title:'ใจกลางจักรวาลมีเธอ', author:'ลลิตา', tag1:'โรแมนซ์', tag2:'แต่งเอง', desc:'นักดาราศาสตร์ที่หลงรักดาวทุกดวง แต่กลับหลงรักเธอมากที่สุด', ep:'ตอนที่ 27', time:'11-06-2026 07:00'},
+    {seed:'yh-r9', title:'อัศวินพลิกโลก', author:'ธีระ', tag1:'แอ็กชัน', tag2:'แปล', desc:'อัศวินที่ออกเดินทางพลิกโลกด้วยมือของตัวเอง', ep:'ตอนที่ 143', time:'11-06-2026 05:40'},
+    {seed:'yh-r10', title:'เย็นชาหัวใจ', author:'วิชิต', tag1:'โรแมนซ์', tag2:'นิยาย', desc:'เขาดูเย็นชาต่อทุกคน แต่หัวใจของเขาร้อนแรงที่สุดเมื่ออยู่ใกล้เธอ', ep:'ตอนที่ 38', time:'11-06-2026 04:25'},
+    {seed:'yh-b1', title:'ปรมาจารย์หน้ากาก', author:'สรรพสิทธิ์', tag1:'กำลังภายใน', tag2:'แปล', desc:'ปรมาจารย์ที่สวมหน้ากากมาตลอด ซ่อนความจริงไว้ใต้ผ้าไหม', ep:'ตอนที่ 92', time:'11-06-2026 03:10'},
+    {seed:'yh-b2', title:'สาวน้อยจากอนาคต', author:'มณีนุช', tag1:'แฟนตาซี', tag2:'แปล', desc:'เธอมาจากปี 2566 พร้อมภารกิจที่เปลี่ยนแปลงชะตาโลก', ep:'ตอนที่ 61', time:'11-06-2026 01:50'},
+  ];
+
+  let loadedCount = 12;
+  const batchSize = 12;
+
+  function makeUpdateItem(d) {
+    return `<a href="#" class="update-item">
+      <div class="update-cover"><img src="https://picsum.photos/seed/${d.seed}/120/160" alt="" loading="lazy"></div>
+      <div class="update-body">
+        <div class="update-title">${d.title}</div>
+        <div class="update-author">${d.author}</div>
+        <span class="update-tag">${d.tag1}</span><span class="update-tag">${d.tag2}</span>
+        <div class="update-desc">${d.desc}</div>
+        <div class="update-stats">
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>${Math.floor(Math.random()*9+1)}.${Math.floor(Math.random()*9)}K</span>
+          <span class="update-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>${d.ep}</span>
+          <span class="update-time">${d.time}</span>
+        </div>
+      </div>
+    </a>`;
+  }
+
+  function loadMoreUpdates(){
+    const container = document.getElementById('moreUpdates');
+    const btn = document.getElementById('loadMoreBtn');
+    const end = Math.min(loadedCount + batchSize, moreData.length + 12);
+    const batch = moreData.slice(loadedCount - 12, end - 12);
+    container.innerHTML += batch.map(makeUpdateItem).join('');
+    loadedCount = end;
+    if(loadedCount >= moreData.length + 12){
+      btn.textContent = 'แสดงครบ 50 เรื่องแล้ว';
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      btn.style.cursor = 'default';
+    } else {
+      btn.textContent = 'แสดงเพิ่มเติม';
+    }
+  }
+</script>
+
+</body>
+</html>

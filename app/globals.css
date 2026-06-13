@@ -47,6 +47,17 @@
   --color-gold: var(--gold);
   --color-gold-light: var(--gold-light);
   --color-border-gold: var(--border-gold);
+
+  /* index_78 home-landing palette (mockup-exact) */
+  --color-rl-cream: #fff6f2;
+  --color-rl-cream-deep: #fce9e4;
+  --color-rl-red: #e63950;
+  --color-rl-red-deep: #c22641;
+  --color-rl-pink: #ff9eb5;
+  --color-rl-gold: #f2c879;
+  --color-rl-ink: #3a1f24;
+  --color-rl-ink-soft: #7a5560;
+  --color-rl-line: #f4d9d6;
 }
 
 :root {

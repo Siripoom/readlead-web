@@ -77,7 +77,8 @@ export function HeroSlider({ slides }: Props) {
   const translateXPct = (100 - CARD_PCT) / 2 - idx * CARD_PCT
 
   return (
-    <section className="relative overflow-hidden">
+    <section className="overflow-hidden">
+      <div className="relative">
       <div
         className={cn(
           'flex items-center',
@@ -149,8 +150,10 @@ export function HeroSlider({ slides }: Props) {
       >
         <ChevronRight className="h-5 w-5" />
       </button>
+      </div>
 
-      <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-2 rounded-full bg-black/35 px-3 py-1.5 backdrop-blur">
+      {/* Dots indicator — below the image */}
+      <div className="mt-3.5 flex justify-center gap-2">
         {banners.map((banner, i) => (
           <button
             key={banner.id}
@@ -158,8 +161,8 @@ export function HeroSlider({ slides }: Props) {
             onClick={() => { setAnimated(true); setIdx(n + i) }}
             aria-label={`Go to slide ${i + 1}`}
             className={cn(
-              'h-2 rounded-full transition-all',
-              i === activeDot ? 'w-6 bg-red-600' : 'w-2 bg-white/40',
+              'h-2.25 rounded-full transition-all',
+              i === activeDot ? 'w-7 bg-rl-red-deep' : 'w-2.25 bg-rl-line',
             )}
           />
         ))}

@@ -151,7 +151,8 @@ export function HomePromotionCards({ slides }: Props) {
   }
 
   return (
-    <section className="relative overflow-hidden rounded-[1.75rem]">
+    <section>
+      <div className="relative overflow-hidden rounded-[1.75rem]">
       <div
         className={cn(
           'flex',
@@ -190,22 +191,26 @@ export function HomePromotionCards({ slides }: Props) {
           >
             <ChevronRight className="h-4 w-4" />
           </button>
-
-          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 rounded-full bg-black/35 px-3 py-1.5 backdrop-blur">
-            {units.map((unit, i) => (
-              <button
-                key={`dot-${'id' in unit ? unit.id : i}`}
-                type="button"
-                onClick={() => setIdx(i)}
-                aria-label={`Go to promotion ${i + 1}`}
-                className={cn(
-                  'h-2 rounded-full transition-all',
-                  i === idx ? 'w-6 bg-white' : 'w-2 bg-white/40',
-                )}
-              />
-            ))}
-          </div>
         </>
+      )}
+      </div>
+
+      {/* Dots indicator — below the image */}
+      {count > 1 && (
+        <div className="mt-2.5 flex justify-center gap-1.5">
+          {units.map((unit, i) => (
+            <button
+              key={`dot-${'id' in unit ? unit.id : i}`}
+              type="button"
+              onClick={() => setIdx(i)}
+              aria-label={`Go to promotion ${i + 1}`}
+              className={cn(
+                'h-2 rounded-full transition-all',
+                i === idx ? 'w-5.5 bg-rl-red-deep' : 'w-2 bg-rl-line',
+              )}
+            />
+          ))}
+        </div>
       )}
     </section>
   )

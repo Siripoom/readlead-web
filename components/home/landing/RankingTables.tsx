@@ -1,102 +1,135 @@
-import type { ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { CONTENT_TYPE_LABELS } from '@/lib/content-types'
-import { GENRE_LABELS } from '@/lib/mock-data'
-import type { Work } from '@/lib/types'
-import { Medal } from './MedalDefs'
+import { CalendarDays, Crown, Eye, Sparkles, Ticket } from 'lucide-react'
+import type { HomeRankingColumn, HomeRankingItem } from '@/lib/home-landing-data'
+import { cn } from '@/lib/utils'
+import styles from './HomeLanding.module.css'
 
-export interface RankingTableItem {
-  work: Work
-  value: string
+const columnIcons = {
+  daily: Ticket,
+  monthly: CalendarDays,
+  views: Eye,
+  new: Sparkles,
 }
 
-export interface RankingTableData {
-  heading: string
-  icon: ReactNode
-  items: RankingTableItem[]
+const medalStyles = {
+  1: 'border-[#d99c23] bg-[linear-gradient(145deg,#ffe9a7,#e9ad31)] text-[#744800]',
+  2: 'border-[#a7acb4] bg-[linear-gradient(145deg,#f2f4f6,#aeb4bd)] text-[#4d535b]',
+  3: 'border-[#a96b3c] bg-[linear-gradient(145deg,#eab381,#a96839)] text-[#563015]',
+} as const
+
+function RankBadge({ rank, featured = false }: { rank: number; featured?: boolean }) {
+  if (rank > 3) {
+    return <span className="flex h-6 w-6 shrink-0 items-center justify-center text-xs font-extrabold text-[var(--home-ink-3)]">{rank}</span>
+  }
+
+  return (
+    <span
+      className={cn(
+        'relative flex shrink-0 items-center justify-center rounded-full border font-extrabold shadow-sm',
+        featured ? 'h-8 w-8 text-xs' : 'h-6 w-6 text-[10px]',
+        medalStyles[rank as 1 | 2 | 3],
+      )}
+    >
+      <Crown className={cn('absolute -top-2 fill-current', featured ? 'h-4 w-4' : 'h-3 w-3')} />
+      {rank}
+    </span>
+  )
 }
 
-function metaOf(work: Work) {
-  return `${CONTENT_TYPE_LABELS[work.type]} · ${GENRE_LABELS[work.genres[0]] ?? work.genres[0]}`
+function detailHref(item: HomeRankingItem) {
+  return `/detail?bookId=${encodeURIComponent(item.detailId)}`
 }
 
-function Row({ work, value, rank }: { work: Work; value: string; rank: number }) {
+function FeaturedRank({ item }: { item: HomeRankingItem }) {
   return (
     <Link
-      href={`/detail/${work.id}`}
-      className="group/row relative flex flex-wrap items-center gap-2 border-b border-rl-line py-[7px] last:border-b-0"
+      href={detailHref(item)}
+      className={cn(
+        styles.rankGroup,
+        'group block border-b border-[var(--home-line)] py-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#cc4452]',
+      )}
     >
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center text-xs font-extrabold text-rl-ink-soft">
-        {rank <= 3 ? <Medal rank={rank as 1 | 2 | 3} className="h-6 w-6 drop-shadow-sm" /> : rank}
-      </span>
-      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-black">{work.title}</span>
-      <span className="shrink-0 text-[11px] font-semibold text-rl-ink-soft">{value}</span>
-
-      {/* hover-expand */}
-      <div className="flex max-h-0 w-full items-center gap-2.5 overflow-hidden pl-8 opacity-0 transition-all duration-300 group-hover/row:max-h-24 group-hover/row:py-1.5 group-hover/row:opacity-100">
-        <div className="relative h-[66px] w-12 shrink-0 overflow-hidden rounded-md bg-rl-cream-deep">
-          <Image src={work.coverUrl} alt="" fill sizes="48px" className="object-cover" />
+      <div className="flex items-center gap-2.5">
+        <RankBadge rank={1} featured />
+        <div className="relative h-[90px] w-[60px] shrink-0 overflow-hidden rounded-md bg-[#e7e4ee] shadow-sm">
+          <Image src={item.coverUrl} alt={item.title} fill sizes="60px" className="object-cover" />
         </div>
-        <div className="flex flex-col gap-0.5">
-          <div className="text-[11px] text-rl-ink-soft">{work.authorName}</div>
-          <span className="w-fit rounded-full bg-rl-cream-deep px-2 py-0.5 text-[10px] font-bold text-rl-red-deep">
-            {metaOf(work)}
-          </span>
+        <div className="min-w-0 flex-1">
+          <h4 className="truncate text-xs font-extrabold text-black">{item.title}</h4>
+          <p className="mt-0.5 truncate text-[10px] text-[var(--home-ink-3)]">{item.author}</p>
+          <p className="truncate text-[10px] text-[var(--home-ink-3)]">{item.genreLabel} · {item.originLabel}</p>
+          <p className="mt-1 text-[13px] font-black text-[var(--home-red-deep)]">{item.value}</p>
+        </div>
+      </div>
+      <div className={styles.rankDetail}>
+        <div>
+          <p className="pl-[42px] pt-2 text-[10px] leading-relaxed text-[var(--home-ink-3)]">{item.tagline}</p>
         </div>
       </div>
     </Link>
   )
 }
 
-function Table({ table }: { table: RankingTableData }) {
-  const [feature, ...rest] = table.items
+function RankingRow({ item, rank }: { item: HomeRankingItem; rank: number }) {
   return (
-    <div className="min-w-0 rounded-[14px] bg-white py-3 pl-4 pr-3">
-      <h3 className="mb-2.5 flex items-center gap-1.5 text-sm font-bold text-black">
-        <span className="text-rl-red-deep [&>svg]:h-4 [&>svg]:w-4">{table.icon}</span>
-        {table.heading}
-      </h3>
-
-      {feature && (
-        <Link
-          href={`/detail/${feature.work.id}`}
-          className="relative mb-2.5 flex items-start gap-2 pl-2"
-        >
-          <div className="relative h-[100px] w-[72px] shrink-0 rounded-md bg-rl-cream-deep">
-            <span className="absolute -left-2.5 -top-2.5 z-[2] h-[34px] w-[34px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]">
-              <Medal rank={1} className="h-full w-full" />
-            </span>
-            <Image
-              src={feature.work.coverUrl}
-              alt={feature.work.title}
-              fill
-              sizes="72px"
-              className="rounded-md object-cover"
-            />
-          </div>
-          <div className="min-w-0 flex-1 pt-[22px]">
-            <div className="mb-0.5 truncate text-xs font-extrabold text-black">{feature.work.title}</div>
-            <div className="mb-0.5 truncate text-[10px] text-rl-ink-soft">{feature.work.authorName}</div>
-            <div className="mb-1 truncate text-[10px] text-rl-ink-soft">{metaOf(feature.work)}</div>
-            <div className="text-[13px] font-black text-rl-red-deep">{feature.value}</div>
-          </div>
-        </Link>
+    <Link
+      href={detailHref(item)}
+      className={cn(
+        styles.rankGroup,
+        'group block border-b border-[var(--home-line)] py-[7px] last:border-b-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#cc4452]',
       )}
-
-      {rest.map((item, i) => (
-        <Row key={item.work.id} work={item.work} value={item.value} rank={i + 2} />
-      ))}
-    </div>
+    >
+      <div className="flex items-center gap-2">
+        <RankBadge rank={rank} />
+        <span className="min-w-0 flex-1 truncate text-xs font-semibold text-black">{item.title}</span>
+        <span className="shrink-0 text-[11px] font-bold text-[var(--home-red-deep)]">{item.value}</span>
+      </div>
+      <div className={styles.rankDetail}>
+        <div>
+          <div className="flex gap-2.5 pl-8 pt-2">
+            <div className="relative h-[66px] w-11 shrink-0 overflow-hidden rounded bg-[#e7e4ee]">
+              <Image src={item.coverUrl} alt="" fill sizes="44px" className="object-cover" />
+            </div>
+            <div className="min-w-0 pt-0.5 text-[10px] text-[var(--home-ink-3)]">
+              <p className="truncate">{item.author}</p>
+              <p className="truncate">{item.genreLabel} · {item.originLabel}</p>
+              <p className="mt-1 line-clamp-2 leading-relaxed">{item.tagline}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Link>
   )
 }
 
-export function RankingTables({ tables }: { tables: RankingTableData[] }) {
+export function RankingTables({ columns }: { columns: HomeRankingColumn[] }) {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {tables.map((table) => (
-        <Table key={table.heading} table={table} />
-      ))}
+    <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 xl:grid-cols-4">
+      {columns.map((column) => {
+        const Icon = columnIcons[column.id]
+        const [featured, ...rows] = column.items
+        return (
+          <section key={column.id} aria-label={column.title} className="min-w-0">
+            <h3 className="mb-2.5 flex items-center gap-1.5 px-0.5 text-sm font-bold text-black">
+              <Icon className="h-4 w-4 text-[var(--home-red-deep)]" />
+              {column.title}
+            </h3>
+            <div className="min-h-[362px] rounded-[14px] border border-[var(--home-line)] bg-white px-4 py-3.5">
+              {featured ? (
+                <>
+                  <FeaturedRank item={featured} />
+                  {rows.map((item, index) => (
+                    <RankingRow key={item.id} item={item} rank={index + 2} />
+                  ))}
+                </>
+              ) : (
+                <div className="grid min-h-[330px] place-items-center text-xs text-[var(--home-ink-3)]">ไม่มีข้อมูลในหมวดนี้</div>
+              )}
+            </div>
+          </section>
+        )
+      })}
     </div>
   )
 }

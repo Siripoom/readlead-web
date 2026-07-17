@@ -1,108 +1,75 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import Image from 'next/image'
+import { useState } from 'react'
 import Link from 'next/link'
-import { BookOpen, Eye } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import type { ContentType, HomeUpdateItem } from '@/lib/types'
+import type { HomeLatestUpdate } from '@/lib/home-landing-data'
 
-const BATCH = 12
+const INITIAL_COUNT = 6
+const EXPANDED_COUNT = 26
 
-const CHIPS: { label: string; value: ContentType | 'all' }[] = [
-  { label: 'ทั้งหมด', value: 'all' },
-  { label: 'นิยาย', value: 'novel' },
-  { label: 'หนังสือเสียง', value: 'audiobook' },
-  { label: 'มังงะ', value: 'manga' },
-]
+function normalizedDate(value: string) {
+  const [date, time = ''] = value.split(' ')
+  const [day, month, year] = date.split('-')
+  return `${year}-${month}-${day}${time ? ` ${time}` : ''}`
+}
 
-function UpdateCard({ item }: { item: HomeUpdateItem }) {
+function UpdateCard({ item }: { item: HomeLatestUpdate }) {
   return (
     <Link
-      href="/discover"
-      className="flex items-start gap-3.5 rounded-[14px] border border-rl-line bg-white p-3.5 transition hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(230,57,80,0.12)]"
+      href={`/detail?bookId=${encodeURIComponent(item.detailId)}`}
+      className="group flex gap-4 rounded-2xl border border-[var(--home-line)] bg-white p-3.5 transition hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(80,60,140,0.10)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#cc4452] sm:p-4"
     >
-      <div className="relative h-[130px] w-[100px] shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-rl-cream-deep to-rl-pink">
-        <Image src={item.coverUrl} alt={item.title} fill sizes="100px" className="object-cover" />
+      <div
+        className="relative h-[120px] w-20 shrink-0 overflow-hidden rounded-[11px] shadow-sm sm:h-[135px] sm:w-[90px]"
+        style={{ background: item.gradient }}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_65%_24%,rgba(255,255,255,0.42),transparent_28%),linear-gradient(to_top,rgba(40,20,50,0.22),transparent_55%)] transition-transform duration-300 group-hover:scale-105" />
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-[15px] font-bold text-black">{item.title}</div>
-        <div className="mb-1.5 text-xs text-rl-ink-soft">{item.author}</div>
-        <div className="flex flex-wrap gap-1.5">
-          <span className="rounded bg-rl-cream-deep px-2 py-0.5 text-[11px] font-bold text-rl-red-deep">{item.genreLabel}</span>
-          <span className="rounded bg-rl-cream-deep px-2 py-0.5 text-[11px] font-bold text-rl-red-deep">{item.originLabel}</span>
-        </div>
-        <p className="mt-1.5 line-clamp-3 text-[13px] text-rl-ink-soft">{item.description}</p>
-        <div className="mt-2.5 flex flex-wrap items-center gap-3 text-xs text-rl-ink-soft">
-          <span className="inline-flex items-center gap-1">
-            <Eye className="h-3.5 w-3.5" />
-            {item.views}
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <BookOpen className="h-3.5 w-3.5" />
-            {item.episodeLabel}
-          </span>
-          <span className="font-semibold text-rl-red-deep">{item.updatedAtLabel}</span>
-        </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <h3 className="truncate text-[15px] font-bold text-[var(--home-ink)] sm:text-base">{item.title}</h3>
+        <p className="mt-0.5 text-xs text-[var(--home-ink-2)] sm:text-[13px]">{item.author}</p>
+        <p className="mt-1.5 text-[11px] text-[var(--home-ink-2)] sm:text-xs">{item.genreLabel} · {item.originLabel === 'แปล' ? 'แปล' : 'ไทย'}</p>
+        <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-[var(--home-ink-3)] sm:text-[13px]">{item.description}</p>
+        <p className="mt-auto truncate pt-2 text-[10px] text-[var(--home-ink-3)] sm:text-[11px]">
+          <span className="mr-1 font-semibold text-[var(--home-ink-2)]">อัปเดตล่าสุด</span>
+          ตอนที่ {item.episode} {item.episodeTitle} · {normalizedDate(item.updatedAt)}
+        </p>
       </div>
     </Link>
   )
 }
 
-export function LatestUpdates({ items }: { items: HomeUpdateItem[] }) {
-  const [filter, setFilter] = useState<ContentType | 'all'>('all')
-  const [visible, setVisible] = useState(BATCH)
-
-  const filtered = useMemo(
-    () => (filter === 'all' ? items : items.filter((i) => i.type === filter)),
-    [items, filter],
-  )
-  const shown = filtered.slice(0, visible)
-  const hasMore = visible < filtered.length
-
-  function selectFilter(value: ContentType | 'all') {
-    setFilter(value)
-    setVisible(BATCH)
-  }
+export function LatestUpdates({ items }: { items: HomeLatestUpdate[] }) {
+  const [expanded, setExpanded] = useState(false)
+  const visibleItems = items.slice(0, expanded ? EXPANDED_COUNT : INITIAL_COUNT)
 
   return (
     <div>
-      <div className="mb-5 flex flex-wrap gap-2.5">
-        {CHIPS.map((chip) => {
-          const active = filter === chip.value
-          return (
+      {visibleItems.length > 0 ? (
+        <div className="grid grid-cols-1 gap-[18px] lg:grid-cols-2">
+          {visibleItems.map((item) => <UpdateCard key={item.id} item={item} />)}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-[var(--home-line)] bg-[var(--home-soft)] px-6 py-10 text-center text-sm text-[var(--home-ink-2)]">
+          ไม่พบรายการอัปเดตในหมวดนี้
+        </div>
+      )}
+
+      {items.length > INITIAL_COUNT && (
+        <div className="mt-5 text-center">
+          {expanded ? (
+            <Link href="/discover" className="inline-flex px-5 py-2.5 text-sm font-semibold text-[var(--home-ink-2)] transition hover:text-[var(--home-red)]">
+              ดูทั้งหมด
+            </Link>
+          ) : (
             <button
-              key={chip.value}
               type="button"
-              onClick={() => selectFilter(chip.value)}
-              className={cn(
-                'rounded-full border-[1.5px] px-[18px] py-[7px] text-[13px] font-semibold transition',
-                active
-                  ? 'border-rl-red bg-rl-red text-white'
-                  : 'border-rl-line bg-white text-rl-ink-soft hover:border-rl-red hover:bg-rl-red hover:text-white',
-              )}
+              onClick={() => setExpanded(true)}
+              className="px-5 py-2.5 text-sm font-semibold text-[var(--home-ink-2)] transition hover:text-[var(--home-red)]"
             >
-              {chip.label}
+              ดูเพิ่มเติม
             </button>
-          )
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2">
-        {shown.map((item) => (
-          <UpdateCard key={item.id} item={item} />
-        ))}
-      </div>
-
-      {hasMore && (
-        <div className="mt-7 text-center">
-          <button
-            type="button"
-            onClick={() => setVisible((v) => v + BATCH)}
-            className="rounded-full border-[1.5px] border-rl-red bg-white px-10 py-3 text-sm font-bold text-rl-red-deep transition hover:bg-rl-red hover:text-white"
-          >
-            แสดงเพิ่มเติม
-          </button>
+          )}
         </div>
       )}
     </div>

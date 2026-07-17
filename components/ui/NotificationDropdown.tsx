@@ -21,12 +21,11 @@ export function NotificationDropdown() {
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label="การแจ้งเตือน"
-        className="relative rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="relative grid h-10 w-10 place-items-center rounded-full text-[#475569] transition-colors hover:bg-[#f5f6f8] hover:text-[#1e293b] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452]"
       >
-        <Bell className="h-5 w-5" />
-        <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
-          {MOCK_NOTIFICATIONS.length}
-        </span>
+        <Bell className="h-[22px] w-[22px]" />
+        <span className="absolute right-[7px] top-[7px] h-2 w-2 rounded-full border border-white bg-[#cc4452]" />
+        <span className="sr-only">{MOCK_NOTIFICATIONS.length} รายการใหม่</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
         <DropdownMenuLabel>การแจ้งเตือน</DropdownMenuLabel>

@@ -1,59 +1,51 @@
 'use client'
 
 import { createContext, startTransition, useContext, useEffect, useState, type ReactNode } from 'react'
+import { useRole } from '@/contexts/RoleContext'
 import { MOCK_USER_PROFILE } from '@/lib/mock-data'
+import { profileStorageKey, readStoredUserProfile } from '@/lib/profile-repository'
 import type { UserProfile } from '@/lib/types'
 
 interface ProfileContextValue {
   profile: UserProfile
   setDisplayName: (name: string) => void
+  updateProfile: (patch: Partial<UserProfile>) => void
 }
-
-const STORAGE_KEY = 'rl_profile'
 
 const ProfileContext = createContext<ProfileContextValue>({
   profile: MOCK_USER_PROFILE,
   setDisplayName: () => {},
+  updateProfile: () => {},
 })
-
-function persistProfile(next: UserProfile) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-}
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile>(MOCK_USER_PROFILE)
+  const { user } = useRole()
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-
-    if (!stored) {
-      persistProfile(MOCK_USER_PROFILE)
+    if (!user) {
+      startTransition(() => setProfile(MOCK_USER_PROFILE))
       return
     }
+    startTransition(() => setProfile(readStoredUserProfile(user)))
+  }, [user])
 
-    try {
-      const parsed = JSON.parse(stored) as Partial<UserProfile>
-      startTransition(() => {
-        setProfile({ ...MOCK_USER_PROFILE, ...parsed })
-      })
-    } catch {
-      persistProfile(MOCK_USER_PROFILE)
-    }
-  }, [])
+  const updateProfile = (patch: Partial<UserProfile>) => {
+    if (!user) return
+    setProfile((current) => {
+      const next = { ...current, ...patch }
+      localStorage.setItem(profileStorageKey(user.id), JSON.stringify(next))
+      return next
+    })
+  }
 
   const setDisplayName = (name: string) => {
     const trimmedName = name.trim()
-    const nextProfile = {
-      ...profile,
-      displayName: trimmedName || MOCK_USER_PROFILE.displayName,
-    }
-
-    setProfile(nextProfile)
-    persistProfile(nextProfile)
+    updateProfile({ displayName: trimmedName || MOCK_USER_PROFILE.displayName })
   }
 
   return (
-    <ProfileContext.Provider value={{ profile, setDisplayName }}>
+    <ProfileContext.Provider value={{ profile, setDisplayName, updateProfile }}>
       {children}
     </ProfileContext.Provider>
   )

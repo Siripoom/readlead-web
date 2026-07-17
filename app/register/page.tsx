@@ -2,7 +2,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useProfile } from '@/contexts/ProfileContext'
 import { useRole } from '@/contexts/RoleContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,15 +12,26 @@ export default function RegisterPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const { setDisplayName } = useProfile()
-  const { setRole } = useRole()
+  const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { register } = useRole()
   const router = useRouter()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setDisplayName(name)
-    setRole('user')
+    setError('')
+    setFieldErrors({})
+    setIsSubmitting(true)
+    const result = await register(name, email, password)
+    setIsSubmitting(false)
+    if (!result.ok) {
+      setError(result.error ?? 'สมัครสมาชิกไม่สำเร็จ กรุณาลองใหม่')
+      setFieldErrors(result.fields ?? {})
+      return
+    }
     router.push('/')
+    router.refresh()
   }
 
   return (
@@ -36,18 +46,24 @@ export default function RegisterPage() {
         <CardContent className="pt-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm font-medium">ชื่อผู้ใช้</label>
-              <Input placeholder="ชื่อของคุณ" value={name} onChange={e => setName(e.target.value)} required />
+              <label htmlFor="register-name" className="mb-1.5 block text-sm font-medium">ชื่อผู้ใช้</label>
+              <Input id="register-name" name="name" autoComplete="name" placeholder="ชื่อของคุณ" value={name} onChange={e => setName(e.target.value)} aria-invalid={Boolean(fieldErrors.name)} required />
+              {fieldErrors.name?.map(message => <p key={message} className="mt-1 text-xs text-destructive">{message}</p>)}
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium">อีเมล</label>
-              <Input type="email" placeholder="example@email.com" value={email} onChange={e => setEmail(e.target.value)} required />
+              <label htmlFor="register-email" className="mb-1.5 block text-sm font-medium">อีเมล</label>
+              <Input id="register-email" name="email" type="email" autoComplete="email" placeholder="example@email.com" value={email} onChange={e => setEmail(e.target.value)} aria-invalid={Boolean(fieldErrors.email)} required />
+              {fieldErrors.email?.map(message => <p key={message} className="mt-1 text-xs text-destructive">{message}</p>)}
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium">รหัสผ่าน</label>
-              <Input type="password" placeholder="อย่างน้อย 8 ตัวอักษร" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} />
+              <label htmlFor="register-password" className="mb-1.5 block text-sm font-medium">รหัสผ่าน</label>
+              <Input id="register-password" name="password" type="password" autoComplete="new-password" placeholder="อย่างน้อย 8 ตัวอักษร" value={password} onChange={e => setPassword(e.target.value)} aria-invalid={Boolean(fieldErrors.password)} required minLength={8} />
+              {fieldErrors.password?.map(message => <p key={message} className="mt-1 text-xs text-destructive">{message}</p>)}
             </div>
-            <Button type="submit" className="w-full bg-primary hover:bg-secondary-foreground">สมัครสมาชิก</Button>
+            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+            <Button type="submit" disabled={isSubmitting} className="w-full bg-primary hover:bg-secondary-foreground">
+              {isSubmitting ? 'กำลังสมัครสมาชิก...' : 'สมัครสมาชิก'}
+            </Button>
           </form>
           <Separator className="my-4" />
           <p className="text-center text-sm text-muted-foreground">

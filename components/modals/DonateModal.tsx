@@ -11,19 +11,36 @@ const DONATE_OPTIONS = [10, 30, 50, 100, 200, 500]
 
 interface Props {
   authorName: string
+  detailId?: string
   open: boolean
   onOpenChange: (open: boolean) => void
+  onSuccess?: (amount: number, message: string) => void
 }
 
-export default function DonateModal({ authorName, open, onOpenChange }: Props) {
+export default function DonateModal({ authorName, detailId, open, onOpenChange, onSuccess }: Props) {
   const { balance, spend } = useWallet()
   const [selected, setSelected] = useState(50)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
 
   function handleDonate() {
     if (balance < selected) { setError('เหรียญไม่เพียงพอ'); return }
-    spend(selected)
+    const completed = spend(selected)
+    if (!completed) { setError('ไม่สามารถหักเหรียญได้'); return }
+    if (detailId) {
+      const key = 'rl_detail_support_v1'
+      try {
+        const stored = JSON.parse(localStorage.getItem(key) ?? '[]') as unknown[]
+        localStorage.setItem(key, JSON.stringify([...stored, {
+          id: crypto.randomUUID(), detailId, kind: 'tip', amount: selected,
+          message: message.trim(), createdAt: new Date().toISOString(),
+        }]))
+      } catch {
+        localStorage.setItem(key, JSON.stringify([]))
+      }
+    }
+    onSuccess?.(selected, message.trim())
     setSuccess(true)
     setError('')
     setTimeout(() => {
@@ -83,6 +100,15 @@ export default function DonateModal({ authorName, open, onOpenChange }: Props) {
                 <Coins className="h-4 w-4" />{balance}
               </span>
             </div>
+
+            <textarea
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+              maxLength={160}
+              rows={3}
+              placeholder="เขียนข้อความเชียร์นักเขียน (ไม่บังคับ)"
+              className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            />
 
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>

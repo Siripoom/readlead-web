@@ -29,8 +29,8 @@ const GENRE_MAP: Record<string, string> = {
   GL: 'gl',
 }
 
-export function getCategoryHref(category: string): string {
-  if (category === 'ทุกหมวดหมู่') return '/'
-  const genre = GENRE_MAP[category]
-  return genre ? `/?genre=${genre}` : `/?genre=${category}`
+export function getCategoryHref(category: string, basePath = '/'): string {
+  if (category === 'ทุกหมวดหมู่') return basePath
+  const genre = GENRE_MAP[category] ?? category
+  return `${basePath}?genre=${genre}`
 }

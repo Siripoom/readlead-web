@@ -97,6 +97,9 @@ export interface UserProfile {
   vipLevel: string
   exp: number
   currentRank: string
+  handle?: string
+  bio?: string
+  coverGradient?: string
 }
 
 export interface PurchaseRecord {

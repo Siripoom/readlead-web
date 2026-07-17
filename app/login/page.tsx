@@ -11,13 +11,28 @@ import { Separator } from '@/components/ui/separator'
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const { setRole } = useRole()
+  const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { login } = useRole()
   const router = useRouter()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setRole('user')
-    router.push('/')
+    setError('')
+    setFieldErrors({})
+    setIsSubmitting(true)
+    const result = await login(email, password)
+    setIsSubmitting(false)
+    if (!result.ok) {
+      setError(result.error ?? 'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่')
+      setFieldErrors(result.fields ?? {})
+      return
+    }
+    const requestedPath = new URLSearchParams(window.location.search).get('next')
+    const nextPath = requestedPath?.startsWith('/') && !requestedPath.startsWith('//') ? requestedPath : '/'
+    router.push(nextPath)
+    router.refresh()
   }
 
   return (
@@ -32,14 +47,19 @@ export default function LoginPage() {
         <CardContent className="pt-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm font-medium">อีเมล</label>
-              <Input type="email" placeholder="example@email.com" value={email} onChange={e => setEmail(e.target.value)} required />
+              <label htmlFor="login-email" className="mb-1.5 block text-sm font-medium">อีเมล</label>
+              <Input id="login-email" name="email" type="email" autoComplete="email" placeholder="example@email.com" value={email} onChange={e => setEmail(e.target.value)} aria-invalid={Boolean(fieldErrors.email)} required />
+              {fieldErrors.email?.map(message => <p key={message} className="mt-1 text-xs text-destructive">{message}</p>)}
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium">รหัสผ่าน</label>
-              <Input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required />
+              <label htmlFor="login-password" className="mb-1.5 block text-sm font-medium">รหัสผ่าน</label>
+              <Input id="login-password" name="password" type="password" autoComplete="current-password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} aria-invalid={Boolean(fieldErrors.password)} required />
+              {fieldErrors.password?.map(message => <p key={message} className="mt-1 text-xs text-destructive">{message}</p>)}
             </div>
-            <Button type="submit" className="w-full bg-primary hover:bg-secondary-foreground">เข้าสู่ระบบ</Button>
+            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+            <Button type="submit" disabled={isSubmitting} className="w-full bg-primary hover:bg-secondary-foreground">
+              {isSubmitting ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+            </Button>
           </form>
           <Separator className="my-4" />
           <p className="text-center text-sm text-muted-foreground">

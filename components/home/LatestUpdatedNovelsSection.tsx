@@ -1,6 +1,10 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Eye, List, MessageSquare, ChevronRight } from 'lucide-react'
+import { Eye, List, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface LatestNovel {
   id: string
@@ -69,62 +73,172 @@ const LATEST_NOVELS: LatestNovel[] = [
   },
 ]
 
-function NovelItem({ novel }: { novel: LatestNovel }) {
+interface NovelBannerCardProps {
+  novel: LatestNovel
+  gradientDir?: 'left' | 'right'
+  priority?: boolean
+  className?: string
+}
+
+function NovelBannerCard({
+  novel,
+  gradientDir = 'left',
+  priority,
+  className,
+}: NovelBannerCardProps) {
   return (
     <Link
       href={novel.href}
-      className="group flex flex-col gap-4 sm:flex-row sm:gap-5"
+      className={cn(
+        'group relative block overflow-hidden rounded-2xl shadow-lg',
+        className,
+      )}
     >
-      {/* รูปปก */}
-      <div className="relative aspect-3/4 w-full shrink-0 overflow-hidden rounded-xl bg-muted/30 sm:h-[240px] sm:w-[170px]">
+      <div className="relative aspect-5/2 min-h-32">
         <Image
           src={novel.coverUrl}
           alt={novel.title}
           fill
-          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          sizes="(max-width: 640px) 100vw, 170px"
+          priority={priority}
+          className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          sizes="(max-width: 768px) 100vw, 50vw"
         />
-      </div>
-
-      {/* รายละเอียด */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex items-start gap-2.5">
-          <span className="mt-0.5 inline-block shrink-0 rounded-lg bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
+        <div
+          className={cn(
+            'absolute inset-0',
+            gradientDir === 'right'
+              ? 'bg-linear-to-l from-black/80 via-black/55 to-transparent'
+              : 'bg-linear-to-r from-black/80 via-black/55 to-transparent',
+          )}
+        />
+        <div
+          className={cn(
+            'absolute inset-0 flex flex-col justify-end gap-2 p-5 text-white md:p-7',
+            gradientDir === 'right' && 'items-end text-right',
+          )}
+        >
+          <span className="inline-flex self-start rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-white/85 backdrop-blur">
             {novel.badge}
           </span>
-          <h3 className="line-clamp-2 text-xl font-bold leading-snug text-black md:text-2xl">
+          <h3 className="line-clamp-2 text-xl font-black leading-tight md:text-2xl">
             {novel.title}
           </h3>
-        </div>
-
-        <p className="mt-2 text-[15px] font-medium text-[#777] md:text-[17px]">
-          {novel.category}
-        </p>
-
-        <p className="mt-2 line-clamp-3 text-[16px] leading-relaxed text-[#8A8A8A] md:text-[18px]">
-          {novel.description}
-        </p>
-
-        <div className="mt-auto flex items-center gap-5 pt-4 text-[15px] text-[#777] md:text-[17px]">
-          <span className="inline-flex items-center gap-1.5">
-            <Eye className="h-5 w-5" />
-            <span className="tabular-nums">{novel.views}</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <List className="h-5 w-5" />
-            <span className="tabular-nums">{novel.chapters}</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <MessageSquare className="h-5 w-5" />
-            <span className="tabular-nums">{novel.comments}</span>
-          </span>
+          <p className="text-sm text-white/80 md:text-base">{novel.category}</p>
+          <div
+            className={cn(
+              'mt-1 flex items-center gap-5 text-sm text-white/80',
+              gradientDir === 'right' && 'justify-end',
+            )}
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <Eye className="h-4 w-4" />
+              <span className="tabular-nums">{novel.views}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <List className="h-4 w-4" />
+              <span className="tabular-nums">{novel.chapters}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <MessageSquare className="h-4 w-4" />
+              <span className="tabular-nums">{novel.comments}</span>
+            </span>
+          </div>
         </div>
       </div>
     </Link>
   )
 }
 
+interface DesktopSlideProps {
+  novels: [LatestNovel, LatestNovel?]
+  priority?: boolean
+}
+
+function DesktopSlide({ novels, priority }: DesktopSlideProps) {
+  return (
+    <div className="flex gap-3 md:gap-4">
+      <NovelBannerCard
+        novel={novels[0]}
+        gradientDir="left"
+        priority={priority}
+        className="flex-1"
+      />
+      {novels[1] && (
+        <NovelBannerCard
+          novel={novels[1]}
+          gradientDir="right"
+          priority={priority}
+          className="flex-1"
+        />
+      )}
+    </div>
+  )
+}
+
+const AUTO_SLIDE_MS = 6000
+
+function chunkPairs(novels: LatestNovel[]): [LatestNovel, LatestNovel?][] {
+  const pairs: [LatestNovel, LatestNovel?][] = []
+  for (let i = 0; i < novels.length; i += 2) {
+    pairs.push([novels[i], novels[i + 1]])
+  }
+  return pairs
+}
+
 export function LatestUpdatedNovelsSection() {
+  const [isDesktop, setIsDesktop] = useState<boolean | null>(null)
+  const [idx, setIdx] = useState(0)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const touchStartX = useRef<number>(0)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const sync = () => setPrefersReducedMotion(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  useEffect(() => {
+    const update = () => {
+      const next = window.innerWidth >= 768
+      setIsDesktop(prev => {
+        if (prev !== null && prev !== next) setIdx(0)
+        return next
+      })
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
+  const pairs = chunkPairs(LATEST_NOVELS)
+  const count = isDesktop ? pairs.length : LATEST_NOVELS.length
+
+  useEffect(() => {
+    if (count <= 1 || prefersReducedMotion) return
+    const timer = window.setInterval(() => {
+      setIdx(prev => (prev + 1) % count)
+    }, AUTO_SLIDE_MS)
+    return () => window.clearInterval(timer)
+  }, [count, prefersReducedMotion])
+
+  if (LATEST_NOVELS.length === 0 || isDesktop === null) return null
+
+  const goToPrev = () => setIdx(prev => (prev - 1 + count) % count)
+  const goToNext = () => setIdx(prev => (prev + 1) % count)
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    const delta = e.changedTouches[0].clientX - touchStartX.current
+    if (Math.abs(delta) > 50) {
+      if (delta < 0) goToNext()
+      else goToPrev()
+    }
+  }
+
   return (
     <section className="space-y-6">
       <div className="flex items-center justify-between gap-3">
@@ -140,11 +254,68 @@ export function LatestUpdatedNovelsSection() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-2">
-        {LATEST_NOVELS.map((novel) => (
-          <NovelItem key={novel.id} novel={novel} />
-        ))}
+      <div className="relative overflow-hidden rounded-[1.75rem]">
+        <div
+          className={cn(
+            'flex',
+            !prefersReducedMotion && 'transition-transform duration-500 ease-out',
+          )}
+          style={{ transform: `translateX(-${idx * 100}%)` }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          {isDesktop
+            ? pairs.map((pair, i) => (
+                <div key={`pair-${pair[0].id}`} className="w-full shrink-0">
+                  <DesktopSlide novels={pair} priority={i === 0} />
+                </div>
+              ))
+            : LATEST_NOVELS.map((novel, i) => (
+                <div key={novel.id} className="w-full shrink-0">
+                  <NovelBannerCard novel={novel} priority={i === 0} />
+                </div>
+              ))}
+        </div>
+
+        {count > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={goToPrev}
+              aria-label="Previous novel"
+              className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/25 bg-black/35 p-2 text-white backdrop-blur transition-colors hover:bg-black/55"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={goToNext}
+              aria-label="Next novel"
+              className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/25 bg-black/35 p-2 text-white backdrop-blur transition-colors hover:bg-black/55"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </>
+        )}
       </div>
+
+      {/* Dots indicator — below the image */}
+      {count > 1 && (
+        <div className="mt-2.5 flex justify-center gap-1.5">
+          {Array.from({ length: count }).map((_, i) => (
+            <button
+              key={`dot-${i}`}
+              type="button"
+              onClick={() => setIdx(i)}
+              aria-label={`Go to slide ${i + 1}`}
+              className={cn(
+                'h-2 rounded-full transition-all',
+                i === idx ? 'w-5.5 bg-rl-red-deep' : 'w-2 bg-rl-line',
+              )}
+            />
+          ))}
+        </div>
+      )}
     </section>
   )
 }

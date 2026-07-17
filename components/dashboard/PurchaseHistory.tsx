@@ -1,31 +1,32 @@
+'use client'
+
+import { useState } from 'react'
 import { Coins } from 'lucide-react'
+import { useRole } from '@/contexts/RoleContext'
+import { localProfileRepository } from '@/lib/profile-repository'
 import type { PurchaseRecord } from '@/lib/types'
 
-const MOCK_PURCHASES: PurchaseRecord[] = [
-  { episodeId: 'e1-3', workId: '1', workTitle: '用情至深', episodeTitle: 'ตอนที่ 3: เจ้าชายแห่งม่านหมอก', coinsSpent: 5, purchasedAt: '2026-05-10T14:00:00Z' },
-  { episodeId: 'e1-4', workId: '1', workTitle: '用情至深', episodeTitle: 'ตอนที่ 4: คำพยากรณ์', coinsSpent: 5, purchasedAt: '2026-05-11T09:30:00Z' },
-  { episodeId: 'e3-3', workId: '3', workTitle: '锦绣江山', episodeTitle: 'ตอนที่ 3: แผนการลับ', coinsSpent: 8, purchasedAt: '2026-05-14T20:00:00Z' },
-]
-
 export default function PurchaseHistory() {
-  if (MOCK_PURCHASES.length === 0) {
-    return <p className="text-sm text-muted-foreground py-6 text-center">ยังไม่มีประวัติการซื้อ</p>
+  const { user } = useRole()
+  const [purchases] = useState<PurchaseRecord[]>(() => user ? localProfileRepository.getPurchaseHistory(user.id) : [])
+
+  if (purchases.length === 0) {
+    return <p className="py-6 text-center text-sm text-muted-foreground">ยังไม่มีประวัติการซื้อ</p>
   }
 
   return (
     <div className="space-y-2">
-      {MOCK_PURCHASES.map((p, idx) => (
-        <div key={idx} className="flex items-start justify-between p-3 rounded-lg border gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{p.episodeTitle}</p>
-            <p className="text-xs text-muted-foreground truncate">{p.workTitle}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {new Date(p.purchasedAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
+      {purchases.map((purchase) => (
+        <div key={purchase.episodeId} className="flex items-start justify-between gap-3 rounded-lg border p-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{purchase.episodeTitle}</p>
+            <p className="truncate text-xs text-muted-foreground">{purchase.workTitle}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {new Date(purchase.purchasedAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
             </p>
           </div>
-          <div className="flex items-center gap-1 text-sm font-semibold text-primary shrink-0">
-            <Coins className="h-4 w-4" />
-            {p.coinsSpent}
+          <div className="flex shrink-0 items-center gap-1 text-sm font-semibold text-primary">
+            <Coins className="h-4 w-4" />{purchase.coinsSpent}
           </div>
         </div>
       ))}

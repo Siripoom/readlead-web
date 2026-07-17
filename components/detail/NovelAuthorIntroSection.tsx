@@ -45,7 +45,7 @@ export default function NovelAuthorIntroSection({ author, intro }: Props) {
 
         <div className="flex flex-col items-center -mt-10 pb-6 px-6">
           {author.id ? (
-            <Link href={`/writer?writerId=${author.id}`} className="group">
+            <Link href={`/profile/${author.id}`} className="group">
               <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-md group-hover:opacity-90 transition-opacity">
                 <Image
                   src={author.avatarUrl}
@@ -69,7 +69,7 @@ export default function NovelAuthorIntroSection({ author, intro }: Props) {
           )}
 
           {author.id ? (
-            <Link href={`/writer?writerId=${author.id}`}>
+            <Link href={`/profile/${author.id}`}>
               <h3 className="mt-3 text-base font-bold text-gray-900 hover:text-red-500 transition-colors">{author.name}</h3>
             </Link>
           ) : (

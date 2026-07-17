@@ -29,7 +29,7 @@ export function HomeContentTypeSelector({ activeType }: Props) {
           return (
             <Link
               key={type}
-              href={type === 'novel' ? '/' : `/?type=${type}`}
+              href={`/${type}`}
               className={cn(
                 buttonVariants({ variant: isActive ? 'default' : 'outline', size: 'sm' }),
                 'rounded-full px-4 py-2',

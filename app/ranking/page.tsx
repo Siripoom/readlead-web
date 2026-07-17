@@ -1,32 +1,74 @@
-'use client'
-
-import { useState } from 'react'
-import { PopularRankingLayout } from '@/components/ranking/PopularRankingLayout'
-import { NovelRankingSection } from '@/components/NovelRankingSection'
+import { RankingLanding } from '@/components/ranking/landing/RankingLanding'
 import {
-  POPULAR_SIDEBAR_ITEMS,
-  MOCK_POPULAR_RANKING,
-  MOCK_NOVEL_RANKING_TOP,
-} from '@/lib/mock-data'
+  VALID_RANKING_GENRES,
+  VALID_RANKING_SORTS,
+  VALID_RANKING_TYPES,
+  VALID_RANKING_VIEWS,
+  getRankingCreators,
+  getRankingWorks,
+  type RankingContentType,
+  type RankingGenreKey,
+  type RankingRouteState,
+  type RankingSort,
+  type RankingView,
+} from '@/lib/ranking-page-data'
 
-export default function RankingPage() {
-  const [activeSidebar, setActiveSidebar] = useState(POPULAR_SIDEBAR_ITEMS[0].id)
+type SearchParams = Promise<{
+  view?: string | string[]
+  type?: string | string[]
+  sort?: string | string[]
+  genre?: string | string[]
+  page?: string | string[]
+}>
 
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
-      <PopularRankingLayout
-        sidebarTitle="รายการความนิยม"
-        sidebarItems={POPULAR_SIDEBAR_ITEMS}
-        activeSidebarId={activeSidebar}
-        rankingItems={MOCK_POPULAR_RANKING}
-        onSidebarChange={setActiveSidebar}
-        topContent={
-          <NovelRankingSection
-            title="อันดับนิยายยอดนิยม"
-            books={MOCK_NOVEL_RANKING_TOP}
-          />
-        }
-      />
-    </div>
-  )
+const first = (value?: string | string[]) => Array.isArray(value) ? value[0] : value
+
+function normalizeState(query: Awaited<SearchParams>): RankingRouteState {
+  const rawView = first(query.view)
+  const rawType = first(query.type)
+  const rawSort = first(query.sort)
+  const rawGenre = first(query.genre)
+  const rawPage = Number.parseInt(first(query.page) ?? '1', 10)
+  const genre = rawGenre && VALID_RANKING_GENRES.has(rawGenre as RankingGenreKey)
+    ? rawGenre as RankingGenreKey
+    : null
+
+  let state: RankingRouteState = {
+    view: 'overview',
+    type: null,
+    sort: null,
+    genre,
+    page: 1,
+  }
+
+  if (rawView && VALID_RANKING_VIEWS.has(rawView as Exclude<RankingView, 'overview'>)) {
+    state = { ...state, view: rawView as RankingView }
+  } else if (
+    rawType && rawSort &&
+    VALID_RANKING_TYPES.has(rawType as RankingContentType) &&
+    VALID_RANKING_SORTS.has(rawSort as RankingSort)
+  ) {
+    state = {
+      ...state,
+      type: rawType as RankingContentType,
+      sort: rawSort as RankingSort,
+    }
+  } else if (rawView || rawType || rawSort) {
+    return { view: 'overview', type: null, sort: null, genre: null, page: 1 }
+  }
+
+  if (state.view !== 'overview' || state.type) {
+    const total = state.view === 'creators'
+      ? getRankingCreators(state).length
+      : getRankingWorks(state).length
+    const totalPages = Math.max(1, Math.ceil(total / 20))
+    state.page = Number.isFinite(rawPage) ? Math.min(totalPages, Math.max(1, rawPage)) : 1
+  }
+
+  return state
+}
+
+export default async function RankingPage({ searchParams }: { searchParams: SearchParams }) {
+  const state = normalizeState(await searchParams)
+  return <RankingLanding state={state} />
 }

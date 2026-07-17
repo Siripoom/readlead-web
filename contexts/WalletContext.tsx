@@ -1,5 +1,8 @@
 'use client'
-import { createContext, startTransition, useContext, useState, useEffect, type ReactNode } from 'react'
+
+import { createContext, startTransition, useContext, useEffect, useState, type ReactNode } from 'react'
+import { useRole } from '@/contexts/RoleContext'
+import { walletStorageKey } from '@/lib/profile-repository'
 
 interface WalletContextValue {
   balance: number
@@ -15,26 +18,33 @@ const WalletContext = createContext<WalletContextValue>({
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [balance, setBalance] = useState(0)
+  const { user } = useRole()
 
   useEffect(() => {
-    const stored = localStorage.getItem('rl_wallet')
-    startTransition(() => {
-      setBalance(stored !== null ? Number(stored) : 100)
-    })
-  }, [])
+    if (!user) {
+      startTransition(() => setBalance(0))
+      return
+    }
+    const key = walletStorageKey(user.id)
+    const stored = localStorage.getItem(key) ?? localStorage.getItem('rl_wallet')
+    const next = stored !== null && Number.isFinite(Number(stored)) ? Number(stored) : 100
+    localStorage.setItem(key, String(next))
+    startTransition(() => setBalance(next))
+  }, [user])
 
   const spend = (n: number): boolean => {
-    if (balance < n) return false
+    if (!user || balance < n) return false
     const next = balance - n
     setBalance(next)
-    localStorage.setItem('rl_wallet', String(next))
+    localStorage.setItem(walletStorageKey(user.id), String(next))
     return true
   }
 
   const topUp = (n: number) => {
+    if (!user) return
     const next = balance + n
     setBalance(next)
-    localStorage.setItem('rl_wallet', String(next))
+    localStorage.setItem(walletStorageKey(user.id), String(next))
   }
 
   return (

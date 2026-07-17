@@ -1,235 +1,338 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { BookOpen, ChevronDown } from "lucide-react";
-import { NotificationDropdown } from "@/components/ui/NotificationDropdown";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useState, type ReactNode } from 'react'
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import {
+  BookOpen,
+  ChevronDown,
+  Coins,
+  History,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  PenSquare,
+  Search,
+  WalletCards,
+} from 'lucide-react'
+import { NotificationDropdown } from '@/components/ui/NotificationDropdown'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { buttonVariants } from "@/components/ui/button";
-import { useRole } from "@/contexts/RoleContext";
-import { CATEGORY_MENU_ITEMS, getCategoryHref } from "@/lib/categories";
-import { ROLE_LABELS, TOP_NAV_ITEMS_BY_ROLE } from "@/lib/roles";
-import { cn } from "@/lib/utils";
-import type { Role } from "@/lib/types";
+} from '@/components/ui/dropdown-menu'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
+import { useProfile } from '@/contexts/ProfileContext'
+import { useRole } from '@/contexts/RoleContext'
+import { useWallet } from '@/contexts/WalletContext'
+import { ROLE_LABELS } from '@/lib/roles'
+import { cn } from '@/lib/utils'
+
+const NAV_ITEMS: ReadonlyArray<{
+  href: string
+  label: string
+  separated?: boolean
+}> = [
+  { href: '/', label: 'หน้าหลัก' },
+  { href: '/ranking', label: 'กระดานอันดับ' },
+  { href: '/novel', label: 'นิยาย', separated: true },
+  { href: '/manga', label: 'เว็บตูน' },
+  { href: '/audiobook', label: 'หนังสือเสียง' },
+]
 
 export function Navbar() {
-  const { role, setRole, isLoggedIn } = useRole();
-  const pathname = usePathname();
-  const navItems = TOP_NAV_ITEMS_BY_ROLE[role];
-  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
-  const categoryMenuRef = useRef<HTMLDivElement>(null);
-  const showBrowseMenus = role === "guest" || role === "user";
+  const pathname = usePathname()
+  const router = useRouter()
+  const { role, user, isLoggedIn, isLoading, logout: endSession } = useRole()
+  const { profile } = useProfile()
+  const { balance } = useWallet()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  useEffect(() => {
-    function handlePointerDown(event: MouseEvent) {
-      if (!categoryMenuRef.current) return;
-      if (categoryMenuRef.current.contains(event.target as Node)) return;
-      setIsCategoryOpen(false);
-    }
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setIsCategoryOpen(false);
-    }
-    window.addEventListener("mousedown", handlePointerDown);
-    window.addEventListener("keydown", handleEscape);
-    return () => {
-      window.removeEventListener("mousedown", handlePointerDown);
-      window.removeEventListener("keydown", handleEscape);
-    };
-  }, []);
+  const canOpenCreator = role === 'creator' || role === 'admin'
+  const profileHref = user ? `/profile/${encodeURIComponent(user.id)}` : '/dashboard'
+  const avatarFallback = profile.displayName.trim().charAt(0) || ROLE_LABELS[role].charAt(0)
+  const formattedBalance = balance.toLocaleString('th-TH', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+
+  const navigateFromMenu = (href: string) => {
+    router.push(href)
+  }
+
+  const logout = async () => {
+    setIsMobileMenuOpen(false)
+    const result = await endSession()
+    if (!result.ok) return
+    router.push('/')
+    router.refresh()
+  }
 
   return (
-    <header className="sticky top-0 z-50 flex h-16 items-center justify-between gap-4 border-b border-border bg-card/95 px-6 backdrop-blur-sm">
-      {/* Logo */}
-      <Link
-        href="/"
-        onClick={() => setIsCategoryOpen(false)}
-        className="flex items-center gap-2 font-bold text-primary text-lg tracking-wide"
-      >
-        <BookOpen className="h-5 w-5" />
-        <span className="font-serif">ReadLead</span>
-        <span className="rounded bg-primary px-1.5 py-0.5 text-xs font-normal text-white">
-          阅
-        </span>
-      </Link>
+    <header className="sticky top-0 z-50 w-full border-b border-[#e9edf2] bg-white">
+      <div className="flex min-h-[55px] w-full items-center gap-4 px-4 sm:px-6 xl:gap-10 xl:px-10">
+        <Link
+          href="/"
+          aria-label="ReadLead หน้าหลัก"
+          className="flex shrink-0 items-center gap-2 text-xl font-extrabold text-[#cc4452] focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#cc4452]"
+        >
+          <BookOpen className="h-[22px] w-[22px]" strokeWidth={2.5} />
+          <span>ReadLead</span>
+        </Link>
 
-      {/* Primary nav */}
-      <nav className="hidden md:flex items-center gap-6">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const hrefPath = item.href.split("?")[0];
-          const isActive = pathname === hrefPath;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setIsCategoryOpen(false)}
-              className={cn(
-                "flex items-center gap-1.5 text-sm font-medium transition-colors",
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <Icon size={15} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
+        <nav className="hidden items-center gap-[3px] self-stretch xl:flex" aria-label="เมนูหลัก">
+          {NAV_ITEMS.map((item) => {
+            const isActive = pathname === item.href
 
-        {showBrowseMenus && (
-          <span className="h-4 w-px bg-border" aria-hidden="true" />
-        )}
-
-        {showBrowseMenus && (
-          <>
-            {/* Category dropdown */}
-            <div className="relative" ref={categoryMenuRef}>
-              <button
-                type="button"
-                onClick={() => setIsCategoryOpen((open) => !open)}
-                className={cn(
-                  "flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
-                  isCategoryOpen
-                    ? "border-primary/40 bg-primary/10 text-primary"
-                    : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+            return (
+              <div key={item.href} className="contents">
+                {item.separated && (
+                  <span className="mx-[7px] h-[18px] w-px bg-[#e9edf2]" aria-hidden="true" />
                 )}
-                aria-haspopup="menu"
-                aria-expanded={isCategoryOpen}
-                aria-controls="category-dropdown-menu"
-              >
-                หมวดหมู่
-                <ChevronDown
-                  size={15}
+                <Link
+                  href={item.href}
+                  aria-current={isActive ? 'page' : undefined}
                   className={cn(
-                    "transition-transform",
-                    isCategoryOpen && "rotate-180",
+                    'relative whitespace-nowrap rounded-[9px] px-[15px] py-2 text-[14.5px] font-medium text-[#64748b] transition-colors hover:text-[#1e293b] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#cc4452]',
+                    isActive &&
+                      'font-semibold text-[#cc4452] after:absolute after:inset-x-[15px] after:-bottom-[9px] after:h-[3px] after:rounded-full after:bg-[#cc4452]',
                   )}
-                />
-              </button>
-
-              {isCategoryOpen && (
-                <div
-                  id="category-dropdown-menu"
-                  className="absolute left-0 top-full mt-3 z-50 w-[820px] max-w-[calc(100vw-3rem)] rounded-2xl border border-border bg-card p-4 shadow-xl"
-                  role="menu"
-                  aria-label="เมนูหมวดหมู่"
                 >
-                  <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
-                    {CATEGORY_MENU_ITEMS.map((category) => (
-                      <Link
-                        key={category}
-                        href={getCategoryHref(category)}
-                        onClick={() => setIsCategoryOpen(false)}
-                        role="menuitem"
-                        className={cn(
-                          "rounded-xl border border-transparent px-3 py-2 text-sm font-semibold leading-none transition-colors",
-                          category === "ทุกหมวดหมู่"
-                            ? "bg-primary/10 text-primary hover:border-primary/30"
-                            : "text-muted-foreground hover:border-primary/30 hover:bg-primary/10 hover:text-primary",
-                        )}
-                      >
-                        {category}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+                  {item.label}
+                </Link>
+              </div>
+            )
+          })}
+        </nav>
 
-            {/* Content-type quick links */}
-            <Link
-              href="/?type=novel#content"
-              onClick={() => setIsCategoryOpen(false)}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              นิยาย
-            </Link>
-            <Link
-              href="/?type=manga#content"
-              onClick={() => setIsCategoryOpen(false)}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              มังงะ
-            </Link>
-            <Link
-              href="/?type=audiobook#content"
-              onClick={() => setIsCategoryOpen(false)}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              หนังสือเสียง
-            </Link>
-          </>
-        )}
-      </nav>
-
-      {/* Right actions */}
-      <div className="flex items-center gap-2">
-        {isLoggedIn ? (
-          <div className="flex items-center gap-2">
-            <NotificationDropdown />
-            <Avatar size="sm">
-              <AvatarFallback>{ROLE_LABELS[role][0]}</AvatarFallback>
-            </Avatar>
-            <span className="hidden md:block text-sm font-medium text-foreground">
-              {ROLE_LABELS[role]}
-            </span>
-          </div>
-        ) : (
-          <>
-            <Link
-              href="/login"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              เข้าสู่ระบบ
-            </Link>
-            <Link
-              href="/register"
-              className="rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              สมัครสมาชิก
-            </Link>
-          </>
-        )}
-
-        {/* Dev role switcher */}
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "gap-1 text-xs",
-            )}
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2 xl:gap-4">
+          <Link
+            href="/discover"
+            aria-label="ค้นหา"
+            className="grid h-10 w-10 place-items-center rounded-full text-[#475569] transition-colors hover:bg-[#f5f6f8] hover:text-[#1e293b] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452]"
           >
-            {ROLE_LABELS[role]} <ChevronDown className="h-3 w-3" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel className="text-xs text-muted-foreground">
-                สลับบทบาท (Dev)
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {(["guest", "user", "creator", "admin"] as Role[]).map((r) => (
-                <DropdownMenuItem
-                  key={r}
-                  onClick={() => setRole(r)}
-                  className={role === r ? "font-semibold text-primary" : ""}
+            <Search className="h-[22px] w-[22px]" />
+          </Link>
+
+          <NotificationDropdown />
+
+          <div className="hidden xl:block">
+            {isLoading ? (
+              <div className="h-9 w-24 animate-pulse rounded-[9px] bg-[#f1f3f5]" aria-label="กำลังตรวจสอบสถานะเข้าสู่ระบบ" />
+            ) : isLoggedIn ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  aria-label="เปิดเมนูผู้ใช้"
+                  className="flex items-center gap-2.5 rounded-lg p-1 text-[#334155] transition-colors hover:bg-[#f5f6f8] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452]"
                 >
-                  {ROLE_LABELS[r]}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                  <Avatar className="size-9">
+                    <AvatarImage src={profile.avatarUrl} alt="" />
+                    <AvatarFallback className="bg-[#f5dfe3] font-semibold text-[#9c3340]">
+                      {avatarFallback}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="max-w-32 truncate text-[14.5px] font-semibold">
+                    {profile.displayName}
+                  </span>
+                  <ChevronDown className="h-4 w-4 text-[#94a3b8]" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" sideOffset={8} className="w-72 p-2">
+                  <DropdownMenuLabel className="flex items-center gap-3 px-2 py-2 normal-case">
+                    <Avatar className="size-10">
+                      <AvatarImage src={profile.avatarUrl} alt="" />
+                      <AvatarFallback className="bg-[#f5dfe3] font-semibold text-[#9c3340]">
+                        {avatarFallback}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-[#334155]">
+                        {profile.displayName}
+                      </span>
+                      <span className="block text-xs font-normal text-[#94a3b8]">
+                        {ROLE_LABELS[role]}
+                      </span>
+                    </span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => navigateFromMenu(`${profileHref}?tab=wallet`)}
+                    className="my-1 gap-3 bg-[#fff7f8] px-3 py-2.5 focus:bg-[#fcecef]"
+                  >
+                    <Coins className="text-[#cc4452]" />
+                    <span>
+                      <span className="block text-xs text-[#94a3b8]">ยอดเหรียญ</span>
+                      <span className="font-bold text-[#9c3340]">{formattedBalance} RL</span>
+                    </span>
+                    <span className="ml-auto rounded-md bg-[#cc4452] px-2 py-1 text-xs font-semibold text-white">
+                      เติมเหรียญ
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigateFromMenu(profileHref)} className="gap-3 px-3 py-2">
+                    <LayoutDashboard /> บัญชีของฉัน
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigateFromMenu(`${profileHref}?tab=wallet`)} className="gap-3 px-3 py-2">
+                    <WalletCards /> กระเป๋าเงิน
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigateFromMenu(`${profileHref}?tab=wallet`)} className="gap-3 px-3 py-2">
+                    <History /> ประวัติการซื้อ
+                  </DropdownMenuItem>
+                  {canOpenCreator && (
+                    <DropdownMenuItem onClick={() => navigateFromMenu(`${profileHref}?tab=creator`)} className="gap-3 px-3 py-2">
+                      <PenSquare /> หน้านักเขียน
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout} variant="destructive" className="gap-3 px-3 py-2">
+                    <LogOut /> ออกจากระบบ
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex h-9 items-center rounded-[9px] bg-[#cc4452] px-[18px] text-sm font-semibold text-white transition-colors hover:bg-[#9c3340] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#cc4452]"
+              >
+                เข้าสู่ระบบ
+              </Link>
+            )}
+          </div>
+
+          <button
+            type="button"
+            aria-label="เปิดเมนู"
+            aria-expanded={isMobileMenuOpen}
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="grid h-10 w-10 place-items-center rounded-full text-[#475569] transition-colors hover:bg-[#f5f6f8] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452] xl:hidden"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+        </div>
       </div>
+
+      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+        <SheetContent side="right" className="w-[min(88vw,360px)] gap-0 bg-white p-0">
+          <SheetHeader className="border-b border-[#e9edf2] px-5 py-4">
+            <SheetTitle className="flex items-center gap-2 text-xl font-extrabold text-[#cc4452]">
+              <BookOpen className="h-[22px] w-[22px]" strokeWidth={2.5} />
+              ReadLead
+            </SheetTitle>
+            <SheetDescription className="sr-only">เมนูนำทางและบัญชีผู้ใช้</SheetDescription>
+          </SheetHeader>
+
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5">
+            {isLoggedIn && (
+              <div className="mb-5 flex items-center gap-3 rounded-xl bg-[#fff7f8] p-3">
+                <Avatar className="size-11">
+                  <AvatarImage src={profile.avatarUrl} alt="" />
+                  <AvatarFallback className="bg-[#f5dfe3] font-semibold text-[#9c3340]">
+                    {avatarFallback}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold text-[#334155]">{profile.displayName}</p>
+                  <p className="text-xs text-[#94a3b8]">{ROLE_LABELS[role]}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-[#94a3b8]">ยอดเหรียญ</p>
+                  <p className="text-sm font-bold text-[#9c3340]">{formattedBalance} RL</p>
+                </div>
+              </div>
+            )}
+
+            <nav className="space-y-1" aria-label="เมนูหลักบนมือถือ">
+              {NAV_ITEMS.map((item) => {
+                const isActive = pathname === item.href
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-current={isActive ? 'page' : undefined}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={cn(
+                      'flex min-h-11 items-center rounded-lg border-l-[3px] border-transparent px-4 text-sm font-medium text-[#64748b] transition-colors hover:bg-[#f8f9fa] hover:text-[#1e293b] focus-visible:outline-2 focus-visible:outline-[#cc4452]',
+                      isActive && 'border-[#cc4452] bg-[#fff7f8] font-semibold text-[#cc4452]',
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </nav>
+
+            <div className="my-5 h-px bg-[#e9edf2]" />
+
+            {isLoading ? (
+              <div className="h-11 w-full animate-pulse rounded-[9px] bg-[#f1f3f5]" aria-label="กำลังตรวจสอบสถานะเข้าสู่ระบบ" />
+            ) : isLoggedIn ? (
+              <div className="space-y-1">
+                <MobileAccountLink href={profileHref} label="บัญชีของฉัน" onNavigate={() => setIsMobileMenuOpen(false)}>
+                  <LayoutDashboard />
+                </MobileAccountLink>
+                <MobileAccountLink href={`${profileHref}?tab=wallet`} label="กระเป๋าเงิน" onNavigate={() => setIsMobileMenuOpen(false)}>
+                  <WalletCards />
+                </MobileAccountLink>
+                <MobileAccountLink href={`${profileHref}?tab=wallet`} label="ประวัติการซื้อ" onNavigate={() => setIsMobileMenuOpen(false)}>
+                  <History />
+                </MobileAccountLink>
+                {canOpenCreator && (
+                  <MobileAccountLink href={`${profileHref}?tab=creator`} label="หน้านักเขียน" onNavigate={() => setIsMobileMenuOpen(false)}>
+                    <PenSquare />
+                  </MobileAccountLink>
+                )}
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="flex min-h-11 w-full items-center gap-3 rounded-lg px-4 text-sm font-medium text-[#c03645] transition-colors hover:bg-[#fff1f3] focus-visible:outline-2 focus-visible:outline-[#cc4452] [&_svg]:size-4"
+                >
+                  <LogOut /> ออกจากระบบ
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="inline-flex h-11 w-full items-center justify-center rounded-[9px] bg-[#cc4452] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#9c3340] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#cc4452]"
+              >
+                เข้าสู่ระบบ
+              </Link>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </header>
-  );
+  )
+}
+
+function MobileAccountLink({
+  href,
+  label,
+  onNavigate,
+  children,
+}: {
+  href: string
+  label: string
+  onNavigate: () => void
+  children: ReactNode
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onNavigate}
+      className="flex min-h-11 items-center gap-3 rounded-lg px-4 text-sm font-medium text-[#475569] transition-colors hover:bg-[#f8f9fa] hover:text-[#1e293b] focus-visible:outline-2 focus-visible:outline-[#cc4452] [&_svg]:size-4"
+    >
+      {children}
+      {label}
+    </Link>
+  )
 }

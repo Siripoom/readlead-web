@@ -1,0 +1,16 @@
+.root {
+  --manga-purple: #8b6df0;
+  --manga-purple-deep: #7355df;
+  --manga-pink: #ee5a96;
+  --manga-soft: #f7f4fc;
+  --manga-line: #ece8f4;
+  --manga-ink: #2e2a3d;
+  background: #fff;
+  color: var(--manga-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root * {
+    scroll-behavior: auto;
+  }
+}

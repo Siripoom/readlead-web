@@ -1,0 +1,16 @@
+.root {
+  --audio-purple: #8b6df0;
+  --audio-purple-deep: #7355df;
+  --audio-red: #cc4452;
+  --audio-red-deep: #b23a48;
+  --audio-line: #ece8f4;
+  --audio-ink: #2e2a3d;
+  background: #fff;
+  color: var(--audio-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root * {
+    scroll-behavior: auto;
+  }
+}

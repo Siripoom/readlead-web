@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Banknote, Check } from 'lucide-react'
+import { Banknote } from 'lucide-react'
 
 interface Props {
   totalRevenue: number
@@ -13,11 +13,10 @@ interface Props {
 export default function WithdrawButton({ totalRevenue }: Props) {
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState('')
-  const [success, setSuccess] = useState(false)
+  const [notice, setNotice] = useState('')
 
   function handleWithdraw() {
-    setSuccess(true)
-    setTimeout(() => { setSuccess(false); setOpen(false); setAmount('') }, 2000)
+    setNotice('ตรวจสอบจำนวนเงินแล้ว แต่ยังไม่ได้ส่งคำขอ เนื่องจากระบบถอนเงินยังไม่มี API')
   }
 
   return (
@@ -36,14 +35,7 @@ export default function WithdrawButton({ totalRevenue }: Props) {
             </DialogTitle>
           </DialogHeader>
 
-          {success ? (
-            <div className="py-8 text-center space-y-2">
-              <Check className="h-12 w-12 text-green-600 mx-auto" />
-              <p className="font-semibold">ส่งคำขอถอนเงินสำเร็จ!</p>
-              <p className="text-sm text-muted-foreground">จะโอนภายใน 3-5 วันทำการ</p>
-            </div>
-          ) : (
-            <div className="space-y-4 py-2">
+          <div className="space-y-4 py-2">
               <div className="rounded-lg border p-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">ยอดคงเหลือ</span>
@@ -59,17 +51,15 @@ export default function WithdrawButton({ totalRevenue }: Props) {
                   onChange={e => setAmount(e.target.value)}
                 />
               </div>
+              {notice && <p className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800" role="status">{notice}</p>}
             </div>
-          )}
 
-          {!success && (
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>ยกเลิก</Button>
-              <Button onClick={handleWithdraw} disabled={!amount || Number(amount) <= 0} className="bg-primary text-primary-foreground">
-                ยืนยันถอนเงิน
-              </Button>
-            </DialogFooter>
-          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setOpen(false); setNotice('') }}>ยกเลิก</Button>
+            <Button onClick={handleWithdraw} disabled={!amount || Number(amount) <= 0} className="bg-primary text-primary-foreground">
+              ตรวจสอบคำขอ
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

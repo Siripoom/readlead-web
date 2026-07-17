@@ -11,7 +11,14 @@ interface Props {
 }
 
 export function RouteGuard({ allowedRoles, children }: Props) {
-  const { role } = useRole()
+  const { role, isLoading } = useRole()
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground" aria-busy="true">
+        กำลังตรวจสอบสิทธิ์...
+      </div>
+    )
+  }
   if (!allowedRoles.includes(role)) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">

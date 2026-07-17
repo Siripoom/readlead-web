@@ -40,7 +40,7 @@ function HeaderContentTypeNav() {
         return (
           <Link
             key={type}
-            href={`/?type=${type}`}
+            href={`/${type}`}
             aria-current={isActive ? "page" : undefined}
             className={cn(
               "rounded-full border px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors",

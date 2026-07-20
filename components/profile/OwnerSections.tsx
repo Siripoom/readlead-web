@@ -6,7 +6,8 @@ import { OwnerHome } from '@/components/profile/sections/OwnerHome'
 import { OwnerAccount, OwnerActivity } from '@/components/profile/sections/OwnerAccountActivity'
 import { OwnerWriterApplication } from '@/components/profile/sections/OwnerWriterApplication'
 import { OwnerCreator, OwnerWallet } from '@/components/profile/sections/OwnerCreatorWallet'
-import { OwnerHelp, OwnerReport } from '@/components/profile/sections/OwnerHelpReport'
+import { OwnerHelp } from '@/components/profile/sections/OwnerHelpReport'
+import { OwnerReport } from '@/components/profile/sections/OwnerReport'
 
 export default function OwnerSections({
   userId,

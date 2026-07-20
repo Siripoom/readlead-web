@@ -1,9 +1,10 @@
 'use client'
 
-import { startTransition, useEffect, useState } from 'react'
+import { startTransition, useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
-import { Bell, Check, Link2, ShieldCheck, Trash2, UserRound } from 'lucide-react'
+import { Bell, Check, Link2, ShieldCheck, TriangleAlert, Trash2, UserRound } from 'lucide-react'
 import { AppleIcon, FacebookIcon, GoogleIcon } from '@/components/icons/SocialProviderIcons'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { useProfile } from '@/contexts/ProfileContext'
 import { useRole } from '@/contexts/RoleContext'
 import type { ProfileActivity } from '@/lib/profile-types'
@@ -136,72 +137,217 @@ export function OwnerActivity({
   activities: ProfileActivity[]
   onDataChange: () => void
 }) {
+  type ActivityTab = 'review' | 'comment'
+  type ActivityFilter = 'all' | 'pending' | 'approved' | 'rejected' | 'normal' | 'revoked'
+  type ActivityResponse = {
+    id: string
+    kind: ActivityTab
+    rating?: number
+    body: string
+    status?: ProfileActivity['status']
+    rawStatus?: string
+    replyCount?: number
+    likes?: number
+    replies?: ProfileActivity['replies']
+    exp?: ProfileActivity['exp']
+    createdAt: string
+    updatedAt?: string
+    work: { id: string; title: string }
+  }
+
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
   const [activities, setActivities] = useState<ProfileActivity[]>(initialActivities)
+  const [tab, setTab] = useState<ActivityTab>('review')
+  const [filter, setFilter] = useState<ActivityFilter>('all')
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+  const [actionError, setActionError] = useState('')
 
   useEffect(() => {
     const controller = new AbortController()
-    fetch('/api/member/activity', { cache: 'no-store', signal: controller.signal }).then((response) => response.ok ? response.json() : { activities: [] }).then((data: { activities?: Array<{ id: string; kind: 'review' | 'comment'; rating?: number; body: string; createdAt: string; work: { id: string; title: string } }> }) => setActivities((data.activities ?? []).map((item) => ({ id: item.id, kind: item.kind, workId: item.work.id, workTitle: item.work.title, body: item.body, rating: item.rating, createdAt: item.createdAt })))).catch(() => undefined)
+    fetch('/api/member/activity', { cache: 'no-store', signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('LOAD_FAILED')
+        return response.json() as Promise<{ activities?: ActivityResponse[] }>
+      })
+      .then((data) => setActivities((data.activities ?? []).map((item) => ({
+        id: item.id,
+        kind: item.kind,
+        workId: item.work.id,
+        workTitle: item.work.title,
+        body: item.body,
+        rating: item.rating,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+        status: item.status,
+        rawStatus: item.rawStatus,
+        replyCount: item.replyCount ?? item.replies?.length ?? 0,
+        likes: item.likes ?? 0,
+        replies: item.replies ?? [],
+        exp: item.exp ?? null,
+      }))))
+      .catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === 'AbortError')) setLoadError(true)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
     return () => controller.abort()
   }, [])
 
   const remove = async (activity: ProfileActivity) => {
+    setBusy(true)
+    setActionError('')
     const response = await fetch('/api/interactions/activity', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: activity.id, kind: activity.kind }) })
-    if (response.ok) { setActivities((current) => current.filter((item) => item.id !== activity.id)); onDataChange() }
+    if (response.ok) {
+      setActivities((current) => current.filter((item) => item.id !== activity.id))
+      setSelectedId(null)
+      setConfirmingDelete(false)
+      onDataChange()
+    } else {
+      setActionError('ลบรายการไม่สำเร็จ กรุณาลองใหม่อีกครั้ง')
+    }
+    setBusy(false)
   }
 
   const startEdit = (activity: ProfileActivity) => {
     setEditingId(activity.id)
     setDraft(activity.body)
+    setConfirmingDelete(false)
+    setActionError('')
   }
 
   const saveEdit = async () => {
     if (!editingId || !draft.trim()) return
     const activity = activities.find((item) => item.id === editingId)
     if (!activity) return
+    setBusy(true)
+    setActionError('')
     const response = await fetch('/api/interactions/activity', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: activity.id, kind: activity.kind, body: draft.trim() }) })
-    if (!response.ok) return
-    setActivities((current) => current.map((item) => item.id === editingId ? { ...item, body: draft.trim() } : item))
+    if (response.ok) {
+      setActivities((current) => current.map((item) => item.id === editingId ? { ...item, body: draft.trim() } : item))
+      setEditingId(null)
+      setDraft('')
+      onDataChange()
+    } else {
+      setActionError('บันทึกการแก้ไขไม่สำเร็จ กรุณาลองใหม่อีกครั้ง')
+    }
+    setBusy(false)
+  }
+
+  const filters: Array<{ id: ActivityFilter; label: string }> = tab === 'review'
+    ? [{ id: 'all', label: 'ทั้งหมด' }, { id: 'pending', label: 'รอตรวจสอบ' }, { id: 'approved', label: 'อนุมัติแล้ว' }, { id: 'rejected', label: 'ไม่อนุมัติ' }]
+    : [{ id: 'all', label: 'ทั้งหมด' }, { id: 'normal', label: 'ปกติ' }, { id: 'revoked', label: 'ถูกริบ EXP' }]
+  const rows = useMemo(() => activities.filter((activity) => {
+    if (activity.kind !== tab) return false
+    const status = activity.status ?? (activity.kind === 'review' ? 'approved' : 'normal')
+    return filter === 'all' || status === filter
+  }), [activities, filter, tab])
+  const selected = activities.find((activity) => activity.id === selectedId) ?? null
+  const canManageSelected = Boolean(selected && (!selected.rawStatus || selected.rawStatus === 'published'))
+
+  const changeTab = (next: ActivityTab) => {
+    setTab(next)
+    setFilter('all')
+  }
+
+  const closeDetail = () => {
+    setSelectedId(null)
     setEditingId(null)
     setDraft('')
-    onDataChange()
+    setConfirmingDelete(false)
+    setActionError('')
   }
 
   return (
-    <div className={styles.stack}>
-      <header><h1 className={styles.sectionTitle}>คอมเมนต์ & รีวิวของฉัน</h1><p className={styles.sectionDesc}>จัดการข้อความที่เผยแพร่บน ReadLead</p></header>
-      <section className={`${styles.card} ${styles.sectionCard}`}>
-        {activities.length ? (
-          <div className={styles.activityList}>
-            {activities.map((activity) => (
-              <article key={activity.id} className={styles.activity}>
-                <div className={styles.activityTop}>
-                  <div>
-                    <b>{activity.workTitle}</b>
-                    <div className={styles.activityMeta}>
-                      {activity.kind === 'review' ? `รีวิว ${'★'.repeat(activity.rating ?? 0)}` : 'ความคิดเห็น'} · {new Date(activity.createdAt).toLocaleDateString('th-TH')}
-                    </div>
-                  </div>
-                  <div className={styles.activityActions}>
-                    <button type="button" className={styles.textButton} onClick={() => startEdit(activity)}>แก้ไข</button>
-                    <button type="button" className={styles.textButton} onClick={() => void remove(activity)}>ลบ</button>
-                  </div>
-                </div>
-                {editingId === activity.id ? (
-                  <div className="mt-3">
-                    <textarea className={styles.textarea} value={draft} onChange={(event) => setDraft(event.target.value)} aria-label="แก้ไขข้อความ" />
-                    <div className={styles.buttonRow}>
-                      <button type="button" className={styles.secondaryButton} onClick={() => setEditingId(null)}>ยกเลิก</button>
-                      <button type="button" className={styles.primaryButton} onClick={() => void saveEdit()}>บันทึก</button>
-                    </div>
-                  </div>
-                ) : <p className={styles.activityBody}>{activity.body}</p>}
-              </article>
-            ))}
+    <div className={styles.myPostsPage}>
+      <div className={styles.myPostsNote}>
+        <TriangleAlert aria-hidden="true" />
+        <p><b>รีวิว</b>ต้องผ่านการตรวจสอบจากเจ้าหน้าที่ก่อนจึงได้รับ EXP ส่วน<b>คอมเมนต์</b>ได้รับ EXP ทันที แต่อาจถูกตรวจสอบย้อนหลัง หากพบว่าเป็นสแปมหรือเนื้อหาไม่เหมาะสม EXP จะถูกริบคืนและอาจมีบทลงโทษ <a href="?tab=help" target="_blank" rel="noreferrer">ดูกติกาและบทลงโทษทั้งหมด</a></p>
+      </div>
+
+      <section className={styles.myPostsBoard}>
+        <div className={styles.myPostsHead}>
+          <button type="button" className={`${styles.myPostsTab} ${tab === 'review' ? styles.myPostsTabActive : ''}`} onClick={() => changeTab('review')}>รีวิวของฉัน</button>
+          <button type="button" className={`${styles.myPostsTab} ${tab === 'comment' ? styles.myPostsTabActive : ''}`} onClick={() => changeTab('comment')}>คอมเมนต์ของฉัน</button>
+          <span>{tab === 'review' ? 'รวมรีวิวที่คุณเขียนและสถานะการได้รับ EXP' : 'รวมคอมเมนต์ที่คุณเขียนและสถานะการได้รับ EXP'}</span>
+        </div>
+
+        <div className={styles.myPostsFilters} aria-label="กรองสถานะ">
+          {filters.map((item, index) => (
+            <span key={item.id} className={styles.myPostsFilterItem}>
+              {index > 0 && <i aria-hidden="true">·</i>}
+              <button type="button" className={filter === item.id ? styles.myPostsFilterActive : ''} onClick={() => setFilter(item.id)}>{item.label}</button>
+            </span>
+          ))}
+        </div>
+
+        {loadError && <div className={styles.myPostsError} role="alert">โหลดข้อมูลล่าสุดไม่สำเร็จ กำลังแสดงข้อมูลที่มีอยู่</div>}
+        {loading && !activities.length ? <div className={styles.myPostsEmpty}>กำลังโหลดรายการ…</div> : rows.length ? (
+          <div className={styles.myPostsTableWrap}>
+            <table className={styles.myPostsTable}>
+              <colgroup><col /><col className={styles.myPostsNumberColumn} /><col className={styles.myPostsNumberColumn} /><col className={styles.myPostsDateColumn} /><col className={styles.myPostsStatusColumn} /><col className={styles.myPostsExpColumn} /></colgroup>
+              <thead><tr><th>{tab === 'review' ? 'รีวิว' : 'คอมเมนต์'}</th><th className={styles.myPostsNumber}>ตอบกลับ</th><th className={styles.myPostsNumber}>ถูกใจ</th><th>วันที่</th><th>สถานะ</th><th className={styles.myPostsExpHeading}>EXP</th></tr></thead>
+              <tbody>{rows.map((activity) => (
+                <tr key={activity.id} tabIndex={0} onClick={() => setSelectedId(activity.id)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedId(activity.id) } }}>
+                  <td className={styles.myPostsMain} data-label={tab === 'review' ? 'รีวิว' : 'คอมเมนต์'}><div><b>{activity.workTitle}</b>{activity.kind === 'review' && activity.rating ? <span>★ {activity.rating}</span> : null}</div><p>{activity.body}</p></td>
+                  <td className={styles.myPostsNumber} data-label="ตอบกลับ">{activity.replyCount ?? activity.replies?.length ?? 0}</td>
+                  <td className={styles.myPostsNumber} data-label="ถูกใจ">{activity.likes ?? 0}</td>
+                  <td className={styles.myPostsDate} data-label="วันที่">{formatActivityDate(activity.createdAt)}</td>
+                  <td data-label="สถานะ"><ActivityStatus activity={activity} /></td>
+                  <td className={styles.myPostsExpValue} data-label="EXP"><ActivityExp activity={activity} /></td>
+                </tr>
+              ))}</tbody>
+            </table>
           </div>
-        ) : <div className={styles.empty}>ยังไม่มีคอมเมนต์หรือรีวิว</div>}
+        ) : <div className={styles.myPostsEmpty}>ยังไม่มีรายการในหมวดนี้</div>}
       </section>
+
+      <Dialog open={Boolean(selected)} onOpenChange={(open) => { if (!open) closeDetail() }}>
+        {selected && <DialogContent className={styles.activityDialog} overlayClassName={styles.activityDialogOverlay}>
+          <div className={styles.activityDialogHead}>
+            <DialogTitle>{selected.workTitle}</DialogTitle>
+            <DialogDescription>{selected.kind === 'review' ? 'รีวิว' : 'คอมเมนต์'} · {formatActivityDate(selected.createdAt)}</DialogDescription>
+          </div>
+          <div className={styles.activityDialogBody}>
+            <div className={styles.activityDialogStatus}><ActivityStatus activity={selected} /><ActivityExp activity={selected} /></div>
+            {selected.exp?.reason && ['rejected', 'revoked'].includes(selected.status ?? '') && <div className={styles.activityRejection}><TriangleAlert /><div><b>{selected.status === 'revoked' ? 'ถูกริบ EXP' : 'ไม่อนุมัติ'}</b><span>{selected.exp.reason}</span></div></div>}
+            {editingId === selected.id ? <textarea className={styles.activityEditTextarea} value={draft} onChange={(event) => setDraft(event.target.value)} aria-label="แก้ไขข้อความ" maxLength={3000} /> : <p className={styles.activityDialogText}>{selected.body}</p>}
+
+            <div className={styles.activityRepliesTitle}>การตอบกลับ ({selected.replyCount ?? selected.replies?.length ?? 0})</div>
+            {selected.replies?.length ? <div className={styles.activityReplies}>{selected.replies.map((reply) => <div key={reply.id} className={styles.activityReply}><span className={`${styles.activityReplyAvatar} ${reply.user.isStaff ? styles.activityReplyStaff : ''}`}>{reply.user.isStaff ? 'ทีม' : reply.user.name.charAt(0)}</span><div><div className={styles.activityReplyName}><b>{reply.user.name}</b>{reply.user.isStaff && <em>เจ้าหน้าที่</em>}<time>{formatActivityDate(reply.createdAt)}</time></div><p>{reply.body}</p></div></div>)}</div> : <div className={styles.activityNoReplies}>ยังไม่มีการตอบกลับ</div>}
+
+            {actionError && <p className={styles.activityActionError} role="alert">{actionError}</p>}
+            {canManageSelected && <div className={styles.activityDialogActions}>
+              {editingId === selected.id ? <><button type="button" className={styles.activitySecondaryAction} disabled={busy} onClick={() => { setEditingId(null); setDraft(''); setActionError('') }}>ยกเลิก</button><button type="button" className={styles.activityPrimaryAction} disabled={busy || !draft.trim()} onClick={() => void saveEdit()}>{busy ? 'กำลังบันทึก…' : 'บันทึก'}</button></> : confirmingDelete ? <><span>ยืนยันลบรายการนี้?</span><button type="button" className={styles.activitySecondaryAction} disabled={busy} onClick={() => setConfirmingDelete(false)}>ยกเลิก</button><button type="button" className={styles.activityDangerAction} disabled={busy} onClick={() => void remove(selected)}>{busy ? 'กำลังลบ…' : 'ยืนยันลบ'}</button></> : <><button type="button" className={styles.activityDangerText} onClick={() => setConfirmingDelete(true)}>ลบ</button><button type="button" className={styles.activityPrimaryAction} onClick={() => startEdit(selected)}>แก้ไข</button></>}
+            </div>}
+          </div>
+        </DialogContent>}
+      </Dialog>
     </div>
   )
+}
+
+function formatActivityDate(value: string) {
+  return new Date(value).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Bangkok' })
+}
+
+function ActivityStatus({ activity }: { activity: ProfileActivity }) {
+  const status = activity.status ?? (activity.kind === 'review' ? 'approved' : 'normal')
+  const labels: Record<NonNullable<ProfileActivity['status']>, string> = {
+    pending: 'รอตรวจสอบ', approved: 'อนุมัติแล้ว', rejected: 'ไม่อนุมัติ', normal: activity.exp?.status === 'granted' ? 'ได้รับ EXP แล้ว' : 'ปกติ', revoked: 'ถูกริบ EXP',
+  }
+  return <span className={`${styles.activityStatus} ${styles[`activityStatus_${status}`]}`}>{labels[status]}</span>
+}
+
+function ActivityExp({ activity }: { activity: ProfileActivity }) {
+  if (!activity.exp) return <span className={`${styles.activityExp} ${styles.activityExpMuted}`}>ไม่มีข้อมูล EXP</span>
+  if (activity.exp.status === 'pending') return <span className={`${styles.activityExp} ${styles.activityExpMuted}`}>รออนุมัติ</span>
+  if (activity.exp.status === 'rejected') return <span className={`${styles.activityExp} ${styles.activityExpMuted}`}>ไม่ได้รับ EXP</span>
+  if (activity.exp.status === 'revoked') return <span className={`${styles.activityExp} ${styles.activityExpMinus}`}>−{Math.abs(activity.exp.amount).toLocaleString('th-TH')} EXP</span>
+  return <span className={`${styles.activityExp} ${styles.activityExpPlus}`}>+{activity.exp.amount.toLocaleString('th-TH')} EXP</span>
 }

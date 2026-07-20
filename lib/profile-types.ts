@@ -58,6 +58,22 @@ export interface ProfileActivity {
   body: string
   rating?: number
   createdAt: string
+  updatedAt?: string
+  status?: 'pending' | 'approved' | 'rejected' | 'normal' | 'revoked'
+  rawStatus?: string
+  replyCount?: number
+  likes?: number
+  replies?: Array<{
+    id: string
+    body: string
+    createdAt: string
+    user: { id: string; name: string; isStaff: boolean }
+  }>
+  exp?: {
+    amount: number
+    status: string
+    reason: string | null
+  } | null
 }
 
 export interface OwnerDashboardData {

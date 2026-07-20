@@ -1,76 +1,177 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { BookOpen, CircleDollarSign, PenTool, Search, Shield, TicketCheck } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type Dispatch, type ElementType, type FormEvent, type SetStateAction } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import { BookOpen, ChevronDown, CircleDollarSign, Headphones, PenTool, Rocket, Search, Shield, TicketCheck } from 'lucide-react'
+import { HELP_CATEGORIES, HELP_FAQS, type HelpArticle, type HelpCategoryIcon } from '@/lib/profile-help-data'
 import styles from '../profile.module.css'
 
-const FAQS = [
-  { category: 'การอ่าน', question: 'เพิ่มเรื่องเข้าชั้นหนังสืออย่างไร?', answer: 'เปิดหน้ารายละเอียดเรื่อง แล้วกดปุ่มเพิ่มเข้าชั้นหนังสือ รายการจะปรากฏในหน้าแรกของบัญชีนี้' },
-  { category: 'เหรียญ', question: 'เหรียญ ReadLead ใช้ทำอะไร?', answer: 'ใช้ปลดล็อกตอนแบบชำระเงิน สนับสนุนนักเขียน และร่วมกิจกรรมที่กำหนด' },
-  { category: 'โหวต', question: 'ตั๋วโหวตรีเซ็ตเมื่อใด?', answer: 'ตั๋วแนะนำรีเซ็ตทุกวัน ส่วนตั๋วรายเดือนรีเซ็ตเมื่อขึ้นเดือนใหม่' },
-  { category: 'นักเขียน', question: 'สมัครนักเขียนต้องใช้เอกสารอะไร?', answer: 'ต้องใช้เอกสารยืนยันตัวตนและหลักฐานบัญชีรับรายได้ ระบบจริงจะส่งเอกสารผ่านช่องทางที่เข้ารหัสเท่านั้น' },
-  { category: 'บัญชี', question: 'แก้ชื่อที่แสดงได้ที่ไหน?', answer: 'ไปที่เมนูศูนย์บัญชี แก้ชื่อหรือคำแนะนำตัว แล้วกดบันทึกการเปลี่ยนแปลง' },
-]
+const CATEGORY_ICONS: Record<HelpCategoryIcon, ElementType> = {
+  rocket: Rocket,
+  book: BookOpen,
+  coin: CircleDollarSign,
+  ticket: TicketCheck,
+  pen: PenTool,
+  shield: Shield,
+}
 
 export function OwnerHelp() {
+  const router = useRouter()
+  const pathname = usePathname()
+  const categoryGridRef = useRef<HTMLDivElement>(null)
+  const faqRef = useRef<HTMLElement>(null)
   const [query, setQuery] = useState('')
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
+  const [openArticleIds, setOpenArticleIds] = useState<Set<string>>(() => new Set())
+  const [openFaqIds, setOpenFaqIds] = useState<Set<string>>(() => new Set())
+  const [columnCount, setColumnCount] = useState(3)
+
   const results = useMemo(() => {
     const normalized = query.trim().toLowerCase()
-    if (!normalized) return FAQS
-    return FAQS.filter((item) => `${item.category} ${item.question} ${item.answer}`.toLowerCase().includes(normalized))
+    if (!normalized) return HELP_FAQS
+    return HELP_FAQS.filter((item) => `${item.question} ${item.answer}`.toLowerCase().includes(normalized))
   }, [query])
 
+  useEffect(() => {
+    const grid = categoryGridRef.current
+    if (!grid) return
+    let active = true
+    const updateColumnCount = () => {
+      if (!active) return
+      const count = getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length
+      setColumnCount(Math.max(1, count))
+    }
+    const observer = new ResizeObserver(updateColumnCount)
+    observer.observe(grid)
+    queueMicrotask(updateColumnCount)
+    return () => {
+      active = false
+      observer.disconnect()
+    }
+  }, [])
+
+  const selectedCategory = HELP_CATEGORIES.find((category) => category.id === selectedCategoryId) ?? null
+  const panelAfterIndex = selectedCategory
+    ? Math.min(Math.ceil((HELP_CATEGORIES.findIndex((category) => category.id === selectedCategory.id) + 1) / columnCount) * columnCount, HELP_CATEGORIES.length) - 1
+    : -1
+
+  function toggleId(setter: Dispatch<SetStateAction<Set<string>>>, id: string) {
+    setter((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function selectCategory(id: string) {
+    setSelectedCategoryId((current) => current === id ? null : id)
+    setOpenArticleIds(new Set())
+  }
+
+  function submitSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    faqRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
-    <div className={styles.stack}>
-      <header><h1 className={styles.sectionTitle}>คู่มือผู้ใช้</h1><p className={styles.sectionDesc}>ค้นหาคำตอบเกี่ยวกับการอ่าน บัญชี เหรียญ และการเป็นนักเขียน</p></header>
-      <section className={`${styles.card} ${styles.sectionCard}`}>
-        <label className={styles.field}>
-          <span className="sr-only">ค้นหาคู่มือ</span>
-          <span className="relative"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#8b91a0]" /><input className={`${styles.input} pl-10`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ค้นหาคำถามหรือหัวข้อ..." /></span>
-        </label>
+    <div className={styles.helpPage}>
+      <section className={styles.helpHero}>
+        <span className={styles.helpHeroDeco} aria-hidden="true" />
+        <h1>เราช่วยอะไรคุณได้บ้าง?</h1>
+        <p>ค้นหาคำตอบ คู่มือการใช้งาน และเคล็ดลับต่าง ๆ ของ ReadLead</p>
+        <form className={styles.helpSearch} role="search" onSubmit={submitSearch}>
+          <Search aria-hidden="true" />
+          <label className="sr-only" htmlFor="profile-help-search">ค้นหาคู่มือผู้ใช้</label>
+          <input
+            id="profile-help-search"
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="พิมพ์คำถามหรือคำค้น เช่น เติมเหรียญ, โหวต, สมัครนักเขียน..."
+          />
+          <button type="submit">ค้นหา</button>
+        </form>
       </section>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <GuideCard icon={BookOpen} title="การอ่าน & ชั้นหนังสือ" count="12 บทความ" />
-        <GuideCard icon={CircleDollarSign} title="เหรียญ & การชำระเงิน" count="9 บทความ" />
-        <GuideCard icon={TicketCheck} title="ตั๋วโหวต & EXP" count="8 บทความ" />
-        <GuideCard icon={PenTool} title="สำหรับนักเขียน" count="15 บทความ" />
-        <GuideCard icon={Shield} title="บัญชี & ความปลอดภัย" count="7 บทความ" />
+
+      <h2 className={styles.helpSectionTitle}>หมวดหมู่ความช่วยเหลือ</h2>
+      <div ref={categoryGridRef} className={styles.helpCategoryGrid}>
+        {HELP_CATEGORIES.map((category) => {
+          const Icon = CATEGORY_ICONS[category.icon]
+          const active = selectedCategoryId === category.id
+          return (
+            <div key={category.id} className={styles.helpCategoryCell}>
+              <button
+                type="button"
+                className={`${styles.card} ${styles.helpCategory} ${active ? styles.helpCategoryActive : ''}`}
+                onClick={() => selectCategory(category.id)}
+                aria-expanded={active}
+                aria-controls={active ? 'profile-help-category-panel' : undefined}
+              >
+                <span className={styles.helpCategoryIcon}><Icon /></span>
+                <span className={styles.helpCategoryText}>
+                  <b>{category.title}</b>
+                  <small>{category.description}</small>
+                  <em>{category.count} บทความ</em>
+                </span>
+              </button>
+            </div>
+          )
+        }).flatMap((card, index) => selectedCategory && index === panelAfterIndex
+          ? [card, <CategoryPanel key="category-panel" category={selectedCategory} openIds={openArticleIds} onToggle={(id) => toggleId(setOpenArticleIds, id)} />]
+          : [card])}
       </div>
-      <section className={`${styles.card} ${styles.sectionCard}`}>
-        <div className={styles.sectionHeader}><div><h2 className={styles.sectionTitle}>คำถามที่พบบ่อย</h2><p className={styles.sectionDesc}>พบ {results.length} รายการ</p></div></div>
-        {results.length ? <div className={styles.faqList}>{results.map((item) => <details key={item.question} className={styles.faqItem}><summary>{item.question}</summary><p>{item.answer}</p></details>)}</div> : <div className={styles.empty}>ไม่พบคำตอบที่ตรงกับคำค้น</div>}
+
+      <section ref={faqRef} className={`${styles.card} ${styles.helpFaqSection}`}>
+        <div className={styles.helpFaqHeader}><h2>คำถามที่พบบ่อย</h2></div>
+        {results.length ? results.map((item) => {
+          const open = openFaqIds.has(item.id)
+          return (
+            <div key={item.id} className={`${styles.helpAccordion} ${open ? styles.helpAccordionOpen : ''}`}>
+              <button type="button" onClick={() => toggleId(setOpenFaqIds, item.id)} aria-expanded={open} aria-controls={`${item.id}-answer`}>
+                <span className={styles.helpQuestionBadge}>Q</span>
+                <span>{item.question}</span>
+                <ChevronDown className={styles.helpChevron} />
+              </button>
+              <div id={`${item.id}-answer`} className={styles.helpAccordionContent} aria-hidden={!open}>
+                <div><p>{item.answer}</p></div>
+              </div>
+            </div>
+          )
+        }) : <div className={styles.helpNoMatch}>ไม่พบคำถามที่ตรงกับการค้นหา ลองพิมพ์คำอื่น หรือติดต่อทีมงานด้านล่าง</div>}
+      </section>
+
+      <section className={`${styles.card} ${styles.helpCta}`}>
+        <span className={styles.helpCtaIcon}><Headphones /></span>
+        <div><b>ยังหาคำตอบไม่เจอ?</b><p>ทีมงานพร้อมช่วยเหลือคุณ ติดต่อเราได้ตลอด 24 ชม.</p></div>
+        <button type="button" onClick={() => router.push(`${pathname}?tab=report`, { scroll: false })}>ติดต่อทีมงาน</button>
       </section>
     </div>
   )
 }
 
-function GuideCard({ icon: Icon, title, count }: { icon: typeof BookOpen; title: string; count: string }) {
-  return <div className={`${styles.card} p-5`}><Icon className="mb-3 text-[#cc4452]" /><b className="block text-sm">{title}</b><span className={styles.sectionDesc}>{count}</span></div>
+function CategoryPanel({ category, openIds, onToggle }: { category: typeof HELP_CATEGORIES[number]; openIds: Set<string>; onToggle: (id: string) => void }) {
+  return (
+    <section id="profile-help-category-panel" className={styles.helpCategoryPanel}>
+      <h3>{category.title} <span>{category.panelCount} บทความ</span></h3>
+      <div>
+        {category.articles.map((article, index) => <ArticleAccordion key={article.id} article={article} number={index + 1} open={openIds.has(article.id)} onToggle={() => onToggle(article.id)} />)}
+      </div>
+    </section>
+  )
 }
 
-export function OwnerReport() {
-  const [notice, setNotice] = useState('')
-  const submit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!event.currentTarget.reportValidity()) return
-    setNotice('ตรวจสอบแบบฟอร์มแล้ว แต่ยังไม่ได้ส่งข้อมูล เนื่องจากระบบแจ้งปัญหายังไม่มี API')
-  }
-
+function ArticleAccordion({ article, number, open, onToggle }: { article: HelpArticle; number: number; open: boolean; onToggle: () => void }) {
   return (
-    <div className={styles.stack}>
-      <header><h1 className={styles.sectionTitle}>แจ้งปัญหา</h1><p className={styles.sectionDesc}>อธิบายปัญหาที่พบเพื่อเตรียมส่งให้ทีมสนับสนุน</p></header>
-      <form onSubmit={submit} className={`${styles.card} ${styles.sectionCard}`}>
-        <div className={styles.formGrid}>
-          <label className={styles.field}><span>ประเภทปัญหา</span><select className={styles.select} name="category" required><option value="">— เลือกประเภท —</option><option>การเข้าสู่ระบบและบัญชี</option><option>การอ่านหรือซื้อเนื้อหา</option><option>การเติมเหรียญ</option><option>ผลงานนักเขียน</option><option>ข้อเสนอแนะอื่น ๆ</option></select></label>
-          <label className={styles.field}><span>อีเมลสำหรับติดต่อกลับ</span><input className={styles.input} name="email" type="email" required /></label>
-          <label className={`${styles.field} ${styles.fieldFull}`}><span>หัวข้อ</span><input className={styles.input} name="subject" maxLength={120} required /></label>
-          <label className={`${styles.field} ${styles.fieldFull}`}><span>รายละเอียดปัญหา</span><textarea className={styles.textarea} name="detail" minLength={20} maxLength={2000} required /></label>
-          <label className={`${styles.field} ${styles.fieldFull}`}><span>ภาพประกอบ (ไม่บังคับ)</span><input className={styles.input} name="attachment" type="file" accept="image/jpeg,image/png,image/webp" /></label>
-        </div>
-        <p className={`${styles.infoNote} mt-4`}>ไฟล์และข้อความจะอยู่ในแบบฟอร์มชั่วคราวเท่านั้น ไม่ถูกบันทึกหรืออัปโหลดจากอุปกรณ์</p>
-        {notice && <p className={`${styles.dangerNote} mt-3`} role="status">{notice}</p>}
-        <div className={styles.buttonRow}><button type="submit" className={styles.primaryButton}>ตรวจสอบแบบฟอร์ม</button></div>
-      </form>
+    <div className={`${styles.helpAccordion} ${styles.helpArticleAccordion} ${open ? styles.helpAccordionOpen : ''}`}>
+      <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={`${article.id}-content`}>
+        <span className={styles.helpQuestionBadge}>{number}</span>
+        <span>{article.title}</span>
+        <ChevronDown className={styles.helpChevron} />
+      </button>
+      <div id={`${article.id}-content`} className={styles.helpAccordionContent} aria-hidden={!open}>
+        <div className={styles.helpArticleBody} dangerouslySetInnerHTML={{ __html: article.html }} />
+      </div>
     </div>
   )
 }

@@ -62,6 +62,19 @@ export interface CreatorEpisodeRecord {
   scheduledAt: string | null
   publishedAt: string | null
   durationSeconds: number | null
+  createdAt?: string
+  updatedAt?: string
+  assets?: Array<{
+    id: string
+    kind: 'page' | 'audio' | string
+    contentType: string
+    sortOrder: number
+    durationSeconds?: number | null
+    isPublic?: boolean
+    createdAt?: string
+    fileName?: string | null
+    sizeBytes?: number | null
+  }>
 }
 
 export interface CreatorWorkDetail extends CreatorDashboardWork {

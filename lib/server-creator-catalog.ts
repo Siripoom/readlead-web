@@ -5,7 +5,7 @@ export interface PublicCreatorWork {
   id: string; type: 'novel' | 'manga' | 'audiobook'; origin: 'original' | 'translated'; title: string; category: string; rating: string; tagline: string; synopsis: string; tags: string[]; seriesStatus: string; publishedAt: string | null; updatedAt: string; views: number; coins: number; shelfCount: number; dailyVotes: number; monthlyVotes: number; reviewCount: number; commentCount: number
   creator: { id: string; name: string; writerApplication: { penName: string } | null; creatorProfile: { followers: number } | null }
   episodes: Array<{ id: string; episodeNumber: number; title: string; type: 'text' | 'image' | 'audio'; priceCoins: number; publishedAt: string | null; durationSeconds: number | null }>
-  reviews: Array<{ id: string; rating: number; body: string; createdAt: string; user: { id: string; name: string } }>
+  reviews: Array<{ id: string; userId: string; rating: number; body: string; recommended: boolean; spoiler: boolean; likes: number; dislikes: number; createdAt: string; updatedAt: string; user: { id: string; name: string }; replies: Array<{ id: string; userId: string; body: string; createdAt: string; updatedAt: string; user: { id: string; name: string } }> }>
   comments: Array<{ id: string; body: string; createdAt: string; user: { id: string; name: string }; replies: Array<{ id: string; body: string; createdAt: string; user: { id: string; name: string } }> }>
 }
 
@@ -25,6 +25,21 @@ export function mapPublicCreatorWork(raw: PublicCreatorWork): { work: DetailCata
     narrationType: raw.type === 'audiobook' ? 'human' : undefined,
   }
   const episodes: DetailEpisode[] = raw.episodes.map((episode) => ({ id: episode.id, workId: raw.id, title: episode.title, episodeNum: episode.episodeNumber, price: episode.priceCoins, status: 'published', type: episode.type, content: '', wordCount: 0, publishedAt: episode.publishedAt, mediaUrl: episode.durationSeconds === null ? undefined : String(episode.durationSeconds) }))
-  const reviews: DetailReview[] = raw.reviews.map((review) => ({ id: review.id, detailId: raw.id, userId: review.user.id, authorName: review.user.name, rating: review.rating, body: review.body, recommended: true, spoiler: false, likes: 0, dislikes: 0, replies: [], createdAt: review.createdAt }))
+  const reviews: DetailReview[] = raw.reviews.map((review) => ({
+    id: review.id,
+    detailId: raw.id,
+    userId: review.userId,
+    authorName: review.user.name,
+    rating: review.rating,
+    body: review.body,
+    recommended: review.recommended,
+    spoiler: review.spoiler,
+    likes: review.likes,
+    dislikes: review.dislikes,
+    viewerReaction: null,
+    replies: review.replies.map((reply) => ({ id: reply.id, userId: reply.userId, authorName: reply.user.name, body: reply.body, createdAt: reply.createdAt, updatedAt: +new Date(reply.updatedAt) > +new Date(reply.createdAt) + 1000 ? reply.updatedAt : undefined })),
+    createdAt: review.createdAt,
+    updatedAt: +new Date(review.updatedAt) > +new Date(review.createdAt) + 1000 ? review.updatedAt : undefined,
+  }))
   return { work, episodes, reviews }
 }

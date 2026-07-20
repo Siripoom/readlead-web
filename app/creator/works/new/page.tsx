@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import RouteGuard from '@/components/layout/RouteGuard'
 import { BookOpen, Image as ImageIcon, Headphones, ChevronRight } from 'lucide-react'
+import { CreatorStudioShell, creatorStudioStyles as styles } from '@/components/creator/CreatorStudioShell'
 
 const TYPES = [
   { id: 'novel', label: 'นิยาย', desc: 'เรื่องราวข้อความ บทและตอน', icon: BookOpen },
@@ -11,29 +12,23 @@ const TYPES = [
 export default function NewWorkTypePage() {
   return (
     <RouteGuard allowedRoles={['creator', 'admin']}>
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
-        <h1 className="text-2xl font-bold mb-2">เพิ่มผลงานใหม่</h1>
-        <p className="text-sm text-muted-foreground mb-8">เลือกประเภทผลงานที่ต้องการสร้าง</p>
-
-        <div className="grid gap-4">
+      <CreatorStudioShell>
+        <div className={styles.pageHead}><div><h1>เพิ่มผลงานใหม่</h1><p>เลือกประเภทผลงาน ระบบจะเตรียมฟอร์มและเครื่องมือจัดการตอนให้เหมาะกับสื่อ</p></div></div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 14 }}>
           {TYPES.map(t => (
             <Link
               key={t.id}
               href={`/creator/works/new/${t.id}`}
-              className="flex items-center gap-4 p-6 rounded-xl border-2 hover:border-primary hover:bg-accent/10 transition-colors group"
+              className={styles.card}
+              style={{ display: 'flex', minHeight: 190, flexDirection: 'column', justifyContent: 'center', gap: 12, transition: '.15s' }}
             >
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <t.icon className="h-6 w-6 text-primary" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-lg">{t.label}</p>
-                <p className="text-sm text-muted-foreground">{t.desc}</p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              <div className={styles.headIcon}><t.icon size={26} /></div>
+              <div><h2 style={{ margin: 0 }}>{t.label}</h2><p className={styles.help}>{t.desc}</p></div>
+              <span className={styles.eyebrow} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>เริ่มสร้าง <ChevronRight size={14} /></span>
             </Link>
           ))}
         </div>
-      </main>
+      </CreatorStudioShell>
     </RouteGuard>
   )
 }

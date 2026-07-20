@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input'
 import type { CreatorDashboardData, CreatorDashboardWork, CreatorMetric, CreatorWorkType } from '@/lib/creator-studio-types'
 import styles from './CreatorDashboard.module.css'
+import CreatorCover from './CreatorCover'
 
 type TypeFilter = CreatorWorkType | 'all'
 type SortMode = 'published' | 'recent' | 'oldest' | 'dailyVotes' | 'monthlyVotes' | 'views'
@@ -52,7 +53,7 @@ function TrendChart({ points, metric }: { points: CreatorDashboardData['chart'];
   return (
     <div className={styles.chartWrap}>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label={`กราฟแนวโน้ม ${metric}`}>
-        <defs><linearGradient id="creatorChartFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#8d5ad8" stopOpacity=".28" /><stop offset="1" stopColor="#8d5ad8" stopOpacity="0" /></linearGradient></defs>
+        <defs><linearGradient id="creatorChartFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#cc4452" stopOpacity=".28" /><stop offset="1" stopColor="#cc4452" stopOpacity="0" /></linearGradient></defs>
         {[20, 40, 60, 80].map((y) => <line key={y} x1="0" x2="100" y1={y} y2={y} className={styles.chartGrid} />)}
         <path d={`${path} L 100 100 L 0 100 Z`} fill="url(#creatorChartFill)" />
         <path d={path} className={styles.chartLine} />
@@ -69,7 +70,8 @@ export default function CreatorDashboard() {
   const [data, setData] = useState<CreatorDashboardData | null>(null)
   const [busy, setBusy] = useState(true)
   const [error, setError] = useState('')
-  const [type, setType] = useState<TypeFilter>('all')
+  const [overviewType, setOverviewType] = useState<TypeFilter>('all')
+  const [workType, setWorkType] = useState<TypeFilter>('all')
   const [metric, setMetric] = useState<CreatorMetric>('coins')
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
@@ -87,19 +89,35 @@ export default function CreatorDashboard() {
 
   const load = useCallback(async () => {
     setBusy(true); setError('')
-    const params = new URLSearchParams({ type, metric, year: String(year), month: String(month), sort, query, page: String(page), pageSize: '10' })
+    const listParams = new URLSearchParams({ type: workType, metric, year: String(year), month: String(month), sort, query, page: String(page), pageSize: '10' })
+    const overviewParams = new URLSearchParams(listParams)
+    overviewParams.set('type', overviewType)
+    overviewParams.set('query', '')
+    overviewParams.set('page', '1')
     try {
-      const response = await fetch(`/api/creator/dashboard?${params}`, { cache: 'no-store' })
-      if (!response.ok) throw new Error(await apiError(response, 'โหลดแดชบอร์ดไม่สำเร็จ'))
-      setData(await response.json() as CreatorDashboardData)
+      const [listResponse, overviewResponse] = await Promise.all([
+        fetch(`/api/creator/dashboard?${listParams}`, { cache: 'no-store' }),
+        overviewType === workType ? null : fetch(`/api/creator/dashboard?${overviewParams}`, { cache: 'no-store' }),
+      ])
+      if (!listResponse.ok) throw new Error(await apiError(listResponse, 'โหลดแดชบอร์ดไม่สำเร็จ'))
+      const listData = await listResponse.json() as CreatorDashboardData
+      if (!overviewResponse) { setData(listData); return }
+      if (!overviewResponse.ok) throw new Error(await apiError(overviewResponse, 'โหลดภาพรวมไม่สำเร็จ'))
+      const overviewData = await overviewResponse.json() as CreatorDashboardData
+      setData({ ...listData, overview: overviewData.overview, chart: overviewData.chart })
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'โหลดแดชบอร์ดไม่สำเร็จ') }
     finally { setBusy(false) }
-  }, [metric, month, page, query, sort, type, year])
+  }, [metric, month, overviewType, page, query, sort, workType, year])
 
   useEffect(() => {
     const timer = window.setTimeout(() => { void load() }, 0)
     return () => window.clearTimeout(timer)
   }, [load])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => { setPage(1); setQuery(queryDraft.trim()) }, 300)
+    return () => window.clearTimeout(timer)
+  }, [queryDraft])
 
   function search(event: FormEvent) { event.preventDefault(); setPage(1); setQuery(queryDraft.trim()) }
 
@@ -145,7 +163,7 @@ export default function CreatorDashboard() {
           </section>
           <section className={styles.panel}>
             <h2>ภาพรวมผลงาน</h2>
-            <div className={styles.tabs}>{typeOptions.map((option) => <button type="button" key={option.value} className={type === option.value ? styles.activeTab : ''} onClick={() => { setType(option.value); setPage(1) }}>{option.label}</button>)}</div>
+            <div className={styles.tabs}>{typeOptions.map((option) => <button type="button" key={option.value} className={overviewType === option.value ? styles.activeTab : ''} onClick={() => setOverviewType(option.value)}>{option.label}</button>)}</div>
             <div className={styles.overview}>{metrics.map((item) => <button type="button" key={item.key} className={metric === item.key ? styles.activeMetric : ''} onClick={() => setMetric(item.key)}><span>{item.label}</span><b>{compact(data?.overview[item.key] ?? 0)}</b></button>)}</div>
           </section>
         </div>
@@ -156,18 +174,18 @@ export default function CreatorDashboard() {
           <div className={styles.balanceActions}><Button onClick={() => setWithdrawOpen(true)}>ถอนเงิน</Button><Button variant="outline" onClick={() => setNewWorkOpen(true)}>+ ลงผลงานใหม่</Button></div>
         </section>
         <section className={`${styles.panel} ${styles.chartPanel}`}>
-          <div className={styles.panelHead}><h2>แนวโน้ม{metrics.find((item) => item.key === metric)?.label ?? 'รายได้'}</h2><div><select value={month} onChange={(event) => setMonth(Number(event.target.value))}><option value={0}>ทั้งปี</option>{Array.from({ length: 12 }, (_, index) => <option value={index + 1} key={index}>{new Intl.DateTimeFormat('th-TH', { month: 'short' }).format(new Date(2026, index, 1))}</option>)}</select><select value={year} onChange={(event) => setYear(Number(event.target.value))}>{[now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map((value) => <option key={value}>{value}</option>)}</select></div></div>
+          <div className={styles.panelHead}><h2>แนวโน้ม{metrics.find((item) => item.key === metric)?.label ?? 'รายได้'}</h2><div><select value={month} onChange={(event) => setMonth(Number(event.target.value))}><option value={0}>ทั้งปี</option>{Array.from({ length: 12 }, (_, index) => <option value={index + 1} key={index}>{new Intl.DateTimeFormat('th-TH', { month: 'short' }).format(new Date(2026, index, 1))}</option>)}</select><select value={year} onChange={(event) => setYear(Number(event.target.value))}>{[now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear()].map((value) => <option key={value}>{value}</option>)}</select></div></div>
           <TrendChart points={data?.chart ?? []} metric={metric} />
         </section>
       </div>
 
       <section className={`${styles.panel} ${styles.worksPanel}`}>
         <div className={styles.worksHead}><h2>ผลงานของฉัน <span>{data?.worksPage.total ?? 0} เรื่อง</span></h2><div className={styles.tools}><form onSubmit={search}><Search /><input value={queryDraft} onChange={(event) => setQueryDraft(event.target.value)} placeholder="ค้นหาผลงาน…" /><button className="sr-only">ค้นหา</button></form><select value={sort} onChange={(event) => { setSort(event.target.value as SortMode); setPage(1) }}>{Object.entries(sortLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></div></div>
-        <div className={styles.workTabs}>{typeOptions.map((option) => <button type="button" key={option.value} className={type === option.value ? styles.activeWorkTab : ''} onClick={() => { setType(option.value); setPage(1) }}>{option.label}</button>)}</div>
+        <div className={styles.workTabs}>{typeOptions.map((option) => <button type="button" key={option.value} className={workType === option.value ? styles.activeWorkTab : ''} onClick={() => { setWorkType(option.value); setPage(1) }}>{option.label}</button>)}</div>
         {busy && <div className={styles.inlineLoading}><LoaderCircle className={styles.spin} /> กำลังอัปเดตรายการ…</div>}
         {!busy && !data?.worksPage.items.length && <div className={styles.empty}><BookOpen /><b>ยังไม่มีผลงาน</b><span>เริ่มสร้างนิยาย เว็บตูน หรือหนังสือเสียงเรื่องแรกของคุณ</span><Button onClick={() => setNewWorkOpen(true)}>ลงผลงานใหม่</Button></div>}
         <div className={styles.workList}>{data?.worksPage.items.map((work) => <article key={work.id} className={styles.workRow}>
-          <div className={`${styles.coverPlaceholder} ${styles[work.type]}`}>{work.type === 'novel' ? <BookOpen /> : work.type === 'manga' ? <ImageIcon /> : <Headphones />}</div>
+          <CreatorCover workId={work.id} type={work.type} title={work.title} className={`${styles.coverPlaceholder} ${styles[work.type]}`} iconSize={20} />
           <div className={styles.workMain}><h3>{work.title}</h3><p>อัปเดตล่าสุด {thaiDate(work.updatedAt)}</p><small>{work._count.episodes} ตอน · {work.origin === 'translated' ? 'ผลงานแปล' : 'ผลงานไทย'}</small>{work.rejectionReason && <em>{work.rejectionReason}</em>}</div>
           <div className={styles.rowStats}><div><b>{compact(work.views)}</b><span>ยอดวิว</span></div><div><b>{work.dailyVotes}</b><span>ตั๋วแนะนำ</span></div><div><b>{work.monthlyVotes}</b><span>ตั๋วรายเดือน</span></div><div><b>{work.reviewCount}</b><span>รีวิว</span></div><div><b>{work.commentCount}</b><span>ความคิดเห็น</span></div><div><b>{work.shelfCount}</b><span>ชั้นหนังสือ</span></div><div><b>{money(work.coins * 7)}</b><span>รายได้</span></div></div>
           <span className={`${styles.status} ${styles[`status_${work.status}`]}`}>{statusLabels[work.status]}</span>

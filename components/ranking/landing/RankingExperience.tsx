@@ -68,6 +68,10 @@ type VoteLedger = {
   dailyUsed: number
   monthlyUsed: number
   bonuses: Record<string, VoteBonus>
+  server?: boolean
+  dailyAllowance?: number
+  dailyBalance?: number
+  monthlyBalance?: number
 }
 
 interface Props {
@@ -85,6 +89,11 @@ const initialLedger = (): VoteLedger => ({
   monthlyUsed: 0,
   bonuses: {},
 })
+
+const remainingTickets = (ledger: VoteLedger, kind: VoteKind) => {
+  if (ledger.server) return kind === 'daily' ? ledger.dailyBalance ?? 0 : ledger.monthlyBalance ?? 0
+  return Math.max(0, (kind === 'daily' ? DAILY_MAX - ledger.dailyUsed : MONTHLY_MAX - ledger.monthlyUsed))
+}
 
 const fmt = (value: number) => {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(value >= 10_000_000 ? 1 : 2)}M`
@@ -250,7 +259,7 @@ function useCountdown(kind: VoteKind) {
   return value
 }
 
-function VoteSummaryCard({ kind, used }: { kind: VoteKind; used: number }) {
+function VoteSummaryCard({ kind, ledger }: { kind: VoteKind; ledger: VoteLedger }) {
   const countdown = useCountdown(kind)
   const daily = kind === 'daily'
   const values = [countdown.days, countdown.hours, countdown.minutes, countdown.seconds]
@@ -258,10 +267,10 @@ function VoteSummaryCard({ kind, used }: { kind: VoteKind; used: number }) {
     <div className={cn(styles.voteCard, daily ? styles.voteDaily : styles.voteMonthly)}>
       <div className={styles.voteHead}>
         <span className={styles.ticketIcon}>{daily ? <Ticket /> : <Crown />}</span>
-        <div><b>{daily ? 'โหวตแนะนำ' : 'โหวตรายเดือน'}</b><p>{daily ? 'รีเซ็ตทุกวัน' : 'รีเซ็ตทุกเดือน'}</p></div>
+        <div><b>{daily ? 'โหวตแนะนำ' : 'โหวตรายเดือน'}</b><p>{daily ? 'ตั๋วรีเซ็ตทุกวัน' : ledger.server ? 'ตั๋วสะสมไม่หมดอายุ' : 'รีเซ็ตทุกเดือน'}</p></div>
       </div>
       <div className={styles.voteCount}>
-        <strong>{used}<small> / {daily ? DAILY_MAX : MONTHLY_MAX}</small></strong><span>โหวตแล้ว</span>
+        {ledger.server ? <><strong>{remainingTickets(ledger, kind)}{daily&&<small> / {ledger.dailyAllowance ?? DAILY_MAX}</small>}</strong><span>ตั๋วคงเหลือ</span></> : <><strong>{daily ? ledger.dailyUsed : ledger.monthlyUsed}<small> / {daily ? DAILY_MAX : MONTHLY_MAX}</small></strong><span>โหวตแล้ว</span></>}
       </div>
       <div>
         <span className={styles.countdownLabel}>เหลือเวลาอีก</span>
@@ -296,8 +305,8 @@ function RankingHero({ state, ledger }: { state: RankingRouteState; ledger: Vote
         {listMode && <div className={styles.heroDots} aria-hidden="true"><i className={styles.heroDot}/><i className={styles.heroDot}/><i className={styles.heroDot}/><i className={styles.heroDot}/></div>}
       </div>
       <div className={styles.voteCards}>
-        <VoteSummaryCard kind="daily" used={ledger.dailyUsed}/>
-        <VoteSummaryCard kind="monthly" used={ledger.monthlyUsed}/>
+        <VoteSummaryCard kind="daily" ledger={ledger}/>
+        <VoteSummaryCard kind="monthly" ledger={ledger}/>
       </div>
     </section>
   )
@@ -528,8 +537,8 @@ function VoteDialog({ item, open, onOpenChange, ledger, onConfirm, message }: {
           <div><b>{item.title}</b><p className={styles.creatorMeta}>{item.author} · {item.genreLabel}</p></div>
         </div>
         <div className={styles.dialogOptions}>
-          <button type="button" className={styles.dialogOption} style={{ '--accent': '#cc4452', '--bg': '#fff5f8' } as CSSProperties} disabled={ledger.dailyUsed >= DAILY_MAX} onClick={() => onConfirm('daily')}><Ticket color="#cc4452"/><b>โหวตแนะนำ</b><span>เหลือ {Math.max(0, DAILY_MAX - ledger.dailyUsed)} ใบวันนี้</span></button>
-          <button type="button" className={styles.dialogOption} style={{ '--accent': '#f6921e', '--bg': '#fff9f1' } as CSSProperties} disabled={ledger.monthlyUsed >= MONTHLY_MAX} onClick={() => onConfirm('monthly')}><Crown color="#f6921e"/><b>โหวตรายเดือน</b><span>เหลือ {Math.max(0, MONTHLY_MAX - ledger.monthlyUsed)} ใบเดือนนี้</span></button>
+          <button type="button" className={styles.dialogOption} style={{ '--accent': '#cc4452', '--bg': '#fff5f8' } as CSSProperties} disabled={remainingTickets(ledger,'daily')<=0} onClick={() => onConfirm('daily')}><Ticket color="#cc4452"/><b>โหวตแนะนำ</b><span>เหลือ {remainingTickets(ledger,'daily')} ใบวันนี้</span></button>
+          <button type="button" className={styles.dialogOption} style={{ '--accent': '#f6921e', '--bg': '#fff9f1' } as CSSProperties} disabled={remainingTickets(ledger,'monthly')<=0} onClick={() => onConfirm('monthly')}><Crown color="#f6921e"/><b>โหวตรายเดือน</b><span>เหลือ {remainingTickets(ledger,'monthly')} ใบ</span></button>
         </div>
         <p className={styles.dialogMessage} role="status">{message}</p>
       </DialogContent>
@@ -559,9 +568,21 @@ export function RankingExperience({ state, works, creators }: Props) {
 
   useEffect(() => {
     if (serverWorks === null) return
-    const timer = window.setTimeout(() => setLedger(initialLedger()), 0)
-    return () => window.clearTimeout(timer)
-  }, [serverWorks])
+    const firstWork = serverWorks[0]
+    if (!user || !firstWork) {
+      const timer = window.setTimeout(() => setLedger({ ...initialLedger(), server: true, dailyAllowance: DAILY_MAX, dailyBalance: 0, monthlyBalance: 0 }), 0)
+      return () => window.clearTimeout(timer)
+    }
+    const controller = new AbortController()
+    void fetch(`/api/interactions/state?workId=${encodeURIComponent(firstWork.detailId)}`, { cache: 'no-store', signal: controller.signal })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({})) as { tickets?: { daily: { allowance: number; used: number; balance: number }; monthly: { balance: number } } }
+        if (!response.ok || !data.tickets) throw new Error('ticket state')
+        setLedger((current) => ({ ...current, server: true, dailyAllowance: data.tickets!.daily.allowance, dailyUsed: data.tickets!.daily.used, dailyBalance: data.tickets!.daily.balance, monthlyBalance: data.tickets!.monthly.balance }))
+      })
+      .catch((error) => { if (error instanceof Error && error.name !== 'AbortError') setVoteMessage('ไม่สามารถโหลดยอดตั๋วล่าสุดได้') })
+    return () => controller.abort()
+  }, [serverWorks, user])
 
   useEffect(() => {
     let next = initialLedger()
@@ -608,16 +629,25 @@ export function RankingExperience({ state, works, creators }: Props) {
 
   const confirmVote = async (kind: VoteKind) => {
     if (!selectedWork) return
-    const max = kind === 'daily' ? DAILY_MAX : MONTHLY_MAX
-    const used = kind === 'daily' ? ledger.dailyUsed : ledger.monthlyUsed
-    if (used >= max) {
+    if (remainingTickets(ledger,kind) <= 0) {
       setVoteMessage('ตั๋วประเภทนี้ถูกใช้ครบแล้ว')
       return
     }
     if (serverWorks?.some((work) => work.detailId === selectedWork.detailId)) {
-      const response = await fetch('/api/interactions/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workId: selectedWork.detailId, kind }) })
-      const data = await response.json().catch(() => ({})) as { error?: string }
-      if (!response.ok) { setVoteMessage(data.error || 'โหวตไม่สำเร็จ'); return }
+      const response = await fetch('/api/interactions/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workId: selectedWork.detailId, kind, amount: 1, requestId: crypto.randomUUID() }) })
+      const data = await response.json().catch(() => ({})) as { tickets?: { daily: { allowance: number; used: number; balance: number }; monthly: { balance: number } }; totals?: { daily: number; monthly: number }; error?: string }
+      if (!response.ok || !data.tickets || !data.totals) { setVoteMessage(data.error || 'โหวตไม่สำเร็จ'); return }
+      setLedger((current) => ({
+        ...current,
+        server: true,
+        dailyAllowance: data.tickets!.daily.allowance,
+        dailyUsed: data.tickets!.daily.used,
+        dailyBalance: data.tickets!.daily.balance,
+        monthlyBalance: data.tickets!.monthly.balance,
+        bonuses: { ...current.bonuses, [selectedWork.detailId]: { daily: Math.max(0,data.totals!.daily-selectedWork.recommendedVotes), monthly: Math.max(0,data.totals!.monthly-selectedWork.monthlyVotes) } },
+      }))
+      setVoteMessage('บันทึกคะแนนโหวตเรียบร้อยแล้ว')
+      return
     }
     setLedger((current) => {
       const currentBonus = current.bonuses[selectedWork.detailId] ?? { daily: 0, monthly: 0 }

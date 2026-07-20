@@ -41,7 +41,8 @@ export interface DetailReview {
   spoiler: boolean
   likes: number
   dislikes: number
-  replies: Array<{ id: string; authorName: string; body: string; createdAt: string }>
+  viewerReaction?: 'like' | 'dislike' | null
+  replies: Array<{ id: string; userId: string; authorName: string; body: string; createdAt: string; updatedAt?: string }>
   createdAt: string
   updatedAt?: string
 }

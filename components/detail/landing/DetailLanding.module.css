@@ -70,6 +70,8 @@
 .reviewContent{display:flow-root;min-width:0;flex:1}
 .reviewHead{display:flex;align-items:center;justify-content:flex-start;gap:8px}
 .reviewName{color:var(--ink);font-size:14px;font-weight:700}
+.reviewStars{display:inline-flex;gap:1px;color:#f0a11b}
+.reviewStars svg{width:12px;height:12px}
 .reviewDate{margin-left:auto;color:#8b91a0;font-size:11.5px;white-space:nowrap}
 .reviewMenu{position:relative;color:#8b91a0}
 .reviewMenu summary{display:grid;width:27px;height:24px;place-items:center;border-radius:6px;cursor:pointer;list-style:none}
@@ -87,6 +89,7 @@
 .reviewFooter{display:flex;align-items:center;gap:16px;margin-top:9px}
 .reviewFooter button{display:inline-flex;align-items:center;gap:5px;color:#8b91a0;font-size:12px;transition:color .14s}
 .reviewFooter button:hover{color:#6b7080}
+.reviewFooter .reviewReactionActive{color:#cc4452}
 .reviewFooter button svg{width:15px;height:15px}
 .reviewFooter .reviewReplyButton{color:#cc4452;font-weight:700}
 .reviewFooter .reviewReplyButton:hover{color:#b23a48}
@@ -101,6 +104,9 @@
 .replyHead{display:flex;align-items:center;gap:7px}
 .replyHead strong{color:var(--ink);font-size:12.5px}
 .replyHead time{margin-left:auto;color:#8b91a0;font-size:11px}
+.replyActions{display:inline-flex;gap:6px;margin-left:4px}
+.replyActions button{color:#8b91a0;font-size:10.5px}
+.replyActions button:last-child{color:#cc4452}
 .reviewReply p{max-width:600px;margin-top:4px;color:#000;font-size:12.5px;line-height:1.65;word-break:break-word}
 .replyComposer{display:flex;align-items:flex-start;gap:9px;margin-top:12px}
 .replyComposer textarea{min-height:38px;padding:8px 11px;border-radius:9px;font-size:12.5px}

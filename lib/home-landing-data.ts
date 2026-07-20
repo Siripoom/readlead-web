@@ -2,6 +2,13 @@ import type { Genre } from '@/lib/types'
 
 export type LandingMediaType = 'read' | 'audio'
 
+export interface HomeHeroVisual {
+  x: number
+  y: number
+  size: number
+  color: string
+}
+
 export interface HomeHeroSlide {
   id: string
   badge: string
@@ -9,7 +16,10 @@ export interface HomeHeroSlide {
   description: string
   ctaLabel: string
   href: string
-  background: string
+  background?: string
+  desktopImageUrl?: string
+  mobileImageUrl?: string
+  visual?: HomeHeroVisual
 }
 
 export interface HomeActivityCard {
@@ -35,6 +45,8 @@ export interface HomeBookStripItem {
   views: string
   chapters: string
   workId?: string
+  coverUrl?: string
+  availability?: 'coming_soon' | 'published'
   gradient: string
 }
 
@@ -82,6 +94,7 @@ export interface HomeLatestUpdate {
   updatedAt: string
   gradient: string
   workId?: string
+  coverUrl?: string
 }
 
 const COVER_GRADIENTS = [

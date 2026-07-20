@@ -26,6 +26,7 @@ export interface DetailCatalogItem extends Work {
   genreLabel: string
   originLabel: string
   narrationType?: 'human' | 'ai'
+  availability?: 'coming_soon' | 'published'
 }
 
 export type DetailEpisode = Episode

@@ -50,14 +50,17 @@ export function useHorizontalScroll() {
         startScroll: row.scrollLeft,
         moved: false,
       }
-      row.setPointerCapture(event.pointerId)
     },
     onPointerMove: (event: React.PointerEvent<HTMLDivElement>) => {
       const row = rowRef.current
       const drag = dragState.current
       if (!row || !drag.active) return
       const delta = event.clientX - drag.startX
-      if (Math.abs(delta) > 4) drag.moved = true
+      if (Math.abs(delta) > 4 && !drag.moved) {
+        drag.moved = true
+        row.setPointerCapture(event.pointerId)
+      }
+      if (!drag.moved) return
       row.scrollLeft = drag.startScroll - delta
     },
     onPointerUp: (event: React.PointerEvent<HTMLDivElement>) => {

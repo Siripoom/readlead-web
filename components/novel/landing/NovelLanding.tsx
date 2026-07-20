@@ -11,14 +11,12 @@ import {
   NOVEL_EDITORIAL_PICKS,
   NOVEL_GENRE_OPTIONS,
   NOVEL_HERO_SLIDES,
-  NOVEL_LATEST_UPDATES,
   NOVEL_LIMITED_OFFERS,
-  NOVEL_NEW_BOOKS,
   NOVEL_POPULAR_BOOKS,
   NOVEL_RANKING_COLUMNS,
-  NOVEL_THAI_BOOKS,
   NOVEL_TRANSLATED_BOOKS,
 } from '@/lib/novel-landing-data'
+import type { NovelLandingCatalog } from '@/lib/novel-landing-catalog'
 import type { Genre } from '@/lib/types'
 import { NovelEditorialBanner } from './NovelEditorialBanner'
 import { NovelGenreSpotlight } from './NovelGenreSpotlight'
@@ -35,19 +33,35 @@ function matchesGenre(genreKeys: Genre[], activeGenre: Genre | null) {
   return !activeGenre || genreKeys.includes(activeGenre)
 }
 
-export function NovelLanding({ activeGenre = null }: { activeGenre?: string | null }) {
+function CatalogError({ message }: { message: string }) {
+  return (
+    <div role="status" className="rounded-2xl border border-dashed border-[var(--home-line)] bg-[var(--home-soft)] px-6 py-10 text-center text-sm text-[var(--home-ink-2)]">
+      {message}
+    </div>
+  )
+}
+
+export function NovelLanding({
+  activeGenre = null,
+  catalog,
+  catalogError,
+}: {
+  activeGenre?: string | null
+  catalog: NovelLandingCatalog
+  catalogError: string | null
+}) {
   const genre = parseGenre(activeGenre)
   const popular = NOVEL_POPULAR_BOOKS.filter((item) => matchesGenre(item.genreKeys, genre))
   const editorial = NOVEL_EDITORIAL_PICKS.filter((item) => matchesGenre(item.genreKeys, genre))
-  const newBooks = NOVEL_NEW_BOOKS.filter((item) => matchesGenre(item.genreKeys, genre))
-  const thaiBooks = NOVEL_THAI_BOOKS.filter((item) => matchesGenre(item.genreKeys, genre))
+  const newBooks = catalog.newWorks.filter((item) => matchesGenre(item.genreKeys, genre))
+  const thaiBooks = catalog.newThaiWorks.filter((item) => matchesGenre(item.genreKeys, genre))
   const translatedBooks = NOVEL_TRANSLATED_BOOKS.filter((item) => matchesGenre(item.genreKeys, genre))
   const categoryBooks = NOVEL_CATEGORY_BOOKS.filter((item) => matchesGenre(item.genreKeys, genre))
   const rankings = NOVEL_RANKING_COLUMNS.map((column) => ({
     ...column,
     items: column.items.filter((item) => matchesGenre(item.genreKeys, genre)),
   }))
-  const updates = NOVEL_LATEST_UPDATES.filter((item) => matchesGenre(item.genreKeys, genre))
+  const updates = catalog.latestUpdates.filter((item) => matchesGenre(item.genreKeys, genre))
 
   return (
     <div className={`${styles.root} pb-5 sm:pb-9`}>
@@ -86,12 +100,16 @@ export function NovelLanding({ activeGenre = null }: { activeGenre?: string | nu
 
         <section className="mt-10">
           <LandingSectionHeading title="ผลงานเรื่องใหม่" href="/discover" />
-          <HomeBookStrip items={newBooks} variant="recommended" />
+          {catalogError
+            ? <CatalogError message={catalogError} />
+            : <HomeBookStrip items={newBooks} variant="recommended" />}
         </section>
 
         <section className="mt-10">
           <LandingSectionHeading title="ผลงานไทยเรื่องใหม่" href="/discover" />
-          <HomeBookStrip items={thaiBooks} variant="recommended" />
+          {catalogError
+            ? <CatalogError message={catalogError} />
+            : <HomeBookStrip items={thaiBooks} variant="recommended" />}
         </section>
 
         <section className="mt-10">
@@ -111,7 +129,9 @@ export function NovelLanding({ activeGenre = null }: { activeGenre?: string | nu
 
         <section className="mt-10" id="latest">
           <LandingSectionHeading title="อัปเดตล่าสุด" href="/discover" />
-          <LatestUpdates key={genre ?? 'all'} items={updates} />
+          {catalogError
+            ? <CatalogError message={catalogError} />
+            : <LatestUpdates key={genre ?? 'all'} items={updates} />}
         </section>
       </main>
     </div>

@@ -1,13 +1,13 @@
 import { ActiveGenreChip } from '@/components/home/ActiveGenreChip'
 import {
   HOME_ACTIVITY_CARDS,
-  HOME_HERO_SLIDES,
   HOME_LATEST_UPDATES,
   HOME_LIMITED_OFFERS,
   HOME_POPULAR_BOOKS,
   HOME_RANKING_COLUMNS,
   HOME_RECOMMENDED_BOOKS,
 } from '@/lib/home-landing-data'
+import type { HomeHeroCatalog } from '@/lib/home-hero-catalog'
 import type { Genre } from '@/lib/types'
 import { ActivityPromos } from './ActivityPromos'
 import { HomeBookStrip } from './HomeBookStrip'
@@ -22,7 +22,7 @@ function hasGenre(genreKeys: Genre[], activeGenre: Genre | null) {
   return !activeGenre || genreKeys.includes(activeGenre)
 }
 
-export function HomeLanding({ activeGenre = null }: { activeGenre?: string | null }) {
+export function HomeLanding({ activeGenre = null, hero }: { activeGenre?: string | null; hero: HomeHeroCatalog }) {
   const genre = activeGenre as Genre | null
   const popular = HOME_POPULAR_BOOKS.filter((item) => hasGenre(item.genreKeys, genre))
   const recommended = HOME_RECOMMENDED_BOOKS.filter((item) => hasGenre(item.genreKeys, genre))
@@ -34,7 +34,7 @@ export function HomeLanding({ activeGenre = null }: { activeGenre?: string | nul
 
   return (
     <div className={`${styles.root} pb-4 sm:pb-8`}>
-      <HomeHero slides={HOME_HERO_SLIDES} />
+      <HomeHero slides={hero.slides} slideSeconds={hero.slideSeconds} />
 
       <div className="mx-auto max-w-[1200px] px-5 sm:px-6">
         <div className="mt-6">

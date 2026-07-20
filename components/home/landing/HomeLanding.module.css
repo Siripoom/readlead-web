@@ -41,6 +41,50 @@
   pointer-events: auto;
 }
 
+.heroMedia,
+.heroMedia img,
+.heroShade {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.heroMedia {
+  display: block;
+}
+
+.heroMedia img {
+  object-fit: cover;
+  object-position: center;
+}
+
+.heroShade {
+  z-index: 1;
+  pointer-events: none;
+}
+
+.heroShadeDark {
+  background: linear-gradient(90deg, rgba(15, 17, 20, .68) 0%, rgba(15, 17, 20, .42) 45%, rgba(15, 17, 20, .08) 72%, transparent 100%);
+}
+
+.heroShadeLight {
+  background: linear-gradient(90deg, rgba(255, 255, 255, .88) 0%, rgba(255, 255, 255, .58) 45%, rgba(255, 255, 255, .12) 72%, transparent 100%);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+}
+
+.heroPositioner {
+  position: absolute;
+  top: var(--hero-y);
+  left: var(--hero-x);
+  width: min(590px, calc(100% - var(--hero-x) - 24px));
+  transform: translateY(-50%);
+}
+
 .heroCopy {
   opacity: 0;
   transform: translateY(12px);
@@ -50,6 +94,20 @@
 .heroSlideActive .heroCopy {
   opacity: 1;
   transform: none;
+}
+
+.heroCmsTitle {
+  color: var(--hero-color);
+  font-size: clamp(24px, var(--hero-title-size), 72px);
+}
+
+.heroCmsCopy {
+  color: var(--hero-color);
+}
+
+.heroCmsDescription {
+  color: var(--hero-color);
+  opacity: .88;
 }
 
 .rankDetail {
@@ -77,5 +135,26 @@
   .scrollRow {
     scroll-behavior: auto;
     transition: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .heroPositioner {
+    top: 50%;
+    right: 20px;
+    left: 20px;
+    width: auto;
+  }
+
+  .heroCmsTitle {
+    font-size: clamp(27px, 8.5vw, 38px);
+  }
+
+  .heroShadeDark {
+    background: rgba(15, 17, 20, .56);
+  }
+
+  .heroShadeLight {
+    background: rgba(255, 255, 255, .68);
   }
 }

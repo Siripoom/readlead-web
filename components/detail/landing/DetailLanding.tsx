@@ -1,6 +1,7 @@
 'use client'
 
 import { startTransition, useEffect, useMemo, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { BookOpen, Bookmark, ChevronDown, ChevronRight, Clock, Crown, Eye, Headphones, MessageCircle, MoreHorizontal, Pencil, Reply, Share2, Star, Ticket, ThumbsDown, ThumbsUp, Users } from 'lucide-react'
@@ -70,6 +71,7 @@ function seededReviews(work: DetailCatalogItem): DetailReview[] {
 
 export function DetailLanding({ work, episodes, related, initialReviews, serverBacked = false }: { work: DetailCatalogItem; episodes: DetailEpisode[]; related: DetailCatalogItem[]; initialReviews?: DetailReview[]; serverBacked?: boolean }) {
   const router = useRouter()
+  const comingSoon = work.availability === 'coming_soon'
   const { isLoggedIn, user } = useRole()
   const { profile } = useProfile()
   const [followed, setFollowed] = useState(false)
@@ -106,6 +108,7 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
   const [fanMode, setFanMode] = useState<'month' | 'all'>('month')
   const [fanKind, setFanKind] = useState<'daily' | 'monthly' | 'tip'>('daily')
   const [fanOpen, setFanOpen] = useState(false)
+  const [coverFailed, setCoverFailed] = useState(false)
 
   useEffect(() => {
     if (serverBacked) {
@@ -115,6 +118,7 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
         setServerTickets(null)
         setOpenChapterGroups(new Set(episodes.length ? [0] : []))
       })
+      if (comingSoon) return
       void fetch(`/api/catalog/works/${encodeURIComponent(work.detailId)}/view`, { method: 'POST' })
       if (user) {
         const controller = new AbortController()
@@ -170,7 +174,7 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
         setTipTotal(supportLogs.filter((log) => log.detailId === work.detailId).reduce((sum, log) => sum + (log.amount ?? 0), 0))
       })
     } catch { startTransition(() => setLedgerReady(true)) }
-  }, [episodes.length, initialReviews, serverBacked, user, work])
+  }, [comingSoon, episodes.length, initialReviews, serverBacked, user, work])
 
   useEffect(() => { if (ledgerReady && !serverBacked) localStorage.setItem(VOTE_KEY, JSON.stringify(ledger)) }, [ledger, ledgerReady, serverBacked])
   useEffect(() => { if (!notice) return; const timer = window.setTimeout(() => setNotice(''), 2400); return () => window.clearTimeout(timer) }, [notice])
@@ -346,23 +350,23 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
   return <main className={styles.page}><div className={styles.wrap}>
     <nav className={styles.breadcrumbs}><Link href="/">หน้าแรก</Link><ChevronRight size={13}/><Link href={routeForType(work.type)}>{typeLabel(work.type)}</Link><ChevronRight size={13}/><span>{work.title}</span></nav>
     <section className={`${styles.card} ${styles.hero}`}>
-      <div className={styles.heroMain}><div className={styles.cover} style={{ background: work.coverGradient }}><span className={styles.coverType}>{typeLabel(work.type)}</span></div><div>
+      <div className={styles.heroMain}><div className={styles.cover} style={{ background: work.coverGradient }}>{work.coverUrl && !coverFailed && <Image unoptimized fill sizes="(max-width: 640px) 150px, 210px" src={work.coverUrl} alt={`ภาพปก ${work.title}`} className="object-cover" onError={() => setCoverFailed(true)} />}<span className={styles.coverType}>{typeLabel(work.type)}</span></div><div>
         <h1 className={styles.title}>{work.title}</h1>
         <div className={styles.authorRow}><span>โดย</span><Link href={`/profile/${encodeURIComponent(work.authorId)}`} className={styles.author}>{work.authorName}</Link><button className={`${styles.follow} ${followed ? styles.followActive : ''}`} onClick={() => togglePersist('follow', followed)}>{followed ? 'กำลังติดตาม' : '+ ติดตาม'}</button></div>
-        <div className={styles.meta}><span className={styles.pill}>{work.genreLabel}</span><span>{work.originLabel}</span><span>•</span><span>{work.status === 'completed' ? 'จบแล้ว' : 'กำลังอัปเดต'}</span><span>•</span><span>อัปเดต 15 ก.ค. 2569</span></div>
+        <div className={styles.meta}><span className={styles.pill}>{work.genreLabel}</span><span>{work.originLabel}</span><span>•</span><span>{comingSoon ? 'เร็ว ๆ นี้' : work.status === 'completed' ? 'จบแล้ว' : 'กำลังอัปเดต'}</span><span>•</span><span>{comingSoon ? `อนุมัติ ${formatEpisodeDate(work.updatedAt)}` : `อัปเดต ${formatEpisodeDate(work.updatedAt)}`}</span></div>
         <p className={styles.synopsis}>{work.synopsis}</p>
         <div className={styles.stats}><div className={styles.stat}><b>{fmt(work.voteCount + bonus.daily)}</b><span>โหวตแนะนำ</span></div><div className={styles.stat}><b>{fmt(work.weeklyVoteCount + bonus.monthly)}</b><span>โหวตรายเดือน</span></div><div className={styles.stat}><b>{fmt(work.viewCount)}</b><span>{work.type === 'audiobook' ? 'ยอดฟัง' : 'ยอดอ่าน'}</span></div><div className={styles.stat}><b>{work.episodeCount}</b><span>ตอนทั้งหมด</span></div></div>
-        <div className={styles.actions}><button className={styles.primary} onClick={() => episodes[0] && openEpisode(episodes[0])}>{work.type === 'audiobook' ? <Headphones size={16}/> : <BookOpen size={16}/>} {work.type === 'audiobook' ? 'เริ่มฟัง' : 'เริ่มอ่าน'}</button><button className={`${styles.secondary} ${shelved ? styles.secondaryActive : ''}`} onClick={() => togglePersist('shelf', shelved)}><Bookmark size={15} fill={shelved ? 'currentColor' : 'none'}/> {shelved ? 'อยู่ในชั้นแล้ว' : 'เพิ่มเข้าชั้น'}</button><button className={styles.ghost} onClick={share}><Share2 size={16}/> แชร์</button></div>
+        <div className={styles.actions}>{!comingSoon && <><button className={styles.primary} onClick={() => episodes[0] && openEpisode(episodes[0])}>{work.type === 'audiobook' ? <Headphones size={16}/> : <BookOpen size={16}/>} {work.type === 'audiobook' ? 'เริ่มฟัง' : 'เริ่มอ่าน'}</button><button className={`${styles.secondary} ${shelved ? styles.secondaryActive : ''}`} onClick={() => togglePersist('shelf', shelved)}><Bookmark size={15} fill={shelved ? 'currentColor' : 'none'}/> {shelved ? 'อยู่ในชั้นแล้ว' : 'เพิ่มเข้าชั้น'}</button></>}<button className={styles.ghost} onClick={share}><Share2 size={16}/> แชร์</button></div>
       </div></div>
-      <div className={styles.support}>
+      {comingSoon ? <div className={styles.comingSoonNotice}><b>เร็ว ๆ นี้</b><span>ผลงานผ่านการอนุมัติแล้ว นักเขียนกำลังเตรียมตอนแรก</span></div> : <div className={styles.support}>
         <Support variant="daily" title="โหวตแนะนำ" subtitle="แนะนำเรื่องโปรดของคุณ" score={fmt(work.voteCount + bonus.daily)} detail={serverBacked ? `เหลือ ${availableTickets('daily')} / ${serverTickets?.daily.allowance ?? DAILY_MAX} ใบวันนี้` : `เหลือ ${availableTickets('daily')} / ${DAILY_MAX} ใบวันนี้`} action="โหวต" onClick={() => openVote('daily')}/>
         <Support variant="monthly" title="โหวตรายเดือน" subtitle="คะแนนชิงอันดับประจำเดือนนี้" score={fmt(work.weeklyVoteCount + bonus.monthly)} detail={serverBacked ? `คงเหลือ ${availableTickets('monthly')} ใบ` : `เหลือ ${availableTickets('monthly')} / ${MONTHLY_MAX} ใบเดือนนี้`} action="โหวต" onClick={() => openVote('monthly')}/>
         <Support variant="tip" title="ทิปนักเขียน" subtitle="สนับสนุนนักเขียนโดยตรง" score={fmt(tipTotal)} unit="เหรียญ" detail={tipTotal ? 'ขอบคุณสำหรับทุกกำลังใจ' : 'ส่งกำลังใจพร้อมข้อความ'} action="ทิป" onClick={() => requireLogin(() => setDonateOpen(true))}/>
-      </div>
+      </div>}
     </section>
     <section className={`${styles.card} ${styles.description}`}><h2 className={styles.sectionTitle}>รายละเอียดเรื่อง</h2><p className={expanded ? '' : 'line-clamp-3'}>{work.synopsis} {work.synopsis} เรื่องราวจะค่อย ๆ เปิดเผยปริศนาและความสัมพันธ์ของตัวละคร ผ่านบททดสอบที่ไม่มีใครสามารถหลีกเลี่ยงได้</p><button className={styles.readMore} onClick={() => setExpanded((value) => !value)}>{expanded ? 'ย่อรายละเอียด' : 'อ่านเพิ่มเติม'}</button><div className={styles.tags}>{work.tags.map((tag) => <span key={tag} className={styles.tag}>#{tag}</span>)}</div></section>
     <div className={styles.columns}><div className={styles.stack}>
-      <section className={`${styles.card} ${styles.section} ${styles.reviewsSection}`}>
+      {!comingSoon && <section className={`${styles.card} ${styles.section} ${styles.reviewsSection}`}>
         <div className={styles.reviewsHeader}>
           <h2>รีวิวจากผู้อ่าน</h2>
           <div className={styles.reviewsHeaderActions}>
@@ -416,7 +420,7 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
           {!reviews.length&&<p className={styles.empty}>ยังไม่มีรีวิว เป็นคนแรกที่เขียนรีวิวเรื่องนี้ได้เลย</p>}
         </div>
         {sortedReviews.length>3&&<button type="button" className={styles.reviewMore} onClick={()=>setReviewsExpanded((value)=>!value)}>{reviewsExpanded?'แสดงน้อยลง ▲':`อ่านเพิ่มเติม (${sortedReviews.length-3}) ...`}</button>}
-      </section>
+      </section>}
       <section className={`${styles.card} ${styles.section}`}>
         <div className={styles.chapterHeader}>
           <h2 className={styles.chapterHeading}>สารบัญ</h2>
@@ -449,13 +453,13 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
         })}</div> : <div className={styles.chapterEmpty}>ยังไม่มีตอน — นักเขียนกำลังเตรียมเนื้อหา</div>}
       </section>
     </div><aside className={`${styles.stack} ${styles.sidebar}`}>
-      <section className={`${styles.card} ${styles.section}`}><div className={styles.sectionHeader}><h2 className={styles.sectionTitle}>อันดับแฟนคลับ</h2><Users size={18}/></div><div className={styles.sideTabs}><button className={fanMode==='month'?styles.sideTabActive:''} onClick={()=>setFanMode('month')}>เดือนนี้</button><button className={fanMode==='all'?styles.sideTabActive:''} onClick={()=>setFanMode('all')}>ตลอดกาล</button></div><div className={styles.sideTabs}><button className={fanKind==='daily'?styles.sideTabActive:''} onClick={()=>setFanKind('daily')}>แนะนำ</button><button className={fanKind==='monthly'?styles.sideTabActive:''} onClick={()=>setFanKind('monthly')}>รายเดือน</button><button className={fanKind==='tip'?styles.sideTabActive:''} onClick={()=>setFanKind('tip')}>บริจาค</button></div>{fans.slice(0,5).map((fan,index)=><div key={fan.name} className={styles.fan}><span className={styles.fanRank}>{index+1}</span><span className={styles.avatar}>{fan.name[0]}</span><strong>{fan.name}</strong><span>{fmt(fan.score)}</span></div>)}{isLoggedIn&&<div className={`${styles.fan} ${styles.currentFan}`}><span>–</span><span className={styles.avatar}>{profile.displayName[0]}</span><strong>{profile.displayName}</strong><span>{bonus.daily+bonus.monthly+tipTotal}</span></div>}<button className={styles.allButton} onClick={()=>setFanOpen(true)}>ดูอันดับทั้งหมด</button></section>
+      {!comingSoon && <section className={`${styles.card} ${styles.section}`}><div className={styles.sectionHeader}><h2 className={styles.sectionTitle}>อันดับแฟนคลับ</h2><Users size={18}/></div><div className={styles.sideTabs}><button className={fanMode==='month'?styles.sideTabActive:''} onClick={()=>setFanMode('month')}>เดือนนี้</button><button className={fanMode==='all'?styles.sideTabActive:''} onClick={()=>setFanMode('all')}>ตลอดกาล</button></div><div className={styles.sideTabs}><button className={fanKind==='daily'?styles.sideTabActive:''} onClick={()=>setFanKind('daily')}>แนะนำ</button><button className={fanKind==='monthly'?styles.sideTabActive:''} onClick={()=>setFanKind('monthly')}>รายเดือน</button><button className={fanKind==='tip'?styles.sideTabActive:''} onClick={()=>setFanKind('tip')}>บริจาค</button></div>{fans.slice(0,5).map((fan,index)=><div key={fan.name} className={styles.fan}><span className={styles.fanRank}>{index+1}</span><span className={styles.avatar}>{fan.name[0]}</span><strong>{fan.name}</strong><span>{fmt(fan.score)}</span></div>)}{isLoggedIn&&<div className={`${styles.fan} ${styles.currentFan}`}><span>–</span><span className={styles.avatar}>{profile.displayName[0]}</span><strong>{profile.displayName}</strong><span>{bonus.daily+bonus.monthly+tipTotal}</span></div>}<button className={styles.allButton} onClick={()=>setFanOpen(true)}>ดูอันดับทั้งหมด</button></section>}
       <section className={`${styles.card} ${styles.section}`}><div className={styles.sectionHeader}><h2 className={styles.sectionTitle}>เรื่องแนะนำ</h2><Star size={18}/></div><div className={styles.related}>{related.map((item)=><Link key={item.detailId} href={`/detail?bookId=${encodeURIComponent(item.detailId)}`} className={styles.relatedItem}><span className={styles.relatedCover} style={{background:item.coverGradient}}/><span><b>{item.title}</b><span>{item.authorName}<br/>{item.genreLabel}</span></span></Link>)}</div></section>
     </aside></div>
   </div>
-  <Dialog open={voteOpen} onOpenChange={setVoteOpen}><DialogContent><DialogHeader><DialogTitle>ใช้ตั๋วโหวตให้ “{work.title}”</DialogTitle></DialogHeader><div className={styles.dialogOptions}><button className={voteKind==='daily'?styles.dialogOptionActive:''} disabled={availableTickets('daily')<=0} onClick={()=>{setVoteKind('daily');setVoteAmount(1)}}><span><Ticket size={16}/> โหวตแนะนำ</span><b>เหลือ {availableTickets('daily')} ใบ</b></button><button className={voteKind==='monthly'?styles.dialogOptionActive:''} disabled={availableTickets('monthly')<=0} onClick={()=>{setVoteKind('monthly');setVoteAmount(1)}}><span><Crown size={16}/> โหวตรายเดือน</span><b>เหลือ {availableTickets('monthly')} ใบ</b></button></div><div className={styles.quantity}><label htmlFor="vote-amount">จำนวนตั๋ว</label><input id="vote-amount" type="number" min={1} max={Math.max(1,availableTickets(voteKind))} value={voteAmount} onChange={(event)=>setVoteAmount(Number(event.target.value))}/><button className={styles.primary} disabled={voteBusy||availableTickets(voteKind)<=0} onClick={()=>void submitVote()}>{voteBusy?'กำลังโหวต...':'ยืนยันโหวต'}</button></div></DialogContent></Dialog>
+  {!comingSoon && <><Dialog open={voteOpen} onOpenChange={setVoteOpen}><DialogContent><DialogHeader><DialogTitle>ใช้ตั๋วโหวตให้ “{work.title}”</DialogTitle></DialogHeader><div className={styles.dialogOptions}><button className={voteKind==='daily'?styles.dialogOptionActive:''} disabled={availableTickets('daily')<=0} onClick={()=>{setVoteKind('daily');setVoteAmount(1)}}><span><Ticket size={16}/> โหวตแนะนำ</span><b>เหลือ {availableTickets('daily')} ใบ</b></button><button className={voteKind==='monthly'?styles.dialogOptionActive:''} disabled={availableTickets('monthly')<=0} onClick={()=>{setVoteKind('monthly');setVoteAmount(1)}}><span><Crown size={16}/> โหวตรายเดือน</span><b>เหลือ {availableTickets('monthly')} ใบ</b></button></div><div className={styles.quantity}><label htmlFor="vote-amount">จำนวนตั๋ว</label><input id="vote-amount" type="number" min={1} max={Math.max(1,availableTickets(voteKind))} value={voteAmount} onChange={(event)=>setVoteAmount(Number(event.target.value))}/><button className={styles.primary} disabled={voteBusy||availableTickets(voteKind)<=0} onClick={()=>void submitVote()}>{voteBusy?'กำลังโหวต...':'ยืนยันโหวต'}</button></div></DialogContent></Dialog>
   <Dialog open={fanOpen} onOpenChange={setFanOpen}><DialogContent><DialogHeader><DialogTitle>อันดับแฟนคลับทั้งหมด</DialogTitle></DialogHeader><div className={styles.fanDialog}>{[...fans,...fans.map((fan,index)=>({...fan,name:`${fan.name} ${index+2}`,score:fan.score-420}))].map((fan,index)=><div key={`${fan.name}-${index}`} className={styles.fan}><span className={styles.fanRank}>{index+1}</span><span className={styles.avatar}>{fan.name[0]}</span><strong>{fan.name}</strong><span>{fmt(fan.score)}</span></div>)}</div></DialogContent></Dialog>
-  <DonateModal authorName={work.authorName} detailId={work.detailId} open={donateOpen} onOpenChange={setDonateOpen} onSuccess={(amount)=>{setTipTotal((value)=>value+amount);setNotice('ส่งกำลังใจให้นักเขียนแล้ว')}}/>
+  <DonateModal authorName={work.authorName} detailId={work.detailId} open={donateOpen} onOpenChange={setDonateOpen} onSuccess={(amount)=>{setTipTotal((value)=>value+amount);setNotice('ส่งกำลังใจให้นักเขียนแล้ว')}}/></>}
   <PurchaseEpisodeModal episode={purchaseEpisode} workTitle={work.title} open={Boolean(purchaseEpisode)} onOpenChange={(open)=>!open&&setPurchaseEpisode(null)} onPurchased={purchasedEpisode} serverPurchase={serverBacked ? purchaseOnServer : undefined}/>
   {notice&&<div className={styles.notice}>{notice}</div>}</main>
 }

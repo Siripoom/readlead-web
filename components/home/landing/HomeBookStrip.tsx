@@ -1,7 +1,9 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight, Eye, Headphones, List } from 'lucide-react'
+import { useState } from 'react'
 import type { HomeBookStripItem } from '@/lib/home-landing-data'
 import { cn } from '@/lib/utils'
 import styles from './HomeLanding.module.css'
@@ -48,6 +50,33 @@ function CoverScene({ index }: { index: number }) {
       <circle cx="50" cy="61" r="10" fill="#05050b" opacity=".46" />
       <path d="m40 53 4 8 6-10 6 10 4-8v10H40z" fill="#f6d77a" opacity=".8" />
     </svg>
+  )
+}
+
+function BookCover({ item, index }: { item: HomeBookStripItem; index: number }) {
+  const [coverFailed, setCoverFailed] = useState(false)
+  return (
+    <>
+      <div className="absolute inset-0 transition-transform duration-300 group-hover:scale-[1.03]">
+        <CoverScene index={index} />
+      </div>
+      {item.coverUrl && !coverFailed && (
+        <Image
+          unoptimized
+          fill
+          sizes="(max-width: 640px) 160px, 176px"
+          src={item.coverUrl}
+          alt={`ภาพปก ${item.title}`}
+          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          onError={() => setCoverFailed(true)}
+        />
+      )}
+      {item.availability === 'coming_soon' && (
+        <span className="absolute right-2 top-2 z-[2] rounded-full bg-[#cc4452] px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
+          เร็ว ๆ นี้
+        </span>
+      )}
+    </>
   )
 }
 
@@ -108,18 +137,20 @@ export function HomeBookStrip({ items, variant = 'popular' }: Props) {
                 className="relative aspect-[2/3] overflow-hidden rounded-[13px] shadow-[0_2px_7px_rgba(0,0,0,0.12)]"
                 style={{ background: item.gradient }}
               >
-                <div className="absolute inset-0 transition-transform duration-300 group-hover:scale-[1.03]">
-                  <CoverScene index={index} />
-                </div>
+                <BookCover item={item} index={index} />
               </div>
               <div className="mt-2.5 min-w-0">
                 <h3 className="truncate text-[14px] font-semibold leading-snug text-[var(--home-ink)]">{item.title}</h3>
                 <p className="mt-0.5 truncate text-xs text-[var(--home-ink-3)]">{item.author}</p>
                 <p className="mt-0.5 truncate text-xs text-[var(--home-ink)]">{item.genreLabel} · {item.originLabel}</p>
-                <div className="mt-1.5 flex items-center gap-3 text-xs font-bold text-[var(--home-ink-2)]">
-                  <span className="inline-flex items-center gap-1"><StatIcon className="h-3.5 w-3.5" />{item.views}</span>
-                  <span className="inline-flex items-center gap-1"><List className="h-3.5 w-3.5" />{item.chapters}</span>
-                </div>
+                {item.availability === 'coming_soon' ? (
+                  <p className="mt-1.5 text-[11px] font-semibold text-[var(--home-red)]">ผ่านการอนุมัติแล้ว · รอตอนแรก</p>
+                ) : (
+                  <div className="mt-1.5 flex items-center gap-3 text-xs font-bold text-[var(--home-ink-2)]">
+                    <span className="inline-flex items-center gap-1"><StatIcon className="h-3.5 w-3.5" />{item.views}</span>
+                    <span className="inline-flex items-center gap-1"><List className="h-3.5 w-3.5" />{item.chapters}</span>
+                  </div>
+                )}
               </div>
             </Link>
           )

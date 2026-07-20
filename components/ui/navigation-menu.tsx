@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -147,55 +148,57 @@ export function Navbar() {
                   <ChevronDown className="h-4 w-4 text-[#94a3b8]" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" sideOffset={8} className="w-72 p-2">
-                  <DropdownMenuLabel className="flex items-center gap-3 px-2 py-2 normal-case">
-                    <Avatar className="size-10">
-                      <AvatarImage src={profile.avatarUrl} alt="" />
-                      <AvatarFallback className="bg-[#f5dfe3] font-semibold text-[#9c3340]">
-                        {avatarFallback}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-semibold text-[#334155]">
-                        {profile.displayName}
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel className="flex items-center gap-3 px-2 py-2 normal-case">
+                      <Avatar className="size-10">
+                        <AvatarImage src={profile.avatarUrl} alt="" />
+                        <AvatarFallback className="bg-[#f5dfe3] font-semibold text-[#9c3340]">
+                          {avatarFallback}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-[#334155]">
+                          {profile.displayName}
+                        </span>
+                        <span className="block text-xs font-normal text-[#94a3b8]">
+                          {ROLE_LABELS[role]}
+                        </span>
                       </span>
-                      <span className="block text-xs font-normal text-[#94a3b8]">
-                        {ROLE_LABELS[role]}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => navigateFromMenu(`${profileHref}?tab=wallet`)}
+                      className="my-1 gap-3 bg-[#fff7f8] px-3 py-2.5 focus:bg-[#fcecef]"
+                    >
+                      <Coins className="text-[#cc4452]" />
+                      <span>
+                        <span className="block text-xs text-[#94a3b8]">ยอดเหรียญ</span>
+                        <span className="font-bold text-[#9c3340]">{formattedBalance} RL</span>
                       </span>
-                    </span>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => navigateFromMenu(`${profileHref}?tab=wallet`)}
-                    className="my-1 gap-3 bg-[#fff7f8] px-3 py-2.5 focus:bg-[#fcecef]"
-                  >
-                    <Coins className="text-[#cc4452]" />
-                    <span>
-                      <span className="block text-xs text-[#94a3b8]">ยอดเหรียญ</span>
-                      <span className="font-bold text-[#9c3340]">{formattedBalance} RL</span>
-                    </span>
-                    <span className="ml-auto rounded-md bg-[#cc4452] px-2 py-1 text-xs font-semibold text-white">
-                      เติมเหรียญ
-                    </span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigateFromMenu(profileHref)} className="gap-3 px-3 py-2">
-                    <LayoutDashboard /> บัญชีของฉัน
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigateFromMenu(`${profileHref}?tab=wallet`)} className="gap-3 px-3 py-2">
-                    <WalletCards /> กระเป๋าเงิน
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigateFromMenu(`${profileHref}?tab=wallet`)} className="gap-3 px-3 py-2">
-                    <History /> ประวัติการซื้อ
-                  </DropdownMenuItem>
-                  {canOpenCreator && (
-                    <DropdownMenuItem onClick={() => navigateFromMenu(`${profileHref}?tab=creator`)} className="gap-3 px-3 py-2">
-                      <PenSquare /> หน้านักเขียน
+                      <span className="ml-auto rounded-md bg-[#cc4452] px-2 py-1 text-xs font-semibold text-white">
+                        เติมเหรียญ
+                      </span>
                     </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} variant="destructive" className="gap-3 px-3 py-2">
-                    <LogOut /> ออกจากระบบ
-                  </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigateFromMenu(profileHref)} className="gap-3 px-3 py-2">
+                      <LayoutDashboard /> บัญชีของฉัน
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigateFromMenu(`${profileHref}?tab=wallet`)} className="gap-3 px-3 py-2">
+                      <WalletCards /> กระเป๋าเงิน
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigateFromMenu(`${profileHref}?tab=wallet`)} className="gap-3 px-3 py-2">
+                      <History /> ประวัติการซื้อ
+                    </DropdownMenuItem>
+                    {canOpenCreator && (
+                      <DropdownMenuItem onClick={() => navigateFromMenu(`${profileHref}?tab=creator`)} className="gap-3 px-3 py-2">
+                        <PenSquare /> หน้านักเขียน
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={logout} variant="destructive" className="gap-3 px-3 py-2">
+                      <LogOut /> ออกจากระบบ
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import type { EpisodeType } from '@/lib/types'
+import type { CreatorWorkDetail } from '@/lib/creator-studio-types'
 
 interface Props {
   params: Promise<{ workId: string }>
@@ -27,6 +28,7 @@ interface EpisodeDraft {
   fileSize: number
   previewUrl?: string
   content?: string
+  file?: File
   status: 'ready' | 'pending'
 }
 
@@ -36,6 +38,7 @@ interface ImagePage {
   url: string
   name: string
   fileSize: number
+  file: File
 }
 
 function FreePaidToggle({ isFree, onChange, small }: { isFree: boolean; onChange: (v: boolean) => void; small?: boolean }) {
@@ -71,6 +74,9 @@ export default function NewEpisodePage({ params }: Props) {
   const [pages, setPages] = useState<ImagePage[]>([])
   const [pageDragId, setPageDragId] = useState<string | null>(null)
   const [pageOverId, setPageOverId] = useState<string | null>(null)
+  const [publishBusy, setPublishBusy] = useState(false)
+  const [publishError, setPublishError] = useState('')
+  const [work, setWork] = useState<CreatorWorkDetail | null>(null)
 
   const textFileRef  = useRef<HTMLInputElement>(null)
   const imageFileRef = useRef<HTMLInputElement>(null)
@@ -80,6 +86,18 @@ export default function NewEpisodePage({ params }: Props) {
   useEffect(() => {
     return () => { previewUrlsRef.current.forEach(u => URL.revokeObjectURL(u)) }
   }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch(`/api/creator/works/${workId}`, { cache: 'no-store', signal: controller.signal })
+      .then(async (response) => {
+        const body = await response.json().catch(() => ({})) as { work?: CreatorWorkDetail; error?: string }
+        if (!response.ok || !body.work) throw new Error(body.error || 'โหลดสถานะผลงานไม่สำเร็จ')
+        setWork(body.work)
+      })
+      .catch((cause) => { if (cause instanceof Error && cause.name !== 'AbortError') setPublishError(cause.message) })
+    return () => controller.abort()
+  }, [workId])
 
   // ── helpers ──────────────────────────────────────────────────────
   const stripExt = (name: string) => name.replace(/\.[^/.]+$/, '')
@@ -94,7 +112,7 @@ export default function NewEpisodePage({ params }: Props) {
     Array.from(files).forEach(file => {
       const id = crypto.randomUUID()
       const isPending = file.name.endsWith('.docx')
-      setDrafts(prev => [...prev, { id, title: stripExt(file.name), isFree: false, fileName: file.name, fileSize: file.size, status: isPending ? 'pending' : 'ready' }])
+      setDrafts(prev => [...prev, { id, title: stripExt(file.name), isFree: false, fileName: file.name, fileSize: file.size, file, status: isPending ? 'pending' : 'ready' }])
       if (!isPending) {
         const reader = new FileReader()
         reader.onload = e => setDrafts(prev => prev.map(d => d.id === id ? { ...d, content: e.target?.result as string } : d))
@@ -107,7 +125,7 @@ export default function NewEpisodePage({ params }: Props) {
     const newDrafts: EpisodeDraft[] = Array.from(files).map(file => {
       const url = URL.createObjectURL(file)
       previewUrlsRef.current.push(url)
-      return { id: crypto.randomUUID(), title: stripExt(file.name), isFree: false, fileName: file.name, fileSize: file.size, previewUrl: url, status: 'ready' as const }
+      return { id: crypto.randomUUID(), title: stripExt(file.name), isFree: false, fileName: file.name, fileSize: file.size, file, previewUrl: url, status: 'ready' as const }
     })
     setDrafts(prev => [...prev, ...newDrafts])
   }
@@ -130,7 +148,7 @@ export default function NewEpisodePage({ params }: Props) {
     const newPages: ImagePage[] = Array.from(files).map(file => {
       const url = URL.createObjectURL(file)
       previewUrlsRef.current.push(url)
-      return { id: crypto.randomUUID(), url, name: file.name, fileSize: file.size }
+      return { id: crypto.randomUUID(), url, name: file.name, fileSize: file.size, file }
     })
     setPages(prev => [...prev, ...newPages])
   }
@@ -195,9 +213,36 @@ export default function NewEpisodePage({ params }: Props) {
     e.target.value = ''
   }
 
-  function handlePublish() { router.push(`/creator/works/${workId}`) }
+  async function saveEpisodes(targetStatus: 'draft' | 'published') {
+    setPublishBusy(true); setPublishError('')
+    try {
+      if (!work?.capabilities.canCreateDraftEpisode) throw new Error('สถานะผลงานนี้ไม่รองรับการเพิ่มตอน')
+      if (targetStatus === 'published' && !work.capabilities.canPublishEpisode) throw new Error('ต้องรอให้ผู้ดูแลอนุมัติเรื่องก่อนเผยแพร่ตอน')
+      const payload = episodeType === 'image'
+        ? [{ title: imgTitle.trim(), type: 'image', status: 'draft', priceCoins: imgIsFree ? 0 : ADMIN_PRICE }]
+        : drafts.map((draft) => ({ title: draft.title.trim(), type: episodeType, status: episodeType === 'text' ? targetStatus : 'draft', priceCoins: draft.isFree ? 0 : ADMIN_PRICE, ...(episodeType === 'text' ? { content: draft.content || '' } : {}) }))
+      const response = await fetch(`/api/creator/works/${workId}/episodes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ episodes: payload }) })
+      if (!response.ok) { const data = await response.json().catch(() => ({})) as { error?: string }; throw new Error(data.error || 'สร้างตอนไม่สำเร็จ') }
+      const data = await response.json() as { episodes: Array<{ id: string }> }
+      const upload = async (episodeId: string, file: File, kind: 'page' | 'audio', sortOrder: number) => {
+        const form = new FormData(); form.set('file', file); form.set('kind', kind); form.set('sortOrder', String(sortOrder))
+        const result = await fetch(`/api/creator/works/${workId}/episodes/${episodeId}/assets`, { method: 'POST', body: form })
+        if (!result.ok) { const body = await result.json().catch(() => ({})) as { error?: string }; throw new Error(body.error || `อัปโหลด ${file.name} ไม่สำเร็จ`) }
+      }
+      if (episodeType === 'image') await Promise.all(pages.map((page, index) => upload(data.episodes[0].id, page.file, 'page', index)))
+      if (episodeType === 'audio') await Promise.all(drafts.map((draft, index) => upload(data.episodes[index].id, draft.file!, 'audio', 0)))
+      if (targetStatus === 'published' && episodeType !== 'text') {
+        for (const episode of data.episodes) {
+          const publish = await fetch(`/api/creator/episodes/${episode.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'published' }) })
+          if (!publish.ok) { const body = await publish.json().catch(() => ({})) as { error?: string }; throw new Error(body.error || 'เผยแพร่ตอนไม่สำเร็จ') }
+        }
+      }
+      router.push(`/creator/works/${workId}`); router.refresh()
+    } catch (cause) { setPublishError(cause instanceof Error ? cause.message : 'บันทึกตอนไม่สำเร็จ') }
+    finally { setPublishBusy(false) }
+  }
 
-  const canPublish = episodeType === 'image' ? pages.length > 0 : drafts.length > 0
+  const canPublish = episodeType === 'image' ? pages.length > 0 && Boolean(imgTitle.trim()) : drafts.length > 0 && drafts.every((draft) => draft.title.trim() && draft.status === 'ready')
   const currentRef = episodeType === 'text' ? textFileRef : episodeType === 'image' ? imageFileRef : audioFileRef
 
   const typeButtons: { key: EpisodeType; label: string; icon: React.ElementType; accept: string }[] = [
@@ -222,13 +267,10 @@ export default function NewEpisodePage({ params }: Props) {
               <span className="ml-2 text-muted-foreground font-normal">({drafts.length} ตอน)</span>
             )}
           </div>
-          <Button onClick={handlePublish} disabled={!canPublish}
+          {work?.capabilities.canPublishEpisode && <Button onClick={() => void saveEpisodes('draft')} disabled={!canPublish || publishBusy} variant="outline" size="sm">บันทึกฉบับร่าง</Button>}
+          <Button onClick={() => void saveEpisodes(work?.capabilities.canPublishEpisode ? 'published' : 'draft')} disabled={!work || !canPublish || publishBusy}
             className="bg-primary text-primary-foreground disabled:opacity-40" size="sm"
-          >
-            {episodeType === 'image'
-              ? 'เผยแพร่ตอนนี้'
-              : drafts.length > 0 ? `เผยแพร่ ${drafts.length} ตอน` : 'เผยแพร่'}
-          </Button>
+          >{publishBusy ? 'กำลังบันทึก…' : work?.capabilities.canPublishEpisode ? episodeType === 'image' ? 'เผยแพร่ตอนนี้' : drafts.length > 0 ? `เผยแพร่ ${drafts.length} ตอน` : 'เผยแพร่' : 'บันทึกฉบับร่าง'}</Button>
         </div>
 
         {/* Type selector */}
@@ -247,6 +289,7 @@ export default function NewEpisodePage({ params }: Props) {
 
         {/* Content */}
         <div className="flex-1 container mx-auto px-4 py-6 max-w-3xl space-y-4">
+          {work && !work.capabilities.canPublishEpisode && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">ผลงานอยู่ในสถานะ “{work.status === 'pending_review' ? 'รอตรวจสอบ' : work.status === 'rejected' ? 'ไม่ผ่านการตรวจ' : 'ฉบับร่าง'}” จึงบันทึกตอนได้เฉพาะฉบับร่าง</div>}
 
           {/* ══ IMAGE MODE — single episode, multi-page ══════════════ */}
           {episodeType === 'image' && (
@@ -311,8 +354,8 @@ export default function NewEpisodePage({ params }: Props) {
                       </div>
                     ))}
                   </div>
-                  <Button onClick={handlePublish} disabled={!imgTitle.trim()} className="w-full bg-primary text-primary-foreground disabled:opacity-40">
-                    {imgTitle.trim() ? `เผยแพร่ตอน "${imgTitle}" (${pages.length} หน้า)` : 'กรุณาใส่ชื่อตอนก่อนเผยแพร่'}
+                  <Button onClick={() => void saveEpisodes(work?.capabilities.canPublishEpisode ? 'published' : 'draft')} disabled={!work || !canPublish || publishBusy} className="w-full bg-primary text-primary-foreground disabled:opacity-40">
+                    {imgTitle.trim() ? `${work?.capabilities.canPublishEpisode ? 'เผยแพร่' : 'บันทึกฉบับร่าง'}ตอน "${imgTitle}" (${pages.length} หน้า)` : 'กรุณาใส่ชื่อตอนก่อนบันทึก'}
                   </Button>
                 </>
               )}
@@ -338,7 +381,7 @@ export default function NewEpisodePage({ params }: Props) {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium text-muted-foreground">
-                      {drafts.length} ตอนที่รอเผยแพร่
+                      {drafts.length} ตอนที่รอบันทึก
                       <span className="ml-1 text-xs font-normal">(ลากเพื่อเรียงลำดับ)</span>
                     </p>
                     <button type="button" onClick={() => currentRef.current?.click()}
@@ -424,13 +467,15 @@ export default function NewEpisodePage({ params }: Props) {
                     )
                   })}
 
-                  <Button onClick={handlePublish} className="w-full bg-primary text-primary-foreground">
-                    เผยแพร่ทั้งหมด {drafts.length} ตอน
+                  <Button onClick={() => void saveEpisodes(work?.capabilities.canPublishEpisode ? 'published' : 'draft')} disabled={!work || !canPublish || publishBusy} className="w-full bg-primary text-primary-foreground">
+                    {work?.capabilities.canPublishEpisode ? 'เผยแพร่' : 'บันทึกฉบับร่าง'}ทั้งหมด {drafts.length} ตอน
                   </Button>
                 </div>
               )}
             </div>
           )}
+
+          {publishError && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{publishError}</div>}
 
           {/* Hidden file inputs */}
           <input ref={textFileRef}  type="file" multiple accept={typeButtons[0].accept} className="hidden" onChange={handleFileChange} />

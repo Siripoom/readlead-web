@@ -4,6 +4,7 @@ import { Bell } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -28,14 +29,16 @@ export function NotificationDropdown() {
         <span className="sr-only">{MOCK_NOTIFICATIONS.length} รายการใหม่</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel>การแจ้งเตือน</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {MOCK_NOTIFICATIONS.map(n => (
-          <DropdownMenuItem key={n.id} className="flex flex-col items-start gap-0.5 py-2.5">
-            <span className="text-sm leading-snug">{n.title}</span>
-            <span className="text-xs text-muted-foreground">{n.time}</span>
-          </DropdownMenuItem>
-        ))}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>การแจ้งเตือน</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {MOCK_NOTIFICATIONS.map(n => (
+            <DropdownMenuItem key={n.id} className="flex flex-col items-start gap-0.5 py-2.5">
+              <span className="text-sm leading-snug">{n.title}</span>
+              <span className="text-xs text-muted-foreground">{n.time}</span>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   )

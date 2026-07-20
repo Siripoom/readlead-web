@@ -81,8 +81,8 @@ const monthKey = () => todayKey().slice(0, 7)
 const initialLedger = (): VoteLedger => ({
   dailyKey: todayKey(),
   monthlyKey: monthKey(),
-  dailyUsed: 12,
-  monthlyUsed: 23,
+  dailyUsed: 0,
+  monthlyUsed: 0,
   bonuses: {},
 })
 
@@ -547,6 +547,21 @@ export function RankingExperience({ state, works, creators }: Props) {
   const [voteDialogOpen, setVoteDialogOpen] = useState(false)
   const [voteMessage, setVoteMessage] = useState('')
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+  const [serverWorks, setServerWorks] = useState<RankingWorkItem[] | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch('/api/catalog/works?pageSize=50', { cache: 'no-store', signal: controller.signal }).then((response) => response.ok ? response.json() : Promise.reject(new Error('catalog'))).then((data: { items?: Array<{ id: string; type: RankingContentType; title: string; category: string; tagline: string; seriesStatus: string; updatedAt: string; publishedAt: string | null; views: number; shelfCount: number; dailyVotes: number; monthlyVotes: number; reviewCount: number; creator: { name: string; writerApplication: { penName: string } | null }; _count: { episodes: number } }> }) => {
+      setServerWorks((data.items ?? []).map((item, index) => ({ id: item.id, detailId: item.id, type: item.type, title: item.title, author: item.creator.writerApplication?.penName || item.creator.name, genre: (RANKING_GENRES.some((genre) => genre.key === item.category) ? item.category : 'other') as RankingGenreKey, genreLabel: RANKING_GENRES.find((genre) => genre.key === item.category)?.label || item.category, synopsis: item.tagline, status: item.seriesStatus === 'completed' ? 'completed' : 'ongoing', origin: 'ไทย', latestEpisode: `${item._count.episodes} ตอน`, updatedAt: item.updatedAt, launchedAt: item.publishedAt ? new Date(item.publishedAt).toLocaleDateString('th-TH', { dateStyle: 'medium' }) : '—', recommendedVotes: item.dailyVotes, monthlyVotes: item.monthlyVotes, views: item.views, change: 0, shelfCount: item.shelfCount, favoriteCount: item.shelfCount, reviewCount: item.reviewCount, rating: 0, coverFrom: ['#7255a7', '#9a5f73', '#477c78'][index % 3], coverTo: ['#241b3a', '#39212b', '#193934'][index % 3] })))
+    }).catch(() => undefined)
+    return () => controller.abort()
+  }, [])
+
+  useEffect(() => {
+    if (serverWorks === null) return
+    const timer = window.setTimeout(() => setLedger(initialLedger()), 0)
+    return () => window.clearTimeout(timer)
+  }, [serverWorks])
 
   useEffect(() => {
     let next = initialLedger()
@@ -573,17 +588,13 @@ export function RankingExperience({ state, works, creators }: Props) {
       setLedgerReady(true)
     })
 
-    try {
-      const key = user ? shelfStorageKey(user.id) : 'rl_ranking_shelf'
-      const shelf = JSON.parse(localStorage.getItem(key) ?? localStorage.getItem('rl_ranking_shelf') ?? '[]') as string[]
-      startTransition(() => setSavedIds(new Set(shelf)))
-    } catch {}
+    if (user) void fetch('/api/member/activity', { cache: 'no-store' }).then((response) => response.ok ? response.json() : { shelves: [] }).then((data: { shelves?: Array<{ work: { id: string } }> }) => setSavedIds(new Set((data.shelves ?? []).map((item) => item.work.id))))
   }, [user])
 
   useEffect(() => {
-    if (!ledgerReady) return
+    if (!ledgerReady || serverWorks !== null) return
     localStorage.setItem(VOTE_STORAGE_KEY, JSON.stringify(ledger))
-  }, [ledger, ledgerReady])
+  }, [ledger, ledgerReady, serverWorks])
 
   const openVote = (item: RankingWorkItem) => {
     if (!isLoggedIn) {
@@ -595,13 +606,18 @@ export function RankingExperience({ state, works, creators }: Props) {
     setVoteDialogOpen(true)
   }
 
-  const confirmVote = (kind: VoteKind) => {
+  const confirmVote = async (kind: VoteKind) => {
     if (!selectedWork) return
     const max = kind === 'daily' ? DAILY_MAX : MONTHLY_MAX
     const used = kind === 'daily' ? ledger.dailyUsed : ledger.monthlyUsed
     if (used >= max) {
       setVoteMessage('ตั๋วประเภทนี้ถูกใช้ครบแล้ว')
       return
+    }
+    if (serverWorks?.some((work) => work.detailId === selectedWork.detailId)) {
+      const response = await fetch('/api/interactions/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workId: selectedWork.detailId, kind }) })
+      const data = await response.json().catch(() => ({})) as { error?: string }
+      if (!response.ok) { setVoteMessage(data.error || 'โหวตไม่สำเร็จ'); return }
     }
     setLedger((current) => {
       const currentBonus = current.bonuses[selectedWork.detailId] ?? { daily: 0, monthly: 0 }
@@ -619,6 +635,14 @@ export function RankingExperience({ state, works, creators }: Props) {
   }
 
   const toggleShelf = (id: string) => {
+    if (!isLoggedIn) { router.push('/login'); return }
+    if (serverWorks?.some((work) => work.detailId === id)) {
+      void fetch('/api/interactions/shelf', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workId: id }) }).then(async (response) => {
+        const data = await response.json().catch(() => ({})) as { active?: boolean }
+        if (response.ok) setSavedIds((current) => { const next = new Set(current); if (data.active) next.add(id); else next.delete(id); return next })
+      })
+      return
+    }
     setSavedIds((current) => {
       const next = new Set(current)
       if (next.has(id)) next.delete(id)
@@ -627,6 +651,8 @@ export function RankingExperience({ state, works, creators }: Props) {
       return next
     })
   }
+
+  const displayWorks = serverWorks ?? works
 
   return (
     <div className={styles.page}>
@@ -643,9 +669,9 @@ export function RankingExperience({ state, works, creators }: Props) {
 
           <RankingHero state={state} ledger={ledger}/>
           {state.view === 'overview' && !state.type ? (
-            <><StatsStrip/><OverviewTable state={state} works={works} creators={creators} ledger={ledger}/></>
+            <><StatsStrip/><OverviewTable state={state} works={displayWorks} creators={creators} ledger={ledger}/></>
           ) : (
-            <ListView state={state} works={works} creators={creators} ledger={ledger} onVote={openVote} savedIds={savedIds} onToggleShelf={toggleShelf}/>
+            <ListView state={state} works={displayWorks} creators={creators} ledger={ledger} onVote={openVote} savedIds={savedIds} onToggleShelf={toggleShelf}/>
           )}
         </main>
       </div>

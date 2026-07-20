@@ -1,19 +1,18 @@
 'use client'
 
-import { createContext, startTransition, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { useRole } from '@/contexts/RoleContext'
-import { walletStorageKey } from '@/lib/profile-repository'
 
 interface WalletContextValue {
   balance: number
   spend: (n: number) => boolean
-  topUp: (n: number) => void
+  topUp: (n: number) => Promise<boolean>
 }
 
 const WalletContext = createContext<WalletContextValue>({
   balance: 0,
   spend: () => false,
-  topUp: () => {},
+  topUp: async () => false,
 })
 
 export function WalletProvider({ children }: { children: ReactNode }) {
@@ -21,30 +20,26 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const { user } = useRole()
 
   useEffect(() => {
-    if (!user) {
-      startTransition(() => setBalance(0))
-      return
-    }
-    const key = walletStorageKey(user.id)
-    const stored = localStorage.getItem(key) ?? localStorage.getItem('rl_wallet')
-    const next = stored !== null && Number.isFinite(Number(stored)) ? Number(stored) : 100
-    localStorage.setItem(key, String(next))
-    startTransition(() => setBalance(next))
+    const controller = new AbortController()
+    if (user) fetch('/api/member/activity', { cache: 'no-store', signal: controller.signal }).then((response) => response.ok ? response.json() : { coinBalance: 0 }).then((data: { coinBalance?: number }) => setBalance(data.coinBalance ?? 0)).catch(() => undefined)
+    else queueMicrotask(() => setBalance(0))
+    return () => controller.abort()
   }, [user])
 
   const spend = (n: number): boolean => {
     if (!user || balance < n) return false
     const next = balance - n
     setBalance(next)
-    localStorage.setItem(walletStorageKey(user.id), String(next))
     return true
   }
 
-  const topUp = (n: number) => {
-    if (!user) return
-    const next = balance + n
-    setBalance(next)
-    localStorage.setItem(walletStorageKey(user.id), String(next))
+  const topUp = async (n: number) => {
+    if (!user) return false
+    const response = await fetch('/api/interactions/simulate-topup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: n, idempotencyKey: `demo-topup:${user.id}:${crypto.randomUUID()}` }) })
+    if (!response.ok) return false
+    const data = await response.json() as { balance: number }
+    setBalance(data.balance)
+    return true
   }
 
   return (

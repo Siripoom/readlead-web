@@ -1,9 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ShieldCheck, Trash2 } from 'lucide-react'
 import { useProfile } from '@/contexts/ProfileContext'
-import { localProfileRepository } from '@/lib/profile-repository'
 import type { ProfileActivity } from '@/lib/profile-types'
 import styles from '../profile.module.css'
 
@@ -86,8 +85,7 @@ export function OwnerAccount({ onDataChange }: { onDataChange: () => void }) {
 }
 
 export function OwnerActivity({
-  userId,
-  activities,
+  activities: initialActivities,
   onDataChange,
 }: {
   userId: string
@@ -96,10 +94,17 @@ export function OwnerActivity({
 }) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
+  const [activities, setActivities] = useState<ProfileActivity[]>(initialActivities)
 
-  const remove = (id: string) => {
-    localProfileRepository.saveActivities(userId, activities.filter((item) => item.id !== id))
-    onDataChange()
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch('/api/member/activity', { cache: 'no-store', signal: controller.signal }).then((response) => response.ok ? response.json() : { activities: [] }).then((data: { activities?: Array<{ id: string; kind: 'review' | 'comment'; rating?: number; body: string; createdAt: string; work: { id: string; title: string } }> }) => setActivities((data.activities ?? []).map((item) => ({ id: item.id, kind: item.kind, workId: item.work.id, workTitle: item.work.title, body: item.body, rating: item.rating, createdAt: item.createdAt })))).catch(() => undefined)
+    return () => controller.abort()
+  }, [])
+
+  const remove = async (activity: ProfileActivity) => {
+    const response = await fetch('/api/interactions/activity', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: activity.id, kind: activity.kind }) })
+    if (response.ok) { setActivities((current) => current.filter((item) => item.id !== activity.id)); onDataChange() }
   }
 
   const startEdit = (activity: ProfileActivity) => {
@@ -107,12 +112,13 @@ export function OwnerActivity({
     setDraft(activity.body)
   }
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editingId || !draft.trim()) return
-    localProfileRepository.saveActivities(
-      userId,
-      activities.map((item) => item.id === editingId ? { ...item, body: draft.trim() } : item),
-    )
+    const activity = activities.find((item) => item.id === editingId)
+    if (!activity) return
+    const response = await fetch('/api/interactions/activity', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: activity.id, kind: activity.kind, body: draft.trim() }) })
+    if (!response.ok) return
+    setActivities((current) => current.map((item) => item.id === editingId ? { ...item, body: draft.trim() } : item))
     setEditingId(null)
     setDraft('')
     onDataChange()
@@ -135,7 +141,7 @@ export function OwnerActivity({
                   </div>
                   <div className={styles.activityActions}>
                     <button type="button" className={styles.textButton} onClick={() => startEdit(activity)}>แก้ไข</button>
-                    <button type="button" className={styles.textButton} onClick={() => remove(activity.id)}>ลบ</button>
+                    <button type="button" className={styles.textButton} onClick={() => void remove(activity)}>ลบ</button>
                   </div>
                 </div>
                 {editingId === activity.id ? (
@@ -143,7 +149,7 @@ export function OwnerActivity({
                     <textarea className={styles.textarea} value={draft} onChange={(event) => setDraft(event.target.value)} aria-label="แก้ไขข้อความ" />
                     <div className={styles.buttonRow}>
                       <button type="button" className={styles.secondaryButton} onClick={() => setEditingId(null)}>ยกเลิก</button>
-                      <button type="button" className={styles.primaryButton} onClick={saveEdit}>บันทึก</button>
+                      <button type="button" className={styles.primaryButton} onClick={() => void saveEdit()}>บันทึก</button>
                     </div>
                   </div>
                 ) : <p className={styles.activityBody}>{activity.body}</p>}

@@ -278,7 +278,11 @@ export const localProfileRepository: ProfileRepository = {
   },
 }
 
-export function recordEpisodePurchase(userId: string, episodeId: string) {
+export function recordEpisodePurchase(
+  userId: string,
+  episodeId: string,
+  details?: Pick<PurchaseRecord, 'workId' | 'workTitle' | 'episodeTitle' | 'coinsSpent'>,
+) {
   const idsKey = purchaseStorageKey(userId)
   const ids = new Set(safeParse<string[]>(localStorage.getItem(idsKey) ?? localStorage.getItem('rl_purchases'), []))
   ids.add(episodeId)
@@ -286,15 +290,15 @@ export function recordEpisodePurchase(userId: string, episodeId: string) {
   const historyKey = `rl_purchase_history_v2:${userId}`
   const history = safeParse<PurchaseRecord[]>(localStorage.getItem(historyKey), [])
   if (history.some((item) => item.episodeId === episodeId)) return
-  const episode = Object.values(MOCK_EPISODES).flat().find((item) => item.id === episodeId)
+  const episode = details ? undefined : Object.values(MOCK_EPISODES).flat().find((item) => item.id === episodeId)
   const work = episode ? MOCK_WORKS.find((item) => item.id === episode.workId) : undefined
-  if (!episode || !work) return
+  if (!details && (!episode || !work)) return
   history.unshift({
     episodeId,
-    workId: work.id,
-    workTitle: work.title,
-    episodeTitle: episode.title,
-    coinsSpent: episode.price,
+    workId: details?.workId ?? work!.id,
+    workTitle: details?.workTitle ?? work!.title,
+    episodeTitle: details?.episodeTitle ?? episode!.title,
+    coinsSpent: details?.coinsSpent ?? episode!.price,
     purchasedAt: new Date().toISOString(),
   })
   localStorage.setItem(historyKey, JSON.stringify(history))

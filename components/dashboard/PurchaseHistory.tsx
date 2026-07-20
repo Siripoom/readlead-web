@@ -1,14 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Coins } from 'lucide-react'
 import { useRole } from '@/contexts/RoleContext'
-import { localProfileRepository } from '@/lib/profile-repository'
 import type { PurchaseRecord } from '@/lib/types'
 
 export default function PurchaseHistory() {
   const { user } = useRole()
-  const [purchases] = useState<PurchaseRecord[]>(() => user ? localProfileRepository.getPurchaseHistory(user.id) : [])
+  const [purchases, setPurchases] = useState<PurchaseRecord[]>([])
+  const [loading, setLoading] = useState(Boolean(user))
+
+  useEffect(() => {
+    const controller = new AbortController()
+    if (user) fetch('/api/member/activity', { cache: 'no-store', signal: controller.signal }).then((response) => response.ok ? response.json() : { purchases: [] }).then((data: { purchases?: Array<{ coinsSpent: number; purchasedAt: string; work: { id: string; title: string }; episode: { id: string; title: string } }> }) => { setPurchases((data.purchases ?? []).map((item) => ({ episodeId: item.episode.id, workId: item.work.id, workTitle: item.work.title, episodeTitle: item.episode.title, coinsSpent: item.coinsSpent, purchasedAt: item.purchasedAt }))); setLoading(false) }).catch(() => setLoading(false))
+    else queueMicrotask(() => setLoading(false))
+    return () => controller.abort()
+  }, [user])
+
+  if (loading) return <p className="py-6 text-center text-sm text-muted-foreground">กำลังโหลดประวัติการซื้อ…</p>
 
   if (purchases.length === 0) {
     return <p className="py-6 text-center text-sm text-muted-foreground">ยังไม่มีประวัติการซื้อ</p>

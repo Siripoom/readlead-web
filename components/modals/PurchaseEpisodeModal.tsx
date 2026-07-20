@@ -14,21 +14,30 @@ interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   onPurchased: (episodeId: string) => void
+  serverPurchase?: (episodeId: string) => Promise<{ ok: boolean; error?: string }>
 }
 
-export default function PurchaseEpisodeModal({ episode, workTitle, open, onOpenChange, onPurchased }: Props) {
+export default function PurchaseEpisodeModal({ episode, workTitle, open, onOpenChange, onPurchased, serverPurchase }: Props) {
   const { balance, spend } = useWallet()
   const { isLoggedIn } = useRole()
   const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
 
   if (!episode) return null
 
-  const canAfford = balance >= episode.price
+  const canAfford = serverPurchase ? true : balance >= episode.price
 
-  function handlePurchase() {
+  async function handlePurchase() {
     if (!episode) return
     if (!isLoggedIn) { setError('กรุณาเข้าสู่ระบบก่อน'); return }
     if (!canAfford) { setError('เหรียญไม่เพียงพอ กรุณาเติมเหรียญ'); return }
+    if (serverPurchase) {
+      setBusy(true)
+      const result = await serverPurchase(episode.id)
+      setBusy(false)
+      if (!result.ok) { setError(result.error || 'ซื้อเนื้อหาไม่สำเร็จ'); return }
+      onPurchased(episode.id); onOpenChange(false); setError(''); return
+    }
     const ok = spend(episode.price)
     if (ok) {
       onPurchased(episode.id)
@@ -71,9 +80,9 @@ export default function PurchaseEpisodeModal({ episode, workTitle, open, onOpenC
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>ยกเลิก</Button>
-          <Button onClick={handlePurchase} disabled={!canAfford} className="bg-primary text-primary-foreground">
+          <Button onClick={() => void handlePurchase()} disabled={!canAfford || busy} className="bg-primary text-primary-foreground">
             <Coins className="h-4 w-4 mr-1" />
-            ซื้อ {episode.price} เหรียญ
+            {busy ? 'กำลังซื้อ…' : `ซื้อ ${episode.price} เหรียญ`}
           </Button>
         </DialogFooter>
       </DialogContent>

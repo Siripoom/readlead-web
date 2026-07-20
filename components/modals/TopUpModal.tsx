@@ -25,11 +25,16 @@ export default function TopUpModal({ open, onOpenChange }: Props) {
   const [selectedCoins, setSelectedCoins] = useState(200)
   const [method, setMethod] = useState<PaymentMethod>('promptpay')
   const [success, setSuccess] = useState(false)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
 
   const selected = MOCK_TOPUP_OPTIONS.find(o => o.coins === selectedCoins) ?? MOCK_TOPUP_OPTIONS[1]
 
-  function handleTopUp() {
-    topUp(selected.coins + (selected.bonus ?? 0))
+  async function handleTopUp() {
+    setBusy(true); setError('')
+    const ok = await topUp(selected.coins + (selected.bonus ?? 0))
+    setBusy(false)
+    if (!ok) { setError('ระบบเติมเหรียญจำลองปิดอยู่ หรือไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'); return }
     setSuccess(true)
     setTimeout(() => {
       setSuccess(false)
@@ -119,11 +124,13 @@ export default function TopUpModal({ open, onOpenChange }: Props) {
           </div>
         )}
 
+        {error && !success && <p className="text-sm text-destructive" role="alert">{error}</p>}
+
         {!success && (
           <DialogFooter>
             <Button variant="outline" onClick={() => handleOpenChange(false)}>ยกเลิก</Button>
-            <Button onClick={handleTopUp} className="bg-primary text-primary-foreground">
-              ชำระเงิน ฿{selected.price}
+            <Button onClick={() => void handleTopUp()} disabled={busy} className="bg-primary text-primary-foreground">
+              {busy ? 'กำลังดำเนินการ…' : `ชำระเงิน ฿${selected.price}`}
             </Button>
           </DialogFooter>
         )}

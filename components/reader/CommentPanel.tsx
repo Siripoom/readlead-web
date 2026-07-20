@@ -1,297 +1,277 @@
 'use client'
 
-import { useState } from 'react'
-import { X, Send, MessageSquare, CornerDownRight, ChevronDown, ChevronRight, Heart } from 'lucide-react'
-
-export interface Reply {
-  id: string
-  author: string
-  text: string
-}
-
-export type CommentType = 'normal' | 'report'
-
-export interface Comment {
-  id: string
-  author: string
-  text: string
-  type: CommentType
-  likes: number
-  replies: Reply[]
-}
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { ChevronDown, ChevronRight, CornerDownRight, Flag, Heart, MessageSquare, Send, X } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import type { ReaderComment, ReaderReportReason } from '@/lib/reader-repository'
 
 interface Props {
   open: boolean
   onClose: () => void
-  paragraphText: string
-  comments: Comment[]
-  onAddComment: (text: string, type: CommentType) => void
+  slotLabel: string
+  comments: ReaderComment[]
+  isLoggedIn: boolean
+  viewerId: string | null
+  onLogin: () => void
+  onAddComment: (text: string) => void
   onAddReply: (commentId: string, text: string) => void
+  onToggleLike: (commentId: string, replyId?: string) => void
+  onReport: (commentId: string, reason: ReaderReportReason) => void
 }
 
-function AuthorAvatar({ name }: { name: string }) {
-  return (
-    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/15 text-primary text-xs font-semibold shrink-0">
-      {name.charAt(0)}
-    </span>
-  )
+const REPORT_REASONS: ReaderReportReason[] = [
+  'คำหยาบคาย / ไม่สุภาพ',
+  'สแปม / โฆษณา',
+  'เนื้อหาไม่เหมาะสม',
+  'คุกคาม / ก่อกวน',
+  'สปอยล์เนื้อหา',
+  'อื่น ๆ',
+]
+
+function InitialAvatar({ name }: { name: string }) {
+  return <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-extrabold text-primary" aria-hidden>{name.charAt(0) || '?'}</span>
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat('th-TH', {
+    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  }).format(new Date(value))
 }
 
 export default function CommentPanel({
-  open, onClose,
-  paragraphText,
+  open,
+  onClose,
+  slotLabel,
   comments,
+  isLoggedIn,
+  viewerId,
+  onLogin,
   onAddComment,
   onAddReply,
+  onToggleLike,
+  onReport,
 }: Props) {
   const [newText, setNewText] = useState('')
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyText, setReplyText] = useState('')
-  // track which comments have their replies expanded
-  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set())
-  const [likedComments, setLikedComments] = useState<Set<string>>(new Set())
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const [reportTarget, setReportTarget] = useState<string | null>(null)
+  const [reportReason, setReportReason] = useState<ReaderReportReason | null>(null)
+  const [localNotice, setLocalNotice] = useState('')
+  const closeRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLElement>(null)
+  const reportOpenRef = useRef(false)
 
-  function toggleLike(commentId: string) {
-    setLikedComments(prev => {
-      const next = new Set(prev)
-      if (next.has(commentId)) next.delete(commentId)
-      else next.add(commentId)
-      return next
-    })
-  }
+  const sortedComments = useMemo(() => [...comments].sort((a, b) =>
+    b.likes.length - a.likes.length || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  ), [comments])
 
-  function toggleRepliesExpanded(commentId: string) {
-    setExpandedReplies(prev => {
-      const next = new Set(prev)
-      if (next.has(commentId)) next.delete(commentId)
-      else next.add(commentId)
-      return next
-    })
-  }
+  useEffect(() => {
+    reportOpenRef.current = Boolean(reportTarget)
+  }, [reportTarget])
 
-  function submitComment(type: CommentType = 'normal') {
-    const t = newText.trim()
-    if (!t) return
-    onAddComment(t, type)
+  useEffect(() => {
+    if (!open) return
+    const previouslyFocused = document.activeElement as HTMLElement | null
+    closeRef.current?.focus()
+    function handleKeyDown(event: KeyboardEvent) {
+      if (reportOpenRef.current) return
+      if (event.key === 'Escape') {
+        onClose()
+        return
+      }
+      if (event.key !== 'Tab' || !panelRef.current) return
+      const focusable = [...panelRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], textarea:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      previouslyFocused?.focus()
+    }
+  }, [onClose, open])
+
+  function submitComment() {
+    const text = newText.trim()
+    if (!text) return
+    onAddComment(text)
     setNewText('')
   }
 
   function submitReply(commentId: string) {
-    const t = replyText.trim()
-    if (!t) return
-    onAddReply(commentId, t)
+    const text = replyText.trim()
+    if (!text) return
+    onAddReply(commentId, text)
     setReplyText('')
     setReplyingTo(null)
-    // auto-expand replies after posting
-    setExpandedReplies(prev => new Set(prev).add(commentId))
+    setExpanded((current) => new Set(current).add(commentId))
   }
 
-  function openReplyInput(id: string) {
-    if (replyingTo === id) {
-      setReplyingTo(null)
-      setReplyText('')
-    } else {
-      setReplyingTo(id)
-      setReplyText('')
-    }
+  function submitReport() {
+    if (!reportTarget || !reportReason) return
+    onReport(reportTarget, reportReason)
+    setReportTarget(null)
+    setReportReason(null)
+    setLocalNotice('บันทึกรายงานไว้ในอุปกรณ์แล้ว และยังไม่ได้ส่งถึงผู้ดูแล')
   }
 
   return (
     <>
-      {/* Backdrop (mobile) */}
-      {open && (
-        <div
-          className="fixed inset-0 z-30 bg-black/30 lg:hidden"
-          onClick={onClose}
-          aria-hidden
-        />
-      )}
-
-      {/* Slide panel */}
-      <div
-        className={`fixed inset-y-0 right-0 z-40 flex flex-col w-80 sm:w-96 bg-background border-l shadow-2xl transition-transform duration-300 ease-in-out ${
-          open ? 'translate-x-0' : 'translate-x-full'
-        }`}
+      {open && <button type="button" className="fixed inset-0 z-40 cursor-default bg-black/30" onClick={onClose} aria-label="ปิดความคิดเห็น" />}
+      <aside
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="ความคิดเห็น"
+        aria-hidden={!open}
+        inert={!open}
+        className={`fixed inset-y-0 right-0 z-50 flex w-full max-w-[380px] flex-col border-l bg-background shadow-2xl transition-transform duration-300 motion-reduce:transition-none ${open ? 'translate-x-0' : 'translate-x-full'}`}
       >
-        {/* Header */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b shrink-0">
-          <MessageSquare className="h-4 w-4 text-primary shrink-0" />
-          <span className="font-semibold text-sm flex-1">ความคิดเห็น</span>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            <X className="h-4 w-4" />
+        <div className="flex items-center gap-2 border-b px-5 py-4">
+          <MessageSquare className="h-4 w-4 text-primary" />
+          <h2 className="min-w-0 flex-1 truncate text-sm font-extrabold">ความคิดเห็น {comments.length} รายการ</h2>
+          <button ref={closeRef} type="button" onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="ปิดความคิดเห็น">
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Paragraph preview */}
-        {paragraphText && (
-          <div className="px-4 py-2 border-b bg-muted/30 shrink-0">
-            <p className="text-xs text-muted-foreground line-clamp-3 italic">
-              &ldquo;{paragraphText}&rdquo;
-            </p>
-          </div>
-        )}
+        <p className="line-clamp-3 border-b bg-muted/30 px-5 py-3 text-xs leading-relaxed text-muted-foreground">{slotLabel}</p>
 
-        {/* Comment list */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-5">
-          {comments.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              ยังไม่มีความคิดเห็นสำหรับบรรทัดนี้
-            </p>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+          {sortedComments.length === 0 ? (
+            <div className="py-14 text-center">
+              <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground/40" />
+              <p className="mt-3 text-sm font-semibold">ยังไม่มีความคิดเห็น</p>
+              <p className="mt-1 text-xs text-muted-foreground">เริ่มบทสนทนาสำหรับส่วนนี้ได้เลย</p>
+            </div>
           ) : (
-            comments.map(comment => {
-              const repliesOpen = expandedReplies.has(comment.id)
-              const replyCount = comment.replies.length
-
-              return (
-                <div key={comment.id} className="space-y-2">
-                  {/* Comment bubble */}
-                  <div className={`rounded-lg px-3 py-2.5 space-y-1.5 ${
-                    comment.type === 'report'
-                      ? 'bg-red-50 border border-red-200 dark:bg-red-950/30 dark:border-red-800'
-                      : 'bg-muted/40'
-                  }`}>
-                    {/* Author row */}
-                    <div className="flex items-center gap-1.5">
-                      <AuthorAvatar name={comment.author} />
-                      <span className="text-xs font-semibold">{comment.author}</span>
-                      {comment.type === 'report' && (
-                        <span className="ml-auto text-xs font-medium text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/40 rounded px-1.5 py-0.5">
-                          รายงาน
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm leading-relaxed pl-7">{comment.text}</p>
-
-                    {/* Action row */}
-                    <div className="flex items-center gap-3 pl-7 pt-0.5">
-                      {/* Like */}
-                      <button
-                        type="button"
-                        onClick={() => toggleLike(comment.id)}
-                        className={`flex items-center gap-1 text-xs transition-colors ${likedComments.has(comment.id) ? 'text-red-500' : 'text-muted-foreground hover:text-red-400'}`}
-                      >
-                        <Heart className={`h-3 w-3 ${likedComments.has(comment.id) ? 'fill-current' : ''}`} />
-                        {comment.likes + (likedComments.has(comment.id) ? 1 : 0) || ''}
-                      </button>
-
-                      {/* Reply input toggle */}
-                      <button
-                        type="button"
-                        onClick={() => openReplyInput(comment.id)}
-                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                      >
-                        <CornerDownRight className="h-3 w-3" />
-                        {replyingTo === comment.id ? 'ยกเลิก' : 'ตอบกลับ'}
-                      </button>
-
-                      {/* Expand/collapse replies */}
-                      {replyCount > 0 && (
+            <div className="space-y-6">
+              {sortedComments.map((comment) => {
+                const repliesOpen = expanded.has(comment.id)
+                const liked = viewerId ? comment.likes.includes(viewerId) : false
+                return (
+                  <article key={comment.id} className="flex gap-2.5">
+                    <InitialAvatar name={comment.authorName} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <strong className="truncate text-xs">{comment.authorName}</strong>
+                        {comment.isAuthor && <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold text-primary">ผู้เขียน</span>}
+                        <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">{formatDate(comment.createdAt)}</span>
                         <button
                           type="button"
-                          onClick={() => toggleRepliesExpanded(comment.id)}
-                          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                        >
-                          {repliesOpen
-                            ? <><ChevronDown className="h-3 w-3" />ซ่อน {replyCount} การตอบกลับ</>
-                            : <><ChevronRight className="h-3 w-3" />แสดง {replyCount} การตอบกลับ</>}
-                        </button>
+                          className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive"
+                          onClick={() => isLoggedIn ? setReportTarget(comment.id) : onLogin()}
+                          aria-label="รายงานความคิดเห็น"
+                        ><Flag className="h-3.5 w-3.5" /></button>
+                      </div>
+                      <p className="mt-1 break-words text-sm leading-relaxed">{comment.text}</p>
+                      <div className="mt-2 flex items-center gap-4">
+                        <button
+                          type="button"
+                          onClick={() => isLoggedIn ? onToggleLike(comment.id) : onLogin()}
+                          className={`inline-flex items-center gap-1 text-[11px] font-semibold ${liked ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+                          aria-pressed={liked}
+                        ><Heart className={`h-3.5 w-3.5 ${liked ? 'fill-current' : ''}`} /> ถูกใจ {comment.likes.length || ''}</button>
+                        <button
+                          type="button"
+                          onClick={() => isLoggedIn ? setReplyingTo((current) => current === comment.id ? null : comment.id) : onLogin()}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-primary"
+                        ><CornerDownRight className="h-3.5 w-3.5" /> ตอบกลับ</button>
+                        {comment.replies.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setExpanded((current) => {
+                              const next = new Set(current)
+                              if (next.has(comment.id)) next.delete(comment.id); else next.add(comment.id)
+                              return next
+                            })}
+                            className="ml-auto inline-flex items-center gap-1 text-[11px] font-bold text-primary"
+                          >{repliesOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />} {comment.replies.length} การตอบกลับ</button>
+                        )}
+                      </div>
+
+                      {replyingTo === comment.id && (
+                        <div className="mt-3 flex items-end gap-2">
+                          <textarea
+                            autoFocus
+                            rows={2}
+                            maxLength={500}
+                            value={replyText}
+                            onChange={(event) => setReplyText(event.target.value)}
+                            placeholder={`ตอบกลับ ${comment.authorName}`}
+                            className="min-w-0 flex-1 resize-none rounded-xl border bg-background px-3 py-2 text-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                          />
+                          <button type="button" disabled={!replyText.trim()} onClick={() => submitReply(comment.id)} className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground disabled:opacity-40" aria-label="ส่งการตอบกลับ"><Send className="h-4 w-4" /></button>
+                        </div>
+                      )}
+
+                      {repliesOpen && comment.replies.length > 0 && (
+                        <div className="mt-4 space-y-4 border-l pl-3">
+                          {comment.replies.map((reply) => {
+                            const replyLiked = viewerId ? reply.likes.includes(viewerId) : false
+                            return (
+                              <div key={reply.id} className="flex gap-2">
+                                <InitialAvatar name={reply.authorName} />
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5"><strong className="truncate text-xs">{reply.authorName}</strong>{reply.isAuthor && <span className="text-[9px] font-bold text-primary">ผู้เขียน</span>}<span className="ml-auto text-[10px] text-muted-foreground">{formatDate(reply.createdAt)}</span></div>
+                                  <p className="mt-1 break-words text-sm leading-relaxed">{reply.replyToName && <span className="mr-1 font-bold text-primary">@{reply.replyToName}</span>}{reply.text}</p>
+                                  <button type="button" onClick={() => isLoggedIn ? onToggleLike(comment.id, reply.id) : onLogin()} className={`mt-1 inline-flex items-center gap-1 text-[11px] ${replyLiked ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`} aria-pressed={replyLiked}><Heart className={`h-3 w-3 ${replyLiked ? 'fill-current' : ''}`} /> {reply.likes.length || 'ถูกใจ'}</button>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
                       )}
                     </div>
-                  </div>
-
-                  {/* Replies (collapsible) */}
-                  {replyCount > 0 && repliesOpen && (
-                    <div className="ml-4 space-y-2">
-                      {comment.replies.map(reply => (
-                        <div key={reply.id} className="flex gap-2">
-                          <div className="w-px bg-border shrink-0 mt-2 mb-2" />
-                          <div className="rounded-lg bg-background border px-3 py-2.5 flex-1 space-y-1">
-                            <div className="flex items-center gap-1.5">
-                              <AuthorAvatar name={reply.author} />
-                              <span className="text-xs font-semibold">{reply.author}</span>
-                            </div>
-                            <p className="text-sm leading-relaxed pl-7">{reply.text}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Reply input */}
-                  {replyingTo === comment.id && (
-                    <div className="ml-4 flex items-end gap-2">
-                      <textarea
-                        autoFocus
-                        rows={2}
-                        value={replyText}
-                        onChange={e => setReplyText(e.target.value)}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault()
-                            submitReply(comment.id)
-                          }
-                        }}
-                        placeholder="ตอบกลับ..."
-                        className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => submitReply(comment.id)}
-                        disabled={!replyText.trim()}
-                        className="p-2 rounded-md bg-primary text-primary-foreground disabled:opacity-40 transition-opacity"
-                      >
-                        <Send className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )
-            })
+                  </article>
+                )
+              })}
+            </div>
           )}
         </div>
 
-        {/* New comment input */}
-        <div className="border-t px-4 py-3 shrink-0 space-y-2">
-          <textarea
-            rows={2}
-            value={newText}
-            onChange={e => setNewText(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                submitComment()
-              }
-            }}
-            placeholder="เขียนความคิดเห็น... (Enter เพื่อส่ง)"
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
-          />
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => submitComment('normal')}
-              disabled={!newText.trim()}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium disabled:opacity-40 transition-opacity"
-            >
-              <Send className="h-3.5 w-3.5" />
-              ส่งความคิดเห็น
-            </button>
-            <button
-              type="button"
-              onClick={() => submitComment('report')}
-              disabled={!newText.trim()}
-              title="รายงานถึงแอดมิน"
-              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-red-600 text-white text-sm font-medium disabled:opacity-40 transition-opacity hover:bg-red-700"
-            >
-              <Send className="h-3.5 w-3.5" />
-              รายงาน
-            </button>
-          </div>
+        <div className="shrink-0 border-t p-4">
+          {localNotice && <p role="status" className="mb-2 rounded-lg bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">{localNotice}</p>}
+          {isLoggedIn ? (
+            <div className="flex items-end gap-2">
+              <textarea
+                rows={2}
+                maxLength={500}
+                value={newText}
+                onChange={(event) => setNewText(event.target.value)}
+                placeholder="เขียนความคิดเห็น..."
+                className="min-w-0 flex-1 resize-none rounded-xl border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+              <button type="button" disabled={!newText.trim()} onClick={submitComment} className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground disabled:opacity-40" aria-label="ส่งความคิดเห็น"><Send className="h-4 w-4" /></button>
+            </div>
+          ) : (
+            <button type="button" onClick={onLogin} className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground">เข้าสู่ระบบเพื่อแสดงความคิดเห็น</button>
+          )}
         </div>
-      </div>
+      </aside>
+
+      <Dialog open={Boolean(reportTarget)} onOpenChange={(value) => { if (!value) { setReportTarget(null); setReportReason(null) } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><Flag className="h-5 w-5 text-destructive" />รายงานความคิดเห็น</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">เลือกเหตุผลที่ต้องการบันทึกรายงาน</p>
+          <div className="grid gap-2">
+            {REPORT_REASONS.map((reason) => (
+              <button key={reason} type="button" onClick={() => setReportReason(reason)} className={`rounded-lg border px-3 py-2 text-left text-sm ${reportReason === reason ? 'border-primary bg-primary/5 text-primary' : 'hover:bg-muted'}`}>{reason}</button>
+            ))}
+          </div>
+          <p className="rounded-lg bg-amber-50 p-2 text-[11px] leading-relaxed text-amber-800">ระบบยังไม่มี API รายงาน รายการนี้จะถูกเก็บเป็น local pending ในอุปกรณ์นี้เท่านั้น</p>
+          <div className="flex justify-end gap-2"><button type="button" className="rounded-lg border px-4 py-2 text-sm" onClick={() => setReportTarget(null)}>ยกเลิก</button><button type="button" disabled={!reportReason} className="rounded-lg bg-destructive px-4 py-2 text-sm font-bold text-destructive-foreground disabled:opacity-40" onClick={submitReport}>บันทึกรายงาน</button></div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

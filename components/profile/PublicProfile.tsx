@@ -20,14 +20,17 @@ export default function PublicProfile({
   data,
   viewerId,
   onDataChange,
+  serverBacked = false,
 }: {
   data: PublicProfileData
   viewerId?: string
   onDataChange: () => void
+  serverBacked?: boolean
 }) {
   const router = useRouter()
   const [filter, setFilter] = useState<PublicProfileFilter>('all')
   const [notice, setNotice] = useState('')
+  const [following, setFollowing] = useState(data.isFollowing)
   const items = data.profile.kind === 'creator' ? data.works : data.shelf
   const availableFilters = useMemo(
     () => (['all', ...new Set(items.map((item) => item.type))] as PublicProfileFilter[]),
@@ -40,7 +43,11 @@ export default function PublicProfile({
       router.push(`/login?next=${encodeURIComponent(`/profile/${data.profile.id}`)}`)
       return
     }
-    localProfileRepository.toggleFollow(viewerId, data.profile.id)
+    if (serverBacked && data.profile.kind === 'creator') {
+      void fetch('/api/interactions/follow', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ creatorId: data.profile.id }) }).then(async (response) => { const result = await response.json().catch(() => ({})) as { active?: boolean; error?: string }; if (response.ok) setFollowing(Boolean(result.active)); else setNotice(result.error || 'ติดตามไม่สำเร็จ') })
+      return
+    }
+    setFollowing(localProfileRepository.toggleFollow(viewerId, data.profile.id))
     onDataChange()
   }
 
@@ -74,10 +81,10 @@ export default function PublicProfile({
             <button
               type="button"
               onClick={toggleFollow}
-              className={`${styles.primaryButton} ${data.isFollowing ? styles.primaryButtonFollowing : ''}`}
-              aria-pressed={data.isFollowing}
+              className={`${styles.primaryButton} ${following ? styles.primaryButtonFollowing : ''}`}
+              aria-pressed={following}
             >
-              {data.isFollowing ? '✓ กำลังติดตาม' : 'ติดตาม'}
+              {following ? '✓ กำลังติดตาม' : 'ติดตาม'}
             </button>
             <button type="button" onClick={share} className={styles.iconButton} aria-label="คัดลอกลิงก์โปรไฟล์">
               <Share2 size={17} />

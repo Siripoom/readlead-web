@@ -3,7 +3,7 @@
 import { startTransition, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { BookOpen, Bookmark, ChevronDown, ChevronRight, Clock, Coins, Crown, Headphones, MessageCircle, Share2, Star, Ticket, ThumbsDown, ThumbsUp, Users } from 'lucide-react'
+import { BookOpen, Bookmark, ChevronDown, ChevronRight, Clock, Crown, Eye, Headphones, MessageCircle, MoreHorizontal, Pencil, Reply, Share2, Star, Ticket, ThumbsDown, ThumbsUp, Users } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import DonateModal from '@/components/modals/DonateModal'
 import PurchaseEpisodeModal from '@/components/modals/PurchaseEpisodeModal'
@@ -60,10 +60,16 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
   const [tipTotal, setTipTotal] = useState(0)
   const [reviews, setReviews] = useState<DetailReview[]>(() => initialReviews ?? seededReviews(work))
   const [reviewText, setReviewText] = useState('')
-  const [rating, setRating] = useState(5)
+  const rating = 5
   const [recommend, setRecommend] = useState(true)
   const [spoiler, setSpoiler] = useState(false)
   const [reviewSort, setReviewSort] = useState<'new' | 'old'>('new')
+  const [showReviewForm, setShowReviewForm] = useState(false)
+  const [reviewsExpanded, setReviewsExpanded] = useState(false)
+  const [revealedSpoilers, setRevealedSpoilers] = useState<Set<string>>(new Set())
+  const [openReplies, setOpenReplies] = useState<Set<string>>(new Set())
+  const [replyingTo, setReplyingTo] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
   const [openChapterGroups, setOpenChapterGroups] = useState<Set<number>>(() => new Set([0]))
   const [episodeCommentCounts, setEpisodeCommentCounts] = useState<Record<string, number>>({})
   const [purchased, setPurchased] = useState<Set<string>>(new Set())
@@ -140,6 +146,7 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
   }, [sortedEpisodes])
   const newestEpisode = useMemo(() => [...sortedEpisodes].reverse().find((episode) => episode.status === 'published'), [sortedEpisodes])
   const sortedReviews = useMemo(() => [...reviews].sort((a, b) => reviewSort === 'new' ? +new Date(b.createdAt) - +new Date(a.createdAt) : +new Date(a.createdAt) - +new Date(b.createdAt)), [reviews, reviewSort])
+  const visibleReviews = reviewsExpanded ? sortedReviews : sortedReviews.slice(0, 3)
   const fans = useMemo(() => ['มะลิในสายฝน','เจ้าหญิงชาเย็น','Bookworm99','ดาวเหนือ','คุณนักอ่าน'].map((name, index) => ({ name, score: (fanMode === 'month' ? 820 : 3280) - index * 137 + (fanKind === 'tip' ? 200 : fanKind === 'monthly' ? 80 : 0) })), [fanMode, fanKind])
 
   function requireLogin(action: () => void) { if (!isLoggedIn) { router.push('/login'); return } action() }
@@ -179,15 +186,22 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
         const data = await response.json().catch(() => ({})) as { review?: { id: string; createdAt: string }; error?: string }
         if (!response.ok || !data.review) { setNotice(data.error || 'ส่งรีวิวไม่สำเร็จ'); return }
         const next: DetailReview = { id: data.review.id, detailId: work.detailId, userId: user?.id ?? 'current-user', authorName: profile.displayName, rating, body: reviewText.trim(), recommended: recommend, spoiler, likes: 0, dislikes: 0, replies: [], createdAt: data.review.createdAt }
-        setReviews((current) => [next, ...current.filter((item) => item.userId !== next.userId)]); setReviewText(''); setNotice('เผยแพร่รีวิวแล้ว')
+        setReviews((current) => [next, ...current.filter((item) => item.userId !== next.userId)]); setReviewText(''); setShowReviewForm(false); setReviewSort('new'); setReviewsExpanded(false); setNotice('เผยแพร่รีวิวแล้ว')
       }); return
     }
-    const next: DetailReview = { id: crypto.randomUUID(), detailId: work.detailId, userId: 'current-user', authorName: profile.displayName, rating, body: reviewText.trim(), recommended: recommend, spoiler, likes: 0, dislikes: 0, replies: [], createdAt: new Date().toISOString() }; persistReviews([next, ...reviews]); setReviewText(''); setNotice('เผยแพร่รีวิวแล้ว')
+    const next: DetailReview = { id: crypto.randomUUID(), detailId: work.detailId, userId: 'current-user', authorName: profile.displayName, rating, body: reviewText.trim(), recommended: recommend, spoiler, likes: 0, dislikes: 0, replies: [], createdAt: new Date().toISOString() }; persistReviews([next, ...reviews]); setReviewText(''); setShowReviewForm(false); setReviewSort('new'); setReviewsExpanded(false); setNotice('เผยแพร่รีวิวแล้ว')
   }) }
   function editReview(review: DetailReview) { const body = window.prompt('แก้ไขรีวิว', review.body)?.trim(); if (!body) return; persistReviews(reviews.map((item) => item.id === review.id ? { ...item, body, updatedAt: new Date().toISOString() } : item)) }
   function deleteReview(id: string) { if (window.confirm('ลบรีวิวนี้หรือไม่?')) persistReviews(reviews.filter((item) => item.id !== id)) }
   function reactReview(id: string, kind: 'likes' | 'dislikes') { persistReviews(reviews.map((item) => item.id === id ? { ...item, [kind]: item[kind] + 1 } : item)) }
-  function replyReview(review: DetailReview) { requireLogin(() => { const body = window.prompt('ตอบกลับรีวิวนี้')?.trim(); if (!body) return; persistReviews(reviews.map((item) => item.id === review.id ? { ...item, replies: [...item.replies, { id: crypto.randomUUID(), authorName: profile.displayName, body, createdAt: new Date().toISOString() }] } : item)) }) }
+  function toggleReviewSet(setter: React.Dispatch<React.SetStateAction<Set<string>>>, id: string) { setter((current) => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next }) }
+  function startReply(reviewId: string) { requireLogin(() => { setReplyingTo((current) => current === reviewId ? null : reviewId); setReplyText('') }) }
+  function submitReply(reviewId: string) {
+    const body = replyText.trim()
+    if (!body) return
+    persistReviews(reviews.map((item) => item.id === reviewId ? { ...item, replies: [...item.replies, { id: crypto.randomUUID(), authorName: profile.displayName, body, createdAt: new Date().toISOString() }] } : item))
+    setOpenReplies((current) => new Set(current).add(reviewId)); setReplyingTo(null); setReplyText(''); setNotice('ส่งคำตอบแล้ว')
+  }
   function toggleChapterGroup(index: number) { setOpenChapterGroups((current) => { const next = new Set(current); if (next.has(index)) next.delete(index); else next.add(index); return next }) }
   function openEpisode(episode: DetailEpisode) { if (episode.status === 'scheduled') { setNotice(`ตอนนี้จะเผยแพร่ ${formatEpisodeDate(episode.publishedAt)}`); return } const unlocked = episode.price === 0 || purchased.has(episode.id); if (unlocked) router.push(`/reader?bookId=${encodeURIComponent(work.detailId)}&episodeId=${encodeURIComponent(episode.id)}`); else setPurchaseEpisode(episode) }
   function purchasedEpisode(id: string) { const next = new Set([...purchased, id]); setPurchased(next); if (!serverBacked && user) recordEpisodePurchase(user.id, id); const episode = episodes.find((item) => item.id === id); if (episode) router.push(`/reader?bookId=${encodeURIComponent(work.detailId)}&episodeId=${encodeURIComponent(id)}`) }
@@ -209,16 +223,66 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
         <div className={styles.actions}><button className={styles.primary} onClick={() => episodes[0] && openEpisode(episodes[0])}>{work.type === 'audiobook' ? <Headphones size={16}/> : <BookOpen size={16}/>} {work.type === 'audiobook' ? 'เริ่มฟัง' : 'เริ่มอ่าน'}</button><button className={`${styles.secondary} ${shelved ? styles.secondaryActive : ''}`} onClick={() => togglePersist('shelf', shelved)}><Bookmark size={15} fill={shelved ? 'currentColor' : 'none'}/> {shelved ? 'อยู่ในชั้นแล้ว' : 'เพิ่มเข้าชั้น'}</button><button className={styles.ghost} onClick={share}><Share2 size={16}/> แชร์</button></div>
       </div></div>
       <div className={styles.support}>
-        <Support icon={<Ticket size={20}/>} title="โหวตแนะนำ" detail={`เหลือ ${Math.max(0, DAILY_MAX-ledger.dailyUsed)} / ${DAILY_MAX} ใบวันนี้`} action="โหวต" onClick={() => openVote('daily')}/>
-        <Support icon={<Crown size={20}/>} title="โหวตรายเดือน" detail={`เหลือ ${Math.max(0, MONTHLY_MAX-ledger.monthlyUsed)} / ${MONTHLY_MAX} ใบเดือนนี้`} action="โหวต" onClick={() => openVote('monthly')}/>
-        <Support icon={<Coins size={20}/>} title="ทิปนักเขียน" detail={tipTotal ? `สนับสนุนแล้ว ${tipTotal} เหรียญ` : 'ส่งกำลังใจพร้อมข้อความ'} action="ให้ทิป" onClick={() => requireLogin(() => setDonateOpen(true))}/>
+        <Support variant="daily" title="โหวตแนะนำ" subtitle="แนะนำเรื่องโปรดของคุณ" score={fmt(work.voteCount + bonus.daily)} detail={`เหลือ ${Math.max(0, DAILY_MAX-ledger.dailyUsed)} / ${DAILY_MAX} ใบวันนี้`} action="โหวต" onClick={() => openVote('daily')}/>
+        <Support variant="monthly" title="โหวตรายเดือน" subtitle="คะแนนชิงอันดับประจำเดือนนี้" score={fmt(work.weeklyVoteCount + bonus.monthly)} detail={`เหลือ ${Math.max(0, MONTHLY_MAX-ledger.monthlyUsed)} / ${MONTHLY_MAX} ใบเดือนนี้`} action="โหวต" onClick={() => openVote('monthly')}/>
+        <Support variant="tip" title="ทิปนักเขียน" subtitle="สนับสนุนนักเขียนโดยตรง" score={fmt(tipTotal)} unit="เหรียญ" detail={tipTotal ? 'ขอบคุณสำหรับทุกกำลังใจ' : 'ส่งกำลังใจพร้อมข้อความ'} action="ทิป" onClick={() => requireLogin(() => setDonateOpen(true))}/>
       </div>
     </section>
     <section className={`${styles.card} ${styles.description}`}><h2 className={styles.sectionTitle}>รายละเอียดเรื่อง</h2><p className={expanded ? '' : 'line-clamp-3'}>{work.synopsis} {work.synopsis} เรื่องราวจะค่อย ๆ เปิดเผยปริศนาและความสัมพันธ์ของตัวละคร ผ่านบททดสอบที่ไม่มีใครสามารถหลีกเลี่ยงได้</p><button className={styles.readMore} onClick={() => setExpanded((value) => !value)}>{expanded ? 'ย่อรายละเอียด' : 'อ่านเพิ่มเติม'}</button><div className={styles.tags}>{work.tags.map((tag) => <span key={tag} className={styles.tag}>#{tag}</span>)}</div></section>
     <div className={styles.columns}><div className={styles.stack}>
-      <section className={`${styles.card} ${styles.section}`}><div className={styles.sectionHeader}><h2 className={styles.sectionTitle}>รีวิวจากผู้อ่าน <span>({reviews.length})</span></h2><div className={styles.sort}><button className={reviewSort==='new'?styles.sortActive:''} onClick={()=>setReviewSort('new')}>ล่าสุด</button><button className={reviewSort==='old'?styles.sortActive:''} onClick={()=>setReviewSort('old')}>เก่าสุด</button></div></div>
-        <div className={styles.reviewForm}><textarea rows={3} value={reviewText} onChange={(event)=>setReviewText(event.target.value)} placeholder="เล่าความรู้สึกหลังอ่านหรือฟังเรื่องนี้..."/><div className={styles.formRow}><label>คะแนน <select value={rating} onChange={(event)=>setRating(Number(event.target.value))}>{[5,4,3,2,1].map((value)=><option key={value}>{value}</option>)}</select></label><label><input type="checkbox" checked={recommend} onChange={(event)=>setRecommend(event.target.checked)}/> แนะนำเรื่องนี้</label><label><input type="checkbox" checked={spoiler} onChange={(event)=>setSpoiler(event.target.checked)}/> มีสปอยล์</label><button className={styles.primary} onClick={addReview}>เขียนรีวิว</button></div></div>
-        {sortedReviews.map((review)=><article key={review.id} className={styles.review}><div className={styles.reviewHead}><div><div className={styles.reviewName}>{review.authorName} · {'★'.repeat(review.rating)} {review.recommended?'· แนะนำ':''}</div><div className={styles.reviewDate}>{new Date(review.createdAt).toLocaleDateString('th-TH')} {review.updatedAt?'· แก้ไขแล้ว':''}</div></div>{review.userId==='current-user'&&<div className={styles.reviewActions}><button onClick={()=>editReview(review)}>แก้ไข</button><button onClick={()=>deleteReview(review.id)}>ลบ</button></div>}</div><p className={`${styles.reviewBody} ${review.spoiler?styles.spoiler:''}`} onClick={(event)=>event.currentTarget.classList.remove(styles.spoiler)}>{review.body}</p><div className={styles.reviewActions}><button onClick={()=>reactReview(review.id,'likes')}><ThumbsUp size={12}/> {review.likes}</button><button onClick={()=>reactReview(review.id,'dislikes')}><ThumbsDown size={12}/> {review.dislikes}</button><button onClick={()=>replyReview(review)}><MessageCircle size={12}/> ตอบกลับ</button></div>{review.replies.map((reply)=><p key={reply.id} className={styles.reviewBody}><b>{reply.authorName}:</b> {reply.body}</p>)}</article>)}
+      <section className={`${styles.card} ${styles.section} ${styles.reviewsSection}`}>
+        <div className={styles.reviewsHeader}>
+          <h2>รีวิวจากผู้อ่าน</h2>
+          <div className={styles.reviewsHeaderActions}>
+            <label className={styles.reviewSortSelect}>
+              <span className="sr-only">เรียงรีวิว</span>
+              <select value={reviewSort} onChange={(event)=>{ setReviewSort(event.target.value as 'new' | 'old'); setReviewsExpanded(false) }}>
+                <option value="new">ล่าสุด</option><option value="old">เก่าสุด</option>
+              </select>
+              <ChevronDown aria-hidden="true"/>
+            </label>
+            <button type="button" className={styles.reviewWriteButton} onClick={()=>requireLogin(()=>setShowReviewForm((value)=>!value))}><Pencil aria-hidden="true"/>เขียนรีวิว</button>
+          </div>
+        </div>
+        {showReviewForm&&<div className={styles.reviewComposer}>
+          <span className={styles.reviewAvatar} aria-hidden="true">{profile.displayName.slice(0,1)}</span>
+          <div className={styles.reviewComposerBody}>
+            <textarea rows={2} value={reviewText} onChange={(event)=>setReviewText(event.target.value)} placeholder="เขียนรีวิวของคุณ..." autoFocus/>
+            <div className={styles.reviewComposerActions}>
+              <div className={styles.recommendButtons}>
+                <button type="button" className={recommend?styles.recommendYesActive:''} onClick={()=>setRecommend(true)}>แนะนำ</button>
+                <button type="button" className={!recommend?styles.recommendNoActive:''} onClick={()=>setRecommend(false)}>ไม่แนะนำ</button>
+              </div>
+              <div className={styles.reviewComposerRight}>
+                <button type="button" role="switch" aria-checked={spoiler} className={`${styles.spoilerSwitch} ${spoiler?styles.spoilerSwitchActive:''}`} onClick={()=>setSpoiler((value)=>!value)}><span aria-hidden="true"/>สปอย</button>
+                <button type="button" className={styles.reviewSubmit} disabled={!reviewText.trim()} onClick={addReview}>ส่งรีวิว</button>
+              </div>
+            </div>
+          </div>
+        </div>}
+        <div className={styles.reviewList}>
+          {visibleReviews.map((review)=><article key={review.id} className={styles.review}>
+            <span className={styles.reviewAvatar} aria-hidden="true">{review.authorName.slice(0,1)}</span>
+            <div className={styles.reviewContent}>
+              <div className={styles.reviewHead}>
+                <strong className={styles.reviewName}>{review.authorName}</strong>
+                <time className={styles.reviewDate} dateTime={review.createdAt}>{new Date(review.createdAt).toLocaleDateString('th-TH')}{review.updatedAt?' · แก้ไขแล้ว':''}</time>
+                {review.userId==='current-user'&&<details className={styles.reviewMenu}><summary aria-label="จัดการรีวิว"><MoreHorizontal/></summary><div><button type="button" onClick={()=>editReview(review)}>แก้ไข</button><button type="button" onClick={()=>deleteReview(review.id)}>ลบรีวิว</button></div></details>}
+              </div>
+              {review.spoiler&&!revealedSpoilers.has(review.id)?<button type="button" className={styles.revealSpoiler} onClick={()=>toggleReviewSet(setRevealedSpoilers,review.id)}><Eye/>สปอย — กดเพื่ออ่าน</button>:<p className={styles.reviewBody}>{review.body}</p>}
+              <div className={styles.reviewFooter}>
+                <button type="button" className={styles.reviewReplyButton} onClick={()=>review.replies.length?toggleReviewSet(setOpenReplies,review.id):startReply(review.id)}><Reply/>{review.replies.length?(openReplies.has(review.id)?'ซ่อนการตอบกลับ':'ดูการตอบกลับ'):'ตอบกลับ'}{review.replies.length>0&&` (${review.replies.length})`}</button>
+                <button type="button" onClick={()=>reactReview(review.id,'likes')}><ThumbsUp/>{review.likes}</button>
+                <button type="button" onClick={()=>reactReview(review.id,'dislikes')}><ThumbsDown/>{review.dislikes||''}</button>
+                <span className={review.recommended?styles.reviewRecommended:styles.reviewNotRecommended}>{review.recommended?'แนะนำ':'ไม่แนะนำ'}</span>
+              </div>
+              {openReplies.has(review.id)&&review.replies.length>0&&<div className={styles.reviewReplies}>{review.replies.map((reply)=><div key={reply.id} className={styles.reviewReply}><span className={styles.replyAvatar}>{reply.authorName.slice(0,1)}</span><div><div className={styles.replyHead}><strong>{reply.authorName}</strong><time dateTime={reply.createdAt}>{new Date(reply.createdAt).toLocaleDateString('th-TH')}</time></div><p>{reply.body}</p></div></div>)}</div>}
+              {replyingTo===review.id&&<div className={styles.replyComposer}><span className={styles.replyAvatar}>{profile.displayName.slice(0,1)}</span><div><textarea rows={1} value={replyText} onChange={(event)=>setReplyText(event.target.value)} placeholder="เขียนตอบกลับ..." autoFocus/><div><button type="button" onClick={()=>{setReplyingTo(null);setReplyText('')}}>ยกเลิก</button><button type="button" disabled={!replyText.trim()} onClick={()=>submitReply(review.id)}>ส่ง</button></div></div></div>}
+            </div>
+          </article>)}
+          {!reviews.length&&<p className={styles.empty}>ยังไม่มีรีวิว เป็นคนแรกที่เขียนรีวิวเรื่องนี้ได้เลย</p>}
+        </div>
+        {sortedReviews.length>3&&<button type="button" className={styles.reviewMore} onClick={()=>setReviewsExpanded((value)=>!value)}>{reviewsExpanded?'แสดงน้อยลง ▲':`อ่านเพิ่มเติม (${sortedReviews.length-3}) ...`}</button>}
       </section>
       <section className={`${styles.card} ${styles.section}`}>
         <div className={styles.chapterHeader}>
@@ -256,11 +320,20 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
       <section className={`${styles.card} ${styles.section}`}><div className={styles.sectionHeader}><h2 className={styles.sectionTitle}>เรื่องแนะนำ</h2><Star size={18}/></div><div className={styles.related}>{related.map((item)=><Link key={item.detailId} href={`/detail?bookId=${encodeURIComponent(item.detailId)}`} className={styles.relatedItem}><span className={styles.relatedCover} style={{background:item.coverGradient}}/><span><b>{item.title}</b><span>{item.authorName}<br/>{item.genreLabel}</span></span></Link>)}</div></section>
     </aside></div>
   </div>
-  <Dialog open={voteOpen} onOpenChange={setVoteOpen}><DialogContent><DialogHeader><DialogTitle>ใช้ตั๋วโหวตให้ “{work.title}”</DialogTitle></DialogHeader><div className={styles.dialogOptions}><button onClick={()=>setVoteKind('daily')}><span><Ticket size={16}/> โหวตแนะนำ</span><b>เหลือ {Math.max(0,DAILY_MAX-ledger.dailyUsed)}</b></button><button onClick={()=>setVoteKind('monthly')}><span><Crown size={16}/> โหวตรายเดือน</span><b>เหลือ {Math.max(0,MONTHLY_MAX-ledger.monthlyUsed)}</b></button></div><div className={styles.quantity}><label htmlFor="vote-amount">จำนวนตั๋ว</label><input id="vote-amount" type="number" min={1} max={voteKind==='daily'?DAILY_MAX-ledger.dailyUsed:MONTHLY_MAX-ledger.monthlyUsed} value={voteAmount} onChange={(event)=>setVoteAmount(Number(event.target.value))}/><button className={styles.primary} onClick={submitVote}>ยืนยันโหวต</button></div></DialogContent></Dialog>
+  <Dialog open={voteOpen} onOpenChange={setVoteOpen}><DialogContent><DialogHeader><DialogTitle>ใช้ตั๋วโหวตให้ “{work.title}”</DialogTitle></DialogHeader><div className={styles.dialogOptions}><button className={voteKind==='daily'?styles.dialogOptionActive:''} onClick={()=>setVoteKind('daily')}><span><Ticket size={16}/> โหวตแนะนำ</span><b>เหลือ {Math.max(0,DAILY_MAX-ledger.dailyUsed)} ใบ</b></button><button className={voteKind==='monthly'?styles.dialogOptionActive:''} onClick={()=>setVoteKind('monthly')}><span><Crown size={16}/> โหวตรายเดือน</span><b>เหลือ {Math.max(0,MONTHLY_MAX-ledger.monthlyUsed)} ใบ</b></button></div><div className={styles.quantity}><label htmlFor="vote-amount">จำนวนตั๋ว</label><input id="vote-amount" type="number" min={1} max={voteKind==='daily'?DAILY_MAX-ledger.dailyUsed:MONTHLY_MAX-ledger.monthlyUsed} value={voteAmount} onChange={(event)=>setVoteAmount(Number(event.target.value))}/><button className={styles.primary} onClick={submitVote}>ยืนยันโหวต</button></div></DialogContent></Dialog>
   <Dialog open={fanOpen} onOpenChange={setFanOpen}><DialogContent><DialogHeader><DialogTitle>อันดับแฟนคลับทั้งหมด</DialogTitle></DialogHeader><div className={styles.fanDialog}>{[...fans,...fans.map((fan,index)=>({...fan,name:`${fan.name} ${index+2}`,score:fan.score-420}))].map((fan,index)=><div key={`${fan.name}-${index}`} className={styles.fan}><span className={styles.fanRank}>{index+1}</span><span className={styles.avatar}>{fan.name[0]}</span><strong>{fan.name}</strong><span>{fmt(fan.score)}</span></div>)}</div></DialogContent></Dialog>
   <DonateModal authorName={work.authorName} detailId={work.detailId} open={donateOpen} onOpenChange={setDonateOpen} onSuccess={(amount)=>{setTipTotal((value)=>value+amount);setNotice('ส่งกำลังใจให้นักเขียนแล้ว')}}/>
   <PurchaseEpisodeModal episode={purchaseEpisode} workTitle={work.title} open={Boolean(purchaseEpisode)} onOpenChange={(open)=>!open&&setPurchaseEpisode(null)} onPurchased={purchasedEpisode} serverPurchase={serverBacked ? purchaseOnServer : undefined}/>
   {notice&&<div className={styles.notice}>{notice}</div>}</main>
 }
 
-function Support({ icon, title, detail, action, onClick }: { icon: React.ReactNode; title: string; detail: string; action: string; onClick: () => void }) { return <div className={styles.supportItem}><span className={styles.supportIcon}>{icon}</span><span><b>{title}</b><small>{detail}</small></span><button className={styles.supportButton} onClick={onClick}>{action}</button></div> }
+function Support({ variant, title, subtitle, score, unit, detail, action, onClick }: { variant: 'daily' | 'monthly' | 'tip'; title: string; subtitle: string; score: string; unit?: string; detail: string; action: string; onClick: () => void }) {
+  return <div className={`${styles.supportItem} ${styles[`support${variant[0].toUpperCase()}${variant.slice(1)}`]}`}>
+    <div className={styles.supportInfo}>
+      <div className={styles.supportTop}><b>{title}</b><span>{subtitle}</span></div>
+      <div className={styles.supportScore}><strong>{score}</strong>{unit&&<span>{unit}</span>}</div>
+      <small>{detail}</small>
+    </div>
+    <button className={styles.supportButton} onClick={onClick}>{action}</button>
+  </div>
+}

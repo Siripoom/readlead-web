@@ -2,6 +2,11 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+body:has([data-auth-page]) [data-site-header],
+body:has([data-auth-page]) [data-site-footer] {
+  display: none;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

@@ -27,3 +27,76 @@
 @media(max-width:1050px){.accountGrid{grid-template-columns:210px minmax(0,1fr)}.bookGrid{grid-template-columns:repeat(4,minmax(0,1fr))}.statsGrid{grid-template-columns:1fr}.ownerHero{padding:25px}.avatarLarge{width:125px;height:125px}}
 @media(max-width:800px){.accountPage{padding:18px 14px 48px}.accountGrid{display:block}.sidebar{display:none}.mobileSelect{display:block;margin-bottom:14px}.ownerHero{align-items:flex-start;flex-direction:column;text-align:center}.avatarLarge{margin:auto}.ownerInfo{width:100%}.levelRow{align-items:flex-start;flex-direction:column}.followStats{justify-content:center}.statsGrid{grid-template-columns:1fr}.bookGrid{grid-template-columns:repeat(3,minmax(0,1fr))}.publicHead{flex-wrap:wrap;padding:0 20px}.publicIdentity{min-width:calc(100% - 132px)}.publicActions{padding-top:0;margin-left:132px}.publicStats,.publicTabs{margin-left:20px;margin-right:20px;padding-left:0}.publicContent{padding:22px 20px}.formGrid{grid-template-columns:1fr}.fieldFull{grid-column:auto}}
 @media(max-width:520px){.bookGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.ownerHero{padding:22px 18px}.ownerName{font-size:25px}.sectionCard{padding:18px}.publicAvatar{width:96px;height:96px}.publicIdentity{min-width:calc(100% - 116px);padding-top:48px}.publicActions{width:100%;margin-left:0;padding-top:0}.publicStats{gap:15px;flex-wrap:wrap}.cover{height:180px}}
+
+/* Account center — aligned with admin/readify.html */
+.accountSettingsPage{gap:0}
+.accountPageHeader{margin-bottom:22px}
+.accountPageHeader h1{margin:0;color:var(--ink);font-size:27px;font-weight:700}
+.accountPageHeader p{margin:5px 0 0;color:var(--softMuted);font-size:14.5px}
+.accountSettings{display:flex;max-width:940px;flex-direction:column;gap:22px}
+.settingsGroup{padding:6px 26px 10px}
+.settingsGroupHeader{display:flex;align-items:center;gap:13px;padding:20px 0 8px}
+.settingsIcon{display:grid;width:42px;height:42px;flex:0 0 42px;place-items:center;border-radius:12px;color:#fff}
+.settingsIcon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8}
+.profileIcon{background:linear-gradient(135deg,#cc4452,#b23a48)}
+.securityIcon{background:linear-gradient(135deg,#4fa3f5,#2b7de0)}
+.notificationIcon{background:linear-gradient(135deg,#fbab4a,#f6921e)}
+.connectedIcon{background:linear-gradient(135deg,#5ad6a0,#16b06a)}
+.settingsGroupHeader h2{margin:0;color:var(--ink);font-size:18px;font-weight:700}
+.settingsGroupHeader p{margin:2px 0 0;color:var(--softMuted);font-size:13px}
+.settingRow{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:17px 0;border-top:1px solid var(--line)}
+.settingLabel{min-width:0}
+.settingLabel b{display:block;color:var(--ink);font-size:14.5px;font-weight:600}
+.settingLabel span{display:-webkit-box;max-width:540px;margin-top:2px;overflow:hidden;color:var(--softMuted);font-size:12.5px;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.settingValue{display:flex;flex-shrink:0;align-items:center;justify-content:flex-end;gap:13px;color:var(--muted);font-size:14px;font-weight:500}
+.settingButton{border:0;border-radius:9px;background:var(--pinkSoft);padding:8px 16px;color:var(--pinkDark);font:600 13px inherit;white-space:nowrap;cursor:pointer;transition:background .15s,opacity .15s}
+.settingButton:hover:not(:disabled){background:#f7dce0}
+.settingButton:disabled{opacity:.48;cursor:not-allowed}
+.ghostSettingButton{background:#f2f3f6;color:var(--muted)}
+.verifiedBadge{display:inline-flex;align-items:center;gap:4px;border-radius:999px;background:#e6f6ee;padding:4px 10px;color:#1f9d62;font-size:12px;font-weight:600;white-space:nowrap}
+.verifiedBadge svg{width:12px;height:12px;stroke-width:2.2}
+.accountAvatar{width:42px;height:42px;border:1px solid var(--line);border-radius:12px;object-fit:cover}
+.profileEditor{padding:18px 0 12px;border-top:1px solid var(--line)}
+.fieldHint{color:var(--softMuted);font-size:12px}
+.editorActions{display:flex;justify-content:flex-end;gap:9px;margin-top:14px}
+.editorSave,.editorCancel{height:34px;border-radius:9px;padding:0 15px;font:700 12.5px inherit}
+.editorSave{background:var(--pink);color:#fff}
+.editorSave:hover{background:var(--pinkDark)}
+.editorCancel{border:1px solid var(--line);background:#fff;color:var(--softMuted)}
+.accountSuccess{margin:0;padding:0 0 12px;color:#1f9d62;font-size:12.5px;font-weight:600}
+.accountToggle{position:relative;width:46px;height:26px;flex:0 0 46px;border-radius:999px;background:#d6d8e2;cursor:pointer;transition:.2s}
+.accountToggle span{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+.accountToggleOn{background:var(--pink)}
+.accountToggleOn span{left:23px}
+.provider{display:flex;align-items:center;gap:13px}
+.providerIcon{display:grid;width:42px;height:42px;flex:0 0 42px;place-items:center;border-radius:12px;font-size:18px;font-weight:800}
+.providerIcon svg{width:22px;height:22px}
+.googleProvider{border:1px solid var(--line);background:#fff;color:#4285f4}
+.facebookProvider{background:#1877f2;color:#fff}
+.appleProvider{border:1px solid var(--line);background:#fff;color:#111}
+.provider>div>b{display:block;color:var(--ink);font-size:14.5px;font-weight:600}
+.provider>div>span{display:block;color:var(--softMuted);font-size:12.5px}
+.notConnected{color:var(--softMuted);font-size:12.5px;font-weight:600}
+.dangerGroup{border-color:#f3cdca}
+.dangerIcon{background:linear-gradient(135deg,#e2453a,#c43a30)}
+.dangerGroup .settingsGroupHeader h2{color:#c43a30}
+.deleteText{padding:4px 0 18px}
+.deleteText p{max-width:560px;margin:6px 0 0;color:var(--muted);font-size:13.5px;line-height:1.6}
+.deleteButton{display:inline-flex;align-items:center;gap:8px;border-radius:11px;background:#e2453a;padding:11px 22px;color:#fff;font:600 14px inherit;cursor:not-allowed;opacity:.58}
+.deleteButton svg{width:16px;height:16px;stroke-width:1.9}
+
+@media(max-width:680px){
+  .accountPageHeader h1{font-size:24px}
+  .accountPageHeader p{font-size:13.5px;line-height:1.6}
+  .settingsGroup{padding:4px 18px 8px}
+  .settingsGroupHeader{align-items:flex-start;padding-top:17px}
+  .settingsGroupHeader h2{font-size:16px}
+  .settingRow{align-items:flex-start;flex-direction:column;gap:12px;padding:15px 0}
+  .settingValue{width:100%;flex-wrap:wrap;justify-content:flex-start}
+  .settingValue .settingButton{margin-left:auto}
+  .provider{width:100%}
+  .provider+.settingValue{width:100%}
+  .profileEditor .formGrid{grid-template-columns:1fr}
+  .profileEditor .fieldFull{grid-column:auto}
+  .deleteButton{width:100%;justify-content:center}
+}

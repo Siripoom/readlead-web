@@ -26,7 +26,13 @@ export const metadata: Metadata = {
   description: 'แพลตฟอร์มอ่านนิยายจีน มังงะ และ Audiobook คุณภาพสูง',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+  auth,
+}: {
+  children: React.ReactNode
+  auth: React.ReactNode
+}) {
   return (
     <html lang="th" className={`${notoSans.variable} ${notoSansThai.variable} ${notoSansMono.variable} antialiased`}>
       <body className="min-h-screen flex flex-col bg-background">
@@ -34,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SiteHeader />
           <main className="flex-1">{children}</main>
           <SiteFooter />
+          {auth}
         </Providers>
       </body>
     </html>

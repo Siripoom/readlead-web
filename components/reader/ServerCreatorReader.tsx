@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { ArrowRight, BookOpen, Coins, LoaderCircle, Lock, MessageSquare, Send } from 'lucide-react'
 import ReaderContent from '@/components/reader/ReaderContent'
@@ -14,6 +15,7 @@ import type { Episode } from '@/lib/types'
 interface SecureEpisode { id: string; workId: string; episodeNumber: number; title: string; type: 'text' | 'image' | 'audio'; status: string; priceCoins: number; content: string | null; publishedAt: string | null; durationSeconds: number | null; assets: Array<{ id: string; kind: string; contentType: string; sortOrder: number }> }
 
 export default function ServerCreatorReader({ workId, episodeId }: { workId: string; episodeId: string }) {
+  const router = useRouter()
   const { isLoggedIn, user } = useRole()
   const [rawWork, setRawWork] = useState<PublicCreatorWork | null>(null)
   const [secureEpisode, setSecureEpisode] = useState<SecureEpisode | null>(null)
@@ -47,7 +49,7 @@ export default function ServerCreatorReader({ workId, episodeId }: { workId: str
   const next = index >= 0 ? toolbarEpisodes[index + 1] : undefined
 
   async function purchase() {
-    if (!isLoggedIn) { window.location.href = `/login?next=${encodeURIComponent(`/reader?bookId=${workId}&episodeId=${episodeId}`)}`; return }
+    if (!isLoggedIn) { router.push(`/login?next=${encodeURIComponent(`/reader?bookId=${workId}&episodeId=${episodeId}`)}`); return }
     setBusy(true)
     const response = await fetch(`/api/episodes/${encodeURIComponent(episodeId)}/purchase`, { method: 'POST' })
     const data = await response.json().catch(() => ({})) as { error?: string }
@@ -58,7 +60,7 @@ export default function ServerCreatorReader({ workId, episodeId }: { workId: str
 
   async function sendComment() {
     if (!comment.trim()) return
-    if (!user) { window.location.href = '/login'; return }
+    if (!user) { router.push('/login'); return }
     const response = await fetch('/api/interactions/comment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workId, body: comment.trim() }) })
     const data = await response.json().catch(() => ({})) as { error?: string }
     if (!response.ok) setNotice(data.error || 'ส่งความคิดเห็นไม่สำเร็จ')

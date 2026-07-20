@@ -1,25 +1,85 @@
 'use client'
 
-import { useState, type ChangeEvent, type ReactNode } from 'react'
+import { useState, type ChangeEvent, type MouseEvent, type ReactNode } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { BookOpen, ChevronLeft, Eye, EyeOff } from 'lucide-react'
+import { AppleIcon, FacebookIcon, GoogleIcon } from '@/components/icons/SocialProviderIcons'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 
-export function AuthShell({ children, backHref }: { children: ReactNode; backHref?: string }) {
+export type AuthPresentation = 'page' | 'modal'
+
+export function AuthShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-[100svh] items-center justify-center bg-[#9998a2] p-1.5 sm:p-6">
+    <div data-auth-page className="flex min-h-[100svh] items-center justify-center bg-[#9998a2] p-1.5 sm:p-6">
       <section className="relative w-full max-w-[480px] rounded-[20px] bg-white px-[clamp(27px,7vw,46px)] py-9 text-[#373244] shadow-sm sm:rounded-[28px] sm:py-12">
-        {backHref && (
-          <Link
-            href={backHref}
-            className="absolute left-6 top-5 inline-flex items-center gap-1 rounded-lg px-1 py-1 text-sm font-semibold text-[#77728a] transition-colors hover:text-[#d04655] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d04655] sm:left-8 sm:top-7"
-          >
-            <ChevronLeft className="h-4 w-4" /> กลับ
-          </Link>
-        )}
         {children}
       </section>
     </div>
   )
+}
+
+export function AuthModalShell({ children, labelledBy }: { children: ReactNode; labelledBy: string }) {
+  const router = useRouter()
+
+  return (
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) router.back()
+      }}
+    >
+      <DialogContent
+        aria-labelledby={labelledBy}
+        showCloseButton={false}
+        overlayClassName="z-[90] bg-[rgba(30,25,50,0.5)] backdrop-blur-[4px]"
+        className="z-[91] block max-h-[calc(100svh-24px)] w-[calc(100%-24px)] max-w-[430px] overflow-y-auto rounded-[22px] bg-white px-[30px] pb-[30px] pt-[34px] text-[#373244] shadow-none ring-0 sm:max-h-[calc(100svh-48px)] sm:w-[calc(100%-48px)] data-open:duration-200 data-open:slide-in-from-bottom-3 data-open:zoom-in-95"
+      >
+        {children}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+export function AuthBackLink({ href, presentation }: { href: string; presentation: AuthPresentation }) {
+  function forceFullPage(event: MouseEvent<HTMLAnchorElement>) {
+    if (presentation !== 'page') return
+    event.preventDefault()
+    window.location.assign(href)
+  }
+
+  return (
+    <Link
+      href={href}
+      replace={presentation === 'modal'}
+      onClick={forceFullPage}
+      className={`absolute inline-flex items-center rounded-lg px-1 py-1 text-sm font-semibold text-[#77728a] transition-colors hover:text-[#d04655] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d04655] ${presentation === 'modal' ? 'left-4 top-4 gap-0.5' : 'left-6 top-5 gap-1 sm:left-8 sm:top-7'}`}
+    >
+      <ChevronLeft className={presentation === 'modal' ? 'h-[17px] w-[17px]' : 'h-4 w-4'} /> กลับ
+    </Link>
+  )
+}
+
+export function AuthModeLink({ href, presentation, children, className }: { href: string; presentation: AuthPresentation; children: ReactNode; className?: string }) {
+  function forceFullPage(event: MouseEvent<HTMLAnchorElement>) {
+    if (presentation !== 'page') return
+    event.preventDefault()
+    window.location.assign(href)
+  }
+
+  return (
+    <Link href={href} replace={presentation === 'modal'} onClick={forceFullPage} className={className}>
+      {children}
+    </Link>
+  )
+}
+
+export function AuthTitle({ id, presentation, children }: { id: string; presentation: AuthPresentation; children: ReactNode }) {
+  const className = "mb-7 mt-6 text-center text-[23px] font-extrabold leading-normal text-[#373244]"
+  if (presentation === 'modal') {
+    return <DialogTitle id={id} className={className}>{children}</DialogTitle>
+  }
+  return <h1 id={id} className={className}>{children}</h1>
 }
 
 export function AuthBrand() {
@@ -125,18 +185,6 @@ export function AuthDivider() {
       <span className="h-px flex-1 bg-[#e8e3f0]" />
     </div>
   )
-}
-
-function GoogleIcon() {
-  return <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden><path fill="#4285F4" d="M21.8 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.5a4.7 4.7 0 0 1-2 3.1v2.6h3.2c1.9-1.8 3.1-4.4 3.1-7.6Z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.7-2.3l-3.2-2.6c-.9.6-2 1-3.5 1a5.9 5.9 0 0 1-5.5-4.1H3.2v2.7A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.5 14a6 6 0 0 1 0-3.9V7.4H3.2a10 10 0 0 0 0 9.3L6.5 14Z"/><path fill="#EA4335" d="M12 6.1c1.6 0 3 .5 4.1 1.6l3-3A10 10 0 0 0 3.2 7.4l3.3 2.7A5.9 5.9 0 0 1 12 6.1Z"/></svg>
-}
-
-function FacebookIcon() {
-  return <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden><circle cx="12" cy="12" r="11" fill="white"/><path fill="#1877F2" d="M13.5 20v-7h2.4l.4-2.8h-2.8V8.4c0-.8.2-1.4 1.4-1.4h1.5V4.5c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2.1H8V13h2.5v7h3Z"/></svg>
-}
-
-function AppleIcon() {
-  return <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden><path d="M17.1 12.5c0-2.5 2-3.7 2.1-3.8a4.5 4.5 0 0 0-3.5-1.9c-1.5-.2-2.9.9-3.6.9-.8 0-1.9-.9-3.1-.9a4.7 4.7 0 0 0-4 2.4c-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3.1 2.4 1.2-.1 1.7-.8 3.2-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.2-1.2 3-2.4a10.7 10.7 0 0 0 1.4-2.9 4.2 4.2 0 0 1-3-3.6ZM14.7 5.2A4.3 4.3 0 0 0 15.8 2a4.5 4.5 0 0 0-3 1.5 4.1 4.1 0 0 0-1.1 3.1 3.7 3.7 0 0 0 3-1.4Z"/></svg>
 }
 
 export function SocialAuthButtons({ onUnavailable }: { onUnavailable: (provider: string) => void }) {

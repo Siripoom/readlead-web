@@ -80,7 +80,7 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[#e9edf2] bg-white">
+    <header data-site-header className="sticky top-0 z-50 w-full border-b border-[#e9edf2] bg-white">
       <div className="flex min-h-[55px] w-full items-center gap-4 px-4 sm:px-6 xl:gap-10 xl:px-10">
         <Link
           href="/"

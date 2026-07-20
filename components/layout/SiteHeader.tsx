@@ -11,9 +11,6 @@ import {
 import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
-  const pathname = usePathname();
-  if (pathname === "/login" || pathname === "/register") return null;
-
   return (
     <>
       <Navbar />

@@ -80,8 +80,8 @@ export function Navbar() {
   }
 
   return (
-    <header data-site-header className="sticky top-0 z-50 w-full border-b border-[#e9edf2] bg-white">
-      <div className="flex min-h-[55px] w-full items-center gap-4 px-4 sm:px-6 xl:gap-10 xl:px-10">
+    <header data-site-header className="sticky top-0 z-50 w-full border-b border-[#e9edf2] bg-white xl:h-[55px]">
+      <div className="flex min-h-[55px] w-full items-center gap-4 px-4 sm:px-6 xl:h-[54px] xl:min-h-0 xl:gap-10 xl:px-10 xl:py-[9px]">
         <Link
           href="/"
           aria-label="ReadLead หน้าหลัก"
@@ -116,11 +116,11 @@ export function Navbar() {
           })}
         </nav>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2 xl:gap-4">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2 xl:gap-5">
           <Link
             href="/discover"
             aria-label="ค้นหา"
-            className="grid h-10 w-10 place-items-center rounded-full text-[#475569] transition-colors hover:bg-[#f5f6f8] hover:text-[#1e293b] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452]"
+            className="grid h-10 w-10 place-items-center rounded-full text-[#475569] transition-colors hover:bg-[#f5f6f8] hover:text-[#1e293b] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452] xl:h-[22px] xl:w-[22px]"
           >
             <Search className="h-[22px] w-[22px]" />
           </Link>
@@ -134,7 +134,7 @@ export function Navbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger
                   aria-label="เปิดเมนูผู้ใช้"
-                  className="flex items-center gap-2.5 rounded-lg p-1 text-[#334155] transition-colors hover:bg-[#f5f6f8] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452]"
+                  className="flex items-center gap-2.5 rounded-lg p-1 text-[#334155] transition-colors hover:bg-[#f5f6f8] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452] xl:p-0"
                 >
                   <Avatar className="size-9">
                     <AvatarImage src={profile.avatarUrl} alt="" />

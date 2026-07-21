@@ -4,7 +4,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, Filter, Star } from 'lucide-react'
-import TopUpModal from '@/components/modals/TopUpModal'
 import { useWallet } from '@/contexts/WalletContext'
 import { GENRE_LABELS } from '@/lib/mock-data'
 import type { OwnerDashboardData } from '@/lib/profile-types'
@@ -109,7 +108,6 @@ export function OwnerHome({ data }: { data: OwnerDashboardData }) {
   const { balance } = useWallet()
   const [filter, setFilter] = useState<ShelfFilter>('all')
   const [category, setCategory] = useState('all')
-  const [topUpOpen, setTopUpOpen] = useState(false)
   const [serverShelf, setServerShelf] = useState<ShelfWork[] | null>(null)
   const [social, setSocial] = useState<{ followers: number; following: number } | null>(null)
   const dailyCountdown = useCountdown('daily')
@@ -199,7 +197,7 @@ export function OwnerHome({ data }: { data: OwnerDashboardData }) {
       </section>
 
       <section className={styles.statsGrid} aria-label="สรุปบัญชี">
-        <button type="button" onClick={() => setTopUpOpen(true)} className={`${styles.card} ${styles.coinCard}`}>
+        <Link href={`/profile/${encodeURIComponent(profile.id)}?tab=wallet`} className={`${styles.card} ${styles.coinCard}`}>
           <Image src="/profile/readify-coin.png" alt="" width={52} height={52} className={styles.coinImage} />
           <span className={styles.coinBody}>
             <b>ยอดเหรียญในบัญชี</b>
@@ -208,7 +206,7 @@ export function OwnerHome({ data }: { data: OwnerDashboardData }) {
               <span>เติมเหรียญ ›</span>
             </span>
           </span>
-        </button>
+        </Link>
 
         <div className={`${styles.voteCard} ${styles.dailyVoteCard}`}>
           <Image src="/profile/readify-daily-ticket.png" alt="" width={52} height={42} className={styles.ticketImage} />
@@ -286,7 +284,6 @@ export function OwnerHome({ data }: { data: OwnerDashboardData }) {
           <div className={styles.empty}>ยังไม่มีเรื่องในหมวดนี้</div>
         )}
       </section>
-      <TopUpModal open={topUpOpen} onOpenChange={setTopUpOpen} />
     </div>
   )
 }

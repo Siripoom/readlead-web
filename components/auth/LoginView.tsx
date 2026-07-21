@@ -25,8 +25,6 @@ interface Props {
   presentation: AuthPresentation
 }
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
 export function LoginView({ searchParams, presentation }: Props) {
   const params = use(searchParams)
   const requestedNext = typeof params.next === 'string' ? params.next : undefined
@@ -39,11 +37,15 @@ export function LoginView({ searchParams, presentation }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { login } = useRole()
   const router = useRouter()
-  const canSubmit = EMAIL_PATTERN.test(email.trim()) && password.length > 0 && !isSubmitting
-
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    if (!canSubmit) return
+    if (isSubmitting) return
+    if (!email.trim() || !password) {
+      setError('')
+      setFieldErrors({})
+      setFeatureStatus('')
+      return
+    }
     setError('')
     setFieldErrors({})
     setFeatureStatus('')
@@ -124,7 +126,7 @@ export function LoginView({ searchParams, presentation }: Props) {
 
         <button
           type="submit"
-          disabled={!canSubmit}
+          disabled={isSubmitting}
           className="mt-3 h-[42px] w-full rounded-xl bg-[#d04655] text-sm font-bold text-white transition-colors hover:bg-[#bd3948] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d04655] disabled:cursor-not-allowed disabled:bg-[#dfdbea] disabled:text-white"
         >
           {isSubmitting ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Eye, List } from 'lucide-react'
 import type { MangaBookItem, MangaLatestUpdate } from '@/lib/manga-landing-data'
-import { MangaCoverArt } from './MangaCoverArt'
+import { MangaCover } from './MangaCover'
 
 type Props = {
   items: Array<MangaBookItem | MangaLatestUpdate>
@@ -33,9 +33,7 @@ export function MangaBookGrid({ items, emptyLabel = 'ไม่พบมังง
             className="relative aspect-[2/3] overflow-hidden rounded-xl shadow-[0_2px_7px_rgba(0,0,0,0.12)]"
             style={{ background: item.gradient }}
           >
-            <div className="absolute inset-0 transition-transform duration-300 group-hover:scale-[1.03]">
-              <MangaCoverArt index={index} />
-            </div>
+            <MangaCover index={index} coverUrl={item.coverUrl} title={item.title} />
             {isLatestUpdate(item) && (
               <span className="absolute bottom-2 left-2 rounded-full bg-black/55 px-2 py-1 text-[9px] font-semibold text-white backdrop-blur-sm sm:text-[10px]">
                 {item.updatedLabel}

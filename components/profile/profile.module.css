@@ -1,11 +1,12 @@
 .accountPage{--pink:#cc4452;--pinkDark:#b23a48;--pinkSoft:#fae8ea;--ink:#2b2d3a;--muted:#6b7080;--softMuted:#8b91a0;--soft:#f2f3f6;--line:#e7e8ee;min-height:calc(100vh - 55px);padding:21px 30px 44px;background:#f4f5f8;color:var(--ink)}
 .accountGrid{display:grid;grid-template-columns:206px minmax(0,1fr);gap:30px;width:100%;max-width:1500px;margin:0 auto}
-.sidebar{position:sticky;top:82px;align-self:start;border:1px solid var(--line);border-radius:18px;background:#fff;padding:11px;box-shadow:0 5px 18px rgba(35,37,47,.04)}
-.sideButton{display:flex;width:100%;align-items:center;gap:11px;border:0;border-radius:11px;background:transparent;padding:11px 12px;color:#666c7c;font:600 13px inherit;text-align:left;cursor:pointer}
-.sideButton:hover{background:#f7f7f9;color:var(--ink)}
-.sideButtonActive{background:var(--pinkSoft);color:var(--pink)}
-.sideButton svg{width:18px;height:18px}
-.sideDivider{height:1px;margin:7px 4px;background:var(--line)}
+.sidebar{position:sticky;top:82px;align-self:start}
+.sideNav{display:flex;min-height:560px;flex-direction:column;gap:1px}
+.sideButton{display:flex;width:100%;align-items:center;gap:13px;border:0;border-radius:11px;background:transparent;padding:10px 12px;color:var(--muted);font-family:inherit;font-size:14px;font-weight:500;line-height:1.5;text-align:left;cursor:pointer}
+.sideButton:hover{background:var(--soft);color:var(--ink)}
+.sideButtonActive,.sideButtonActive:hover{background:#fdf0f4;color:var(--pink);font-weight:600}
+.sideButton svg{width:19px;height:19px;flex:0 0 19px;stroke-width:1.7}
+.sideLogout{margin-top:auto;color:var(--muted)}
 .mobileSelect{display:none;width:100%;height:46px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:0 13px;color:var(--ink);font:600 14px inherit}
 .main{min-width:0}
 .stack{display:flex;flex-direction:column;gap:20px}
@@ -327,8 +328,10 @@
 .paymentMethod{display:flex;min-width:0;align-items:center;gap:12px;border:1.6px solid var(--line);border-radius:13px;background:#fff;padding:13px 14px;color:var(--ink);font-family:inherit;text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
 .paymentMethod:hover{border-color:#d9a4aa}
 .paymentMethodActive{border-color:var(--pink);background:var(--pinkSoft)}
+.paymentMethodDisabled,.paymentMethodDisabled:hover{cursor:not-allowed;border-color:var(--line);background:#f7f7f9;color:var(--softMuted);opacity:.68}
 .paymentLogo{display:flex;width:64px;height:42px;flex:0 0 64px;align-items:center;justify-content:center;gap:5px;overflow:hidden;border:1px solid #e4e6eb;border-radius:10px;background:#fff;padding:5px 6px}
 .paymentLogo img{display:block;width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain}
+.paymentLogo>svg{width:24px;height:24px;color:var(--pink)}
 .paymentLogoMultiple img{max-width:calc(50% - 3px);max-height:24px}
 .paymentText{min-width:0;flex:1}
 .paymentText b{display:block;overflow:hidden;font-size:14px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
@@ -381,6 +384,10 @@
 .historyStatus{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:600;white-space:nowrap}
 .historyStatus::before{width:6px;height:6px;border-radius:50%;background:currentColor;content:""}
 .historyStatusSuccess{background:#e6f6ee;color:#1f9d62}
+.historyStatusPending{background:#fff4e0;color:#ad7d00}
+.historyStatusRejected{background:#fdecee;color:#c23645}
+.historyReference{display:block;margin-top:3px;color:var(--softMuted);font-size:10.5px;font-weight:600}
+.historyRejection{display:block;max-width:210px;margin-top:5px;color:#a83240;font-size:10.5px;line-height:1.45;white-space:normal}
 .walletHistoryEmpty{padding:42px 16px;color:var(--softMuted);font-size:13px;text-align:center}
 .walletDialog{--pink:#cc4452;--pinkDark:#b23a48;--pinkSoft:#fae8ea;--ink:#2b2d3a;--muted:#6b7080;--softMuted:#8b91a0;--soft:#f2f3f6;--line:#e7e8ee;display:flex!important;width:min(480px,calc(100vw - 32px))!important;max-width:480px!important;max-height:min(680px,calc(100dvh - 32px));align-items:stretch;flex-direction:column;gap:0!important;overflow:hidden;border:1px solid var(--line);border-radius:18px!important;background:#fff;color:var(--ink);padding:0!important;box-shadow:0 24px 70px rgba(32,30,40,.18)}
 .walletDialogOverlay{background:rgba(24,22,30,.28)!important}
@@ -413,6 +420,7 @@
 .walletDialogNotice{border:1px solid #e3e4e9;background:#f5f6f8;color:var(--muted)}
 .walletDialogError{border:1px solid #f3cfd3;background:#fff1f2;color:#a83240}
 .walletDialogNotice svg,.walletDialogError svg{width:15px;height:15px;flex:0 0 15px;margin-top:1px}
+.slipUploadBlock{display:flex;flex-direction:column;gap:7px;margin-top:15px}.slipUploadBlock>b{font-size:12.5px}.slipUploadBlock em{color:var(--pink);font-style:normal}.slipDropzone{display:flex;min-height:118px;align-items:center;justify-content:center;flex-direction:column;gap:5px;border:1.5px dashed #d7a6ac;border-radius:12px;background:#fffafb;color:var(--muted);cursor:pointer}.slipDropzone:hover{border-color:var(--pink);background:var(--pinkSoft)}.slipDropzone input{display:none}.slipDropzone svg{width:25px;height:25px;color:var(--pink)}.slipDropzone b{color:var(--pinkDark);font-size:12.5px}.slipDropzone span{font-size:10.5px}.slipPreview{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:12px;background:#fafafa;padding:9px}.slipPreview>img{width:70px;height:70px;flex:0 0 70px;border-radius:8px;object-fit:cover}.slipPreview>span{min-width:0;flex:1}.slipPreview>span b,.slipPreview>span small{display:block}.slipPreview>span b{overflow:hidden;color:var(--ink);font-size:12px;text-overflow:ellipsis;white-space:nowrap}.slipPreview>span small{margin-top:3px;color:var(--softMuted);font-size:10.5px}.slipPreview>button{display:grid;width:30px;height:30px;flex:0 0 30px;place-items:center;border:0;border-radius:8px;background:#f0f1f4;color:var(--muted);cursor:pointer}.slipPreview>button:hover{background:#fdecee;color:var(--pink)}.slipPreview>button svg{width:15px;height:15px}
 .walletDialogActions{display:flex;flex:0 0 auto;justify-content:flex-end;gap:9px;border-top:1px solid var(--line);background:#fafafa;padding:14px 22px}
 .walletDialogActions button,.walletResult button{min-height:40px;border-radius:10px;padding:9px 17px;font:700 13px inherit;cursor:pointer}
 .walletDialogActions button:disabled{cursor:not-allowed;opacity:.55}

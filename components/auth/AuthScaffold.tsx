@@ -122,7 +122,7 @@ export function AuthInput({ id, name, type = 'text', label, value, placeholder, 
         autoComplete={autoComplete}
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
-        className="h-[42px] w-full rounded-xl border border-[#e8e3f0] bg-white px-3.5 text-sm text-[#373244] outline-none transition placeholder:text-[#b1abc4] focus:border-[#d04655] focus:ring-2 focus:ring-[#d04655]/15 aria-invalid:border-red-500 aria-invalid:ring-2 aria-invalid:ring-red-500/15"
+        className="h-[42px] w-full rounded-xl border border-[#e8e3f0] bg-white px-3.5 text-sm text-[#373244] outline-none transition placeholder:text-[#b1abc4] focus:border-[#e8e3f0] focus:ring-0 aria-invalid:border-red-500 aria-invalid:ring-2 aria-invalid:ring-red-500/15"
       />
     </div>
   )
@@ -156,7 +156,7 @@ export function PasswordField({ id, name, label, value, placeholder, autoComplet
           autoComplete={autoComplete}
           aria-invalid={invalid || undefined}
           aria-describedby={describedBy}
-          className="h-[42px] w-full rounded-xl border border-[#e8e3f0] bg-white px-3.5 pr-12 text-sm text-[#373244] outline-none transition placeholder:text-[#b1abc4] focus:border-[#d04655] focus:ring-2 focus:ring-[#d04655]/15 aria-invalid:border-red-500 aria-invalid:ring-2 aria-invalid:ring-red-500/15"
+          className="h-[42px] w-full rounded-xl border border-[#e8e3f0] bg-white px-3.5 pr-12 text-sm text-[#373244] outline-none transition placeholder:text-[#b1abc4] focus:border-[#e8e3f0] focus:ring-0 aria-invalid:border-red-500 aria-invalid:ring-2 aria-invalid:ring-red-500/15"
         />
         <button
           type="button"

@@ -2,14 +2,14 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { BarChart3, Eye, Heart, Sparkles } from 'lucide-react'
+import { BarChart3, Eye, Heart, List, Sparkles } from 'lucide-react'
 import type {
   MangaRankingGroup,
   MangaRankingId,
   MangaRankingItem,
 } from '@/lib/manga-landing-data'
 import { cn } from '@/lib/utils'
-import { MangaCoverArt } from './MangaCoverArt'
+import { MangaCover } from './MangaCover'
 
 const metricIcons = {
   views: Eye,
@@ -39,15 +39,17 @@ function Champion({ item, type }: { item: MangaRankingItem; type: MangaRankingId
       className="group relative min-h-[260px] overflow-hidden rounded-2xl border border-[var(--home-line)] p-6 text-white shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7355df] md:col-span-2 xl:col-span-1"
       style={{ background: item.gradient }}
     >
-      <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-105">
-        <MangaCoverArt index={0} />
-      </div>
+      <MangaCover index={0} coverUrl={item.coverUrl} title={item.title} sizes="(max-width: 1280px) 100vw, 420px" />
       <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(15,10,25,0.94),rgba(15,10,25,0.14)_72%)]" />
       <div className="relative z-10 flex h-full min-h-[210px] flex-col justify-end">
         <span className="mb-2 w-fit rounded-full bg-[#fff3d6] px-3 py-1 text-xs font-bold text-[#a36e00]">อันดับ 1</span>
         <h3 className="text-2xl font-extrabold leading-tight">{item.title}</h3>
-        <p className="mt-1 text-xs font-medium text-white/75">{item.author} · {item.genreLabel}</p>
+        <p className="mt-1 text-xs font-medium text-white/75">{item.author} · {item.genreLabel} · {item.originLabel}</p>
         <div className="mt-3"><Metric type={type} value={item.value} large /></div>
+        <p className="mt-2 flex items-center gap-3 text-xs font-semibold text-white/75">
+          <span className="inline-flex items-center gap-1"><Eye className="h-3.5 w-3.5" />{item.views}</span>
+          <span className="inline-flex items-center gap-1"><List className="h-3.5 w-3.5" />{item.chapters}</span>
+        </p>
         <p className="mt-3 line-clamp-2 max-w-lg text-xs leading-relaxed text-white/75">{item.tagline}</p>
         <span className="mt-4 w-fit rounded-full bg-[#ffcf5c] px-5 py-2 text-xs font-bold text-[#2a1d00]">อ่านเลย</span>
       </div>
@@ -62,16 +64,20 @@ function RunnerUp({ item, rank, type }: { item: MangaRankingItem; rank: number; 
       className="group relative min-h-[260px] overflow-hidden rounded-2xl border border-[var(--home-line)] p-5 text-white shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7355df]"
       style={{ background: item.gradient }}
     >
-      <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-105">
-        <MangaCoverArt index={rank} />
-      </div>
+      <MangaCover index={rank} coverUrl={item.coverUrl} title={item.title} sizes="(max-width: 1280px) 50vw, 330px" />
       <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(15,10,25,0.93),rgba(15,10,25,0.12)_74%)]" />
       <div className="relative z-10 flex h-full min-h-[218px] flex-col justify-between">
         <span className="grid h-8 w-8 place-items-center rounded-full border border-white/30 bg-white/20 text-sm font-extrabold backdrop-blur">{rank}</span>
         <div>
           <h3 className="line-clamp-2 text-lg font-bold leading-snug">{item.title}</h3>
           <p className="mt-1 truncate text-xs text-white/70">{item.author}</p>
+          <p className="mt-1 truncate text-[11px] text-white/65">{item.genreLabel} · {item.originLabel}</p>
           <div className="mt-2"><Metric type={type} value={item.value} /></div>
+          <p className="mt-1 flex items-center gap-2 text-[11px] text-white/65">
+            <span className="inline-flex items-center gap-1"><Eye className="h-3 w-3" />{item.views}</span>
+            <span className="inline-flex items-center gap-1"><List className="h-3 w-3" />{item.chapters}</span>
+          </p>
+          <p className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-white/65">{item.tagline}</p>
         </div>
       </div>
     </Link>
@@ -137,13 +143,17 @@ export function MangaRankingShowcase({ groups }: { groups: MangaRankingGroup[] }
                     className="group min-w-0 focus-visible:rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7355df]"
                   >
                     <div className="relative aspect-[2/3] overflow-hidden rounded-[10px] shadow-sm" style={{ background: item.gradient }}>
-                      <div className="absolute inset-0 transition-transform duration-300 group-hover:scale-105">
-                        <MangaCoverArt index={index + 3} />
-                      </div>
+                      <MangaCover index={index + 3} coverUrl={item.coverUrl} title={item.title} sizes="160px" />
                       <span className="absolute left-1.5 top-1.5 rounded-lg bg-black/60 px-2 py-0.5 text-[11px] font-extrabold text-white">{index + 4}</span>
                     </div>
                     <h4 className="mt-2 truncate text-xs font-semibold text-[var(--home-ink)]">{item.title}</h4>
+                    <p className="mt-0.5 truncate text-[10px] text-[var(--home-ink-2)]">{item.author}</p>
+                    <p className="mt-0.5 truncate text-[10px] text-[var(--home-ink-2)]">{item.genreLabel} · {item.originLabel}</p>
                     <p className="mt-0.5 truncate text-xs font-bold text-[#cc4452]">{item.value}</p>
+                    <p className="mt-0.5 flex items-center gap-2 text-[10px] text-[var(--home-ink-2)]">
+                      <span className="inline-flex items-center gap-0.5"><Eye className="h-3 w-3" />{item.views}</span>
+                      <span className="inline-flex items-center gap-0.5"><List className="h-3 w-3" />{item.chapters}</span>
+                    </p>
                   </Link>
                 ))}
               </div>

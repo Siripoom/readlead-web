@@ -1,12 +1,15 @@
 'use client'
 
-import { startTransition, use, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { startTransition, use, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { notFound, useRouter } from 'next/navigation'
-import { ArrowRight, BookOpen, Coins, LoaderCircle, Lock, MessageSquare, Share2 } from 'lucide-react'
+import { Coins, LoaderCircle, Lock } from 'lucide-react'
 import ReaderToolbar from '@/components/reader/ReaderToolbar'
 import ReaderContent from '@/components/reader/ReaderContent'
 import CommentPanel from '@/components/reader/CommentPanel'
+import ReaderCommentBadge from '@/components/reader/ReaderCommentBadge'
+import ReaderChapterEnd from '@/components/reader/ReaderChapterEnd'
+import ReaderFloatingActions from '@/components/reader/ReaderFloatingActions'
 import ServerCreatorReader from '@/components/reader/ServerCreatorReader'
 import { getDetailEpisodes, getDetailWork, type DetailCatalogItem } from '@/lib/detail-catalog'
 import type { Episode, Work } from '@/lib/types'
@@ -20,29 +23,12 @@ import {
   type ReaderCommentMap,
   type ReaderReportReason,
   type ReaderSettings,
-  type ReaderTheme,
 } from '@/lib/reader-repository'
+import { getReaderThemeStyle } from '@/lib/reader-theme'
+import { submitReaderContentReport } from '@/lib/reader-content-report'
 
 interface Props {
   searchParams: Promise<{ bookId?: string; episodeId?: string }>
-}
-
-const THEME_VARS: Record<ReaderTheme, CSSProperties> = {
-  light: {
-    '--reader-page': '#f4f5f8', '--reader-paper': '#ffffff', '--reader-ink': '#29242b',
-    '--reader-muted': '#85818a', '--reader-border': '#e7e8ee', '--reader-hover': '#faf5f6',
-    '--reader-highlight': '#fdeff1', '--reader-accent': '#cc4452', '--reader-cover': 'linear-gradient(155deg,#985267,#321b2a)',
-  } as CSSProperties,
-  sepia: {
-    '--reader-page': '#e9dfca', '--reader-paper': '#f8f0dd', '--reader-ink': '#493c2e',
-    '--reader-muted': '#847765', '--reader-border': '#ded1b7', '--reader-hover': '#f1e6cf',
-    '--reader-highlight': '#ead8bd', '--reader-accent': '#a84a47', '--reader-cover': 'linear-gradient(155deg,#9c7457,#4a3428)',
-  } as CSSProperties,
-  dark: {
-    '--reader-page': '#17161b', '--reader-paper': '#242128', '--reader-ink': '#ece9ef',
-    '--reader-muted': '#aaa3b0', '--reader-border': '#3b3740', '--reader-hover': '#302c34',
-    '--reader-highlight': '#443039', '--reader-accent': '#ef7d88', '--reader-cover': 'linear-gradient(155deg,#684559,#241b29)',
-  } as CSSProperties,
 }
 
 function readerHref(workId: string, episodeId: string) {
@@ -55,7 +41,7 @@ export default function ReaderPage({ searchParams }: Props) {
   const episodes = bookId ? getDetailEpisodes(bookId) : []
   const episode = episodes.find((item) => item.id === episodeId)
 
-  if (!work && bookId && episodeId) return <ServerCreatorReader workId={bookId} episodeId={episodeId} />
+  if (!work && bookId && episodeId) return <ServerCreatorReader key={`${bookId}:${episodeId}`} workId={bookId} episodeId={episodeId} />
   if (!work || !episode) notFound()
   return <ReaderClient key={`${work.id}:${episode.id}`} work={work} episode={episode} episodes={episodes} />
 }
@@ -75,6 +61,7 @@ function ReaderClient({ work, episode, episodes }: { work: DetailCatalogItem; ep
   const [commentPanelOpen, setCommentPanelOpen] = useState(false)
   const [notice, setNotice] = useState('')
   const restoredProgress = useRef(false)
+  const navigatingRef = useRef(false)
 
   const scopeId = user?.id ?? 'guest'
   const currentIdx = episodes.findIndex((item) => item.id === episode.id)
@@ -190,7 +177,7 @@ function ReaderClient({ work, episode, episodes }: { work: DetailCatalogItem; ep
     }))
   }
 
-  function addReply(commentId: string, text: string) {
+  function addReply(commentId: string, text: string, replyToName?: string) {
     if (!user || !activeSlotId) return requireLogin()
     const slotId = activeSlotId
     commitComments((current) => ({
@@ -200,7 +187,7 @@ function ReaderClient({ work, episode, episodes }: { work: DetailCatalogItem; ep
         replies: [...comment.replies, {
           id: crypto.randomUUID(), userId: user.id, authorName: profile.displayName,
           avatarUrl: profile.avatarUrl, isAuthor: user.id === work.authorId,
-          text, createdAt: new Date().toISOString(), likes: [], replyToName: comment.authorName,
+          text, createdAt: new Date().toISOString(), likes: [], replyToName: replyToName ?? comment.authorName,
         }],
       } : comment),
     }))
@@ -220,12 +207,27 @@ function ReaderClient({ work, episode, episodes }: { work: DetailCatalogItem; ep
     }))
   }
 
-  function saveReport(commentId: string, reason: ReaderReportReason) {
+  function saveReport(commentId: string, reason: ReaderReportReason, replyId?: string) {
     if (!user) return requireLogin()
     localReaderRepository.saveReport({
       id: crypto.randomUUID(), reporterId: user.id, workId: work.id, episodeId: episode.id,
-      commentId, reason, status: 'local-pending', createdAt: new Date().toISOString(),
+      commentId: replyId ?? commentId, reason, status: 'local-pending', createdAt: new Date().toISOString(),
     })
+  }
+
+  async function submitContentReport(text: string) {
+    if (!user) {
+      requireLogin()
+      return false
+    }
+    await submitReaderContentReport({
+      workId: work.id,
+      workTitle: work.title,
+      episodeId: episode.id,
+      episodeTitle: episode.title,
+      slotLabel: activeSlotLabel || episode.title,
+    }, text)
+    return true
   }
 
   function buyEpisode() {
@@ -249,7 +251,8 @@ function ReaderClient({ work, episode, episodes }: { work: DetailCatalogItem; ep
   }
 
   const goNext = useCallback(() => {
-    if (!nextEpisode) return
+    if (!nextEpisode || navigatingRef.current) return
+    navigatingRef.current = true
     router.push(readerHref(work.id, nextEpisode.id))
   }, [nextEpisode, router, work.id])
 
@@ -257,7 +260,27 @@ function ReaderClient({ work, episode, episodes }: { work: DetailCatalogItem; ep
     if (settings.continuous) goNext()
   }, [goNext, settings.continuous])
 
-  const closeCommentPanel = useCallback(() => setCommentPanelOpen(false), [])
+  const closeCommentPanel = useCallback(() => {
+    setCommentPanelOpen(false)
+    setActiveSlotId(null)
+  }, [])
+
+  function toggleCommentMode() {
+    if (episode.type !== 'text') {
+      if (commentPanelOpen) closeCommentPanel()
+      else openCommentSlot('title', episode.title)
+      return
+    }
+
+    setCommentsEnabled((current) => {
+      const next = !current
+      if (!next) {
+        setCommentPanelOpen(false)
+        setActiveSlotId(null)
+      }
+      return next
+    })
+  }
 
   async function shareReader() {
     const url = window.location.href
@@ -272,7 +295,7 @@ function ReaderClient({ work, episode, episodes }: { work: DetailCatalogItem; ep
     }
   }
 
-  const themeStyle = { ...THEME_VARS[settings.theme], '--reader-cover': work.coverGradient } as CSSProperties
+  const themeStyle = getReaderThemeStyle(settings.theme, work.coverGradient)
 
   return (
     <div className="min-h-screen bg-[var(--reader-page)] pb-20 text-[var(--reader-ink)] transition-colors duration-200 md:pb-0" style={themeStyle} data-reader-theme={settings.theme}>
@@ -295,16 +318,15 @@ function ReaderClient({ work, episode, episodes }: { work: DetailCatalogItem; ep
               type="button"
               disabled={!commentsEnabled || !unlocked}
               onClick={() => commentsEnabled && unlocked && openCommentSlot('title', episode.title)}
-              className={`mx-auto flex max-w-full items-center gap-2 rounded px-1 text-center text-xl font-bold ${commentsEnabled && unlocked ? 'cursor-pointer hover:bg-[var(--reader-hover)]' : 'cursor-default'}`}
+              className={`reader-comment-title mx-auto inline-flex max-w-full items-center px-1 text-center text-xl font-bold ${commentsEnabled && unlocked ? 'reader-comment-target' : 'cursor-default'} ${activeSlotId === 'title' ? 'reader-comment-target-active' : ''}`}
             >
               <span className="truncate">{episode.title}</span>
-              {commentsEnabled && (commentCounts.title ?? 0) > 0 && <span className="inline-flex shrink-0 items-center gap-0.5 text-xs text-[var(--reader-accent)]"><MessageSquare className="h-4 w-4" />{commentCounts.title}</span>}
+              {commentsEnabled && (commentCounts.title ?? 0) > 0 && <ReaderCommentBadge count={commentCounts.title} />}
             </button>
             <Link href={`/profile/${encodeURIComponent(work.authorId)}`} className="mx-auto mb-7 mt-1 text-xs font-bold text-[var(--reader-accent)] hover:underline">{work.authorName}</Link>
 
             {unlocked ? (
               <>
-                {commentsEnabled && episode.type === 'text' && <p className="mb-5 text-center text-xs text-[var(--reader-muted)]">เลือกย่อหน้าเพื่ออ่านหรือเขียนความคิดเห็น</p>}
                 <div className="flex-1">
                   {episode.type === 'image' ? (
                     <MangaReader title={work.title} episode={episode} onBottomVisible={handleBottomVisible} />
@@ -323,21 +345,12 @@ function ReaderClient({ work, episode, episodes }: { work: DetailCatalogItem; ep
                   )}
                 </div>
 
-                <div className="mt-12 border-t border-[var(--reader-border)] pt-7 text-center">
-                  {nextEpisode ? (
-                    <>
-                      <p className="text-[11px] font-bold text-[var(--reader-muted)]">บทต่อไป</p>
-                      <p className="mb-4 mt-1 font-bold">{nextEpisode.title}</p>
-                      <button type="button" onClick={goNext} className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">อ่านต่อ <ArrowRight className="h-4 w-4" /></button>
-                    </>
-                  ) : (
-                    <p className="inline-flex items-center gap-2 text-sm font-bold text-[var(--reader-muted)]"><BookOpen className="h-4 w-4" /> อ่านถึงตอนล่าสุดแล้ว</p>
-                  )}
-                  <div className="mx-auto mt-6 flex w-fit items-center gap-3 text-sm text-[var(--reader-muted)]">
-                    <span>โหมดอ่านต่อเนื่อง</span>
-                    <button type="button" role="switch" aria-checked={settings.continuous} onClick={() => setSettings((current) => ({ ...current, continuous: !current.continuous }))} className={`relative h-[22px] w-10 rounded-full transition-colors ${settings.continuous ? 'bg-primary' : 'bg-[var(--reader-border)]'}`}><span className={`absolute left-0.5 top-0.5 h-[18px] w-[18px] rounded-full bg-white shadow transition-transform ${settings.continuous ? 'translate-x-[18px]' : 'translate-x-0'}`} /></button>
-                  </div>
-                </div>
+                <ReaderChapterEnd
+                  nextEpisode={nextEpisode}
+                  continuous={settings.continuous}
+                  onNext={goNext}
+                  onContinuousChange={(continuous) => setSettings((current) => ({ ...current, continuous }))}
+                />
               </>
             ) : (
               <Paywall work={work} episode={episode} settings={settings} isLoggedIn={isLoggedIn} userId={user?.id ?? null} balance={balance} onLogin={requireLogin} onBuy={buyEpisode} />
@@ -346,21 +359,10 @@ function ReaderClient({ work, episode, episodes }: { work: DetailCatalogItem; ep
         )}
       </article>
 
-      {accessReady && unlocked && (
-        <div className="fixed left-[calc(50%+425px)] top-1/2 z-30 hidden -translate-y-1/2 flex-col gap-2 xl:flex">
-          <button type="button" onClick={() => { setCommentsEnabled((current) => !current); if (commentsEnabled) setCommentPanelOpen(false) }} className={`grid h-11 w-11 place-items-center rounded-full shadow-lg transition-colors ${commentsEnabled ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:text-primary'}`} aria-label="เปิดหรือปิดความคิดเห็น" aria-pressed={commentsEnabled}><MessageSquare className="h-[18px] w-[18px]" /></button>
-          <button type="button" onClick={shareReader} className="grid h-11 w-11 place-items-center rounded-full bg-background text-muted-foreground shadow-lg hover:text-primary" aria-label="แชร์ตอนนี้"><Share2 className="h-[18px] w-[18px]" /></button>
-        </div>
-      )}
-
-      {accessReady && unlocked && (
-        <div className="fixed bottom-4 left-1/2 z-30 flex -translate-x-1/2 gap-2 rounded-full border bg-background/95 p-1.5 shadow-xl backdrop-blur xl:hidden">
-          <button type="button" onClick={() => { setCommentsEnabled((current) => !current); if (commentsEnabled) setCommentPanelOpen(false) }} className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-xs font-bold ${commentsEnabled ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`} aria-pressed={commentsEnabled}><MessageSquare className="h-4 w-4" /> ความคิดเห็น</button>
-          <button type="button" onClick={shareReader} className="grid h-10 w-10 place-items-center rounded-full text-muted-foreground" aria-label="แชร์ตอนนี้"><Share2 className="h-4 w-4" /></button>
-        </div>
-      )}
+      {accessReady && unlocked && <ReaderFloatingActions commentsActive={episode.type === 'text' ? commentsEnabled : commentPanelOpen} onToggleComments={toggleCommentMode} onShare={shareReader} />}
 
       <CommentPanel
+        key={activeSlotLabel || 'work-comments'}
         open={commentPanelOpen}
         onClose={closeCommentPanel}
         slotLabel={activeSlotLabel}
@@ -372,6 +374,7 @@ function ReaderClient({ work, episode, episodes }: { work: DetailCatalogItem; ep
         onAddReply={addReply}
         onToggleLike={toggleLike}
         onReport={saveReport}
+        onSubmitContentReport={submitContentReport}
       />
 
       {notice && <div role="status" aria-live="polite" className="fixed bottom-20 left-1/2 z-[60] -translate-x-1/2 rounded-xl bg-foreground px-4 py-3 text-sm text-background shadow-xl md:bottom-6">{notice}</div>}
@@ -411,9 +414,18 @@ function MangaReader({ title, episode, onBottomVisible }: { title: string; episo
   const markerRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!markerRef.current) return
-    const observer = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) onBottomVisible() }, { threshold: 0.8 })
+    let fired = false
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || fired) return
+      fired = true
+      timer = setTimeout(onBottomVisible, 900)
+    }, { threshold: 0.8 })
     observer.observe(markerRef.current)
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      if (timer) clearTimeout(timer)
+    }
   }, [onBottomVisible])
   return <div className="mx-auto max-w-2xl overflow-hidden rounded-xl bg-[#171522] shadow-2xl">
     {Array.from({ length: 9 }, (_, index) => (

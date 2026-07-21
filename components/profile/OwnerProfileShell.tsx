@@ -2,14 +2,14 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  CircleHelp,
+  BookOpen,
   FilePenLine,
+  Gauge,
   Headphones,
-  LayoutDashboard,
+  House,
   LogOut,
   MessageSquareText,
-  PenSquare,
-  Settings,
+  UserRound,
   WalletCards,
 } from 'lucide-react'
 import { useRole } from '@/contexts/RoleContext'
@@ -19,15 +19,15 @@ import OwnerSections from '@/components/profile/OwnerSections'
 import styles from './profile.module.css'
 
 const SECTION_ICONS = {
-  home: LayoutDashboard,
-  account: Settings,
+  home: House,
+  account: UserRound,
   activity: MessageSquareText,
   'writer-application': FilePenLine,
-  creator: PenSquare,
+  creator: Gauge,
   wallet: WalletCards,
-  help: CircleHelp,
+  help: BookOpen,
   report: Headphones,
-} satisfies Record<ProfileSection, typeof LayoutDashboard>
+} satisfies Record<ProfileSection, typeof House>
 
 export default function OwnerProfileShell({
   userId,
@@ -58,13 +58,13 @@ export default function OwnerProfileShell({
   return (
     <div className={styles.accountPage}>
       <div className={styles.accountGrid}>
-        <aside className={styles.sidebar} aria-label="เมนูบัญชี">
-          {PROFILE_SECTIONS.map((section, index) => {
-            const Icon = SECTION_ICONS[section.id]
-            return (
-              <div key={section.id}>
-                {(index === 3 || index === 5) && <div className={styles.sideDivider} />}
+        <aside className={styles.sidebar}>
+          <nav className={styles.sideNav} aria-label="เมนูบัญชี">
+            {PROFILE_SECTIONS.map((section) => {
+              const Icon = SECTION_ICONS[section.id]
+              return (
                 <button
+                  key={section.id}
                   type="button"
                   onClick={() => navigate(section.id)}
                   className={`${styles.sideButton} ${activeSection === section.id ? styles.sideButtonActive : ''}`}
@@ -72,13 +72,12 @@ export default function OwnerProfileShell({
                 >
                   <Icon /> {section.label}
                 </button>
-              </div>
-            )
-          })}
-          <div className={styles.sideDivider} />
-          <button type="button" onClick={signOut} className={styles.sideButton} style={{ color: '#c03645' }}>
-            <LogOut /> ออกจากระบบ
-          </button>
+              )
+            })}
+            <button type="button" onClick={signOut} className={`${styles.sideButton} ${styles.sideLogout}`}>
+              <LogOut /> ออกจากระบบ
+            </button>
+          </nav>
         </aside>
 
         <div className={styles.main}>

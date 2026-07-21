@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Headphones, List, Play } from 'lucide-react'
 import type { AudioBookItem, AudioLatestUpdate } from '@/lib/audiobook-landing-data'
-import { AudioCoverArt } from './AudioCoverArt'
+import { AudioCover } from './AudioCover'
 
 type Props = {
   items: Array<AudioBookItem | AudioLatestUpdate>
@@ -33,9 +33,7 @@ export function AudioBookGrid({ items, emptyLabel = 'ไม่พบหนัง
             className="relative aspect-[2/3] overflow-hidden rounded-xl shadow-[0_2px_7px_rgba(0,0,0,0.12)]"
             style={{ background: item.gradient }}
           >
-            <div className="absolute inset-0 transition-transform duration-300 group-hover:scale-[1.03]">
-              <AudioCoverArt index={index} />
-            </div>
+            <AudioCover index={index} coverUrl={item.coverUrl} title={item.title} />
             <span className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/85 text-[#cc4452] shadow-sm backdrop-blur">
               <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />
             </span>

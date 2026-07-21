@@ -2,7 +2,7 @@ import type { DetailCatalogItem, DetailEpisode, DetailReview } from '@/lib/detai
 import type { Genre, WorkStatus } from '@/lib/types'
 
 export interface PublicCreatorWork {
-  id: string; type: 'novel' | 'manga' | 'audiobook'; origin: 'original' | 'translated'; availability: 'coming_soon' | 'published'; hasCover: boolean; title: string; category: string; rating: string; tagline: string; synopsis: string; tags: string[]; seriesStatus: string; approvedAt: string | null; publishedAt: string | null; updatedAt: string; views: number; coins: number; shelfCount: number; dailyVotes: number; monthlyVotes: number; reviewCount: number; commentCount: number
+  id: string; type: 'novel' | 'manga' | 'audiobook'; origin: 'original' | 'translated'; narrationType: 'human' | 'ai' | null; availability: 'coming_soon' | 'published'; hasCover: boolean; title: string; category: string; rating: string; tagline: string; synopsis: string; tags: string[]; seriesStatus: string; approvedAt: string | null; publishedAt: string | null; updatedAt: string; views: number; coins: number; shelfCount: number; dailyVotes: number; monthlyVotes: number; reviewCount: number; commentCount: number
   creator: { id: string; name: string; writerApplication: { penName: string } | null; creatorProfile: { followers: number } | null }
   episodes: Array<{ id: string; episodeNumber: number; title: string; type: 'text' | 'image' | 'audio'; priceCoins: number; publishedAt: string | null; durationSeconds: number | null }>
   reviews: Array<{ id: string; userId: string; rating: number; body: string; recommended: boolean; spoiler: boolean; likes: number; dislikes: number; createdAt: string; updatedAt: string; user: { id: string; name: string }; replies: Array<{ id: string; userId: string; body: string; createdAt: string; updatedAt: string; user: { id: string; name: string } }> }>
@@ -23,7 +23,7 @@ export function mapPublicCreatorWork(raw: PublicCreatorWork): { work: DetailCata
     rating: averageRating, voteCount: raw.dailyVotes, viewCount: raw.views, readCount: raw.views, vipTopUpTotal: raw.coins, episodeCount: raw.episodes.length,
     latestEpisode: raw.episodes.at(-1)?.title ?? null, isFeatured: false, rankingScore: raw.views + raw.dailyVotes, updatedAt: raw.availability === 'coming_soon' ? raw.approvedAt ?? raw.updatedAt : raw.updatedAt, weeklyVoteCount: raw.monthlyVotes,
     availability: raw.availability,
-    narrationType: raw.type === 'audiobook' ? 'human' : undefined,
+    narrationType: raw.type === 'audiobook' ? raw.narrationType ?? 'human' : undefined,
   }
   const episodes: DetailEpisode[] = raw.episodes.map((episode) => ({ id: episode.id, workId: raw.id, title: episode.title, episodeNum: episode.episodeNumber, price: episode.priceCoins, status: 'published', type: episode.type, content: '', wordCount: 0, publishedAt: episode.publishedAt, mediaUrl: episode.durationSeconds === null ? undefined : String(episode.durationSeconds) }))
   const reviews: DetailReview[] = raw.reviews.map((review) => ({

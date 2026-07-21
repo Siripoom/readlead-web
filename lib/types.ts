@@ -7,7 +7,7 @@ export type Genre =
   | 'comedy' | 'drama' | 'historical' | 'sci-fi' | 'slice-of-life' | 'bl' | 'gl'
 export type WorkStatus = 'ongoing' | 'completed' | 'hiatus'
 export type EpisodeStatus = 'draft' | 'scheduled' | 'published'
-export type PaymentMethod = 'credit-card' | 'promptpay' | 'truemoney' | 'counter-service' | 'paypal' | 'bank-transfer'
+export type PaymentMethod = 'credit-card' | 'promptpay' | 'truemoney' | 'counter-service' | 'paypal' | 'bank-transfer' | 'proof-upload'
 
 export interface WalletPackage {
   id: string
@@ -19,14 +19,17 @@ export interface WalletPackage {
 
 export interface WalletTransaction {
   id: string
+  reference: string | null
   createdAt: string
   coins: number
   baseCoins: number
   bonusCoins: number
   paidAmountBaht: number | null
-  paymentMethod: Extract<PaymentMethod, 'credit-card' | 'promptpay' | 'truemoney' | 'counter-service'> | null
-  status: 'success' | 'failed' | 'pending'
-  balanceAfter: number
+  paymentMethod: PaymentMethod | null
+  status: 'pending' | 'approved' | 'rejected'
+  rejectionReason: string | null
+  reviewedAt: string | null
+  balanceAfter: number | null
 }
 export type PromotionScope = 'work' | 'episode'
 export type DiscountType = 'free' | 'percent'

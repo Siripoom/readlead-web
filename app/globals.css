@@ -127,3 +127,61 @@ body:has([data-auth-page]) [data-site-footer] {
     transparent
   );
 }
+
+.reader-comment-target {
+  cursor: pointer;
+}
+
+.reader-comment-target-active {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-color: var(--reader-accent);
+  text-underline-offset: 4px;
+}
+
+.reader-comment-title.reader-comment-target-active {
+  text-underline-offset: 5px;
+}
+
+.reader-comment-title .reader-comment-badge {
+  margin-left: 6px;
+}
+
+.reader-comment-badge {
+  position: relative;
+  top: -2px;
+  display: inline-flex;
+  margin-left: 2px;
+  padding: 0;
+  flex-shrink: 0;
+  vertical-align: text-top;
+  line-height: 1;
+}
+
+.reader-comment-badge svg {
+  overflow: visible;
+}
+
+.reader-comment-badge path {
+  fill: transparent;
+  stroke: var(--reader-accent);
+  stroke-width: 1.5;
+  transition: fill 150ms ease;
+}
+
+.reader-comment-badge text {
+  fill: var(--reader-accent);
+  stroke: none;
+  font-family: sans-serif;
+  font-size: 7px;
+  font-weight: 600;
+  transition: fill 150ms ease;
+}
+
+.reader-comment-badge:hover path {
+  fill: var(--reader-accent);
+}
+
+.reader-comment-badge:hover text {
+  fill: white;
+}

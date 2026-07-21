@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { BookOpen, ChevronDown, Sparkles } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
+import { CmsBannerCarousel } from '@/components/home/landing/CmsBannerCarousel'
+import type { CmsBanner } from '@/lib/cms-catalog'
 import type {
   MangaBookItem,
   MangaGenreKey,
@@ -16,6 +18,8 @@ type Props = {
   primaryOptions: MangaGenreOption[]
   allOptions: MangaGenreOption[]
   activeGenre: MangaGenreKey | null
+  banners: CmsBanner[]
+  slideSeconds: number
 }
 
 function GenreLink({ option, activeGenre }: { option: MangaGenreOption; activeGenre: MangaGenreKey | null }) {
@@ -34,28 +38,18 @@ function GenreLink({ option, activeGenre }: { option: MangaGenreOption; activeGe
   )
 }
 
-export function MangaGenreSpotlight({ items, primaryOptions, allOptions, activeGenre }: Props) {
+export function MangaGenreSpotlight({ items, primaryOptions, allOptions, activeGenre, banners, slideSeconds }: Props) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
     <div>
-      <div className="overflow-hidden rounded-[18px] bg-white shadow-[0_2px_7px_rgba(0,0,0,0.12)]">
-        <div className="relative min-h-[228px] overflow-hidden bg-[radial-gradient(130%_150%_at_88%_8%,#f6ecff_0%,rgba(246,236,255,0)_46%),linear-gradient(110deg,#ece1ff_0%,#f1e8ff_30%,#f9ebf4_64%,#ffeef5_100%)] px-6 py-8 sm:px-10">
-          <div className="relative z-10 max-w-[680px]">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#cc4452]/20 bg-white/75 px-4 py-1.5 text-xs font-semibold text-[#cc4452] sm:text-sm">
-              <Sparkles className="h-3.5 w-3.5" /> มังงะดี ๆ ที่รอให้คุณค้นพบ
-            </span>
-            <h3 className="mt-5 text-[30px] font-extrabold leading-tight text-[#2a2540] sm:text-[40px]">เติมเต็มทุกอารมณ์</h3>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#6b6580] sm:text-base">
-              คัดสรรมังงะคุณภาพ หลากหลายแนว ครบทุกอารมณ์ ให้คุณสนุกได้ไม่รู้จบ
-            </p>
-          </div>
-          <div className="absolute bottom-[-34px] right-[-18px] hidden h-[230px] w-[330px] opacity-80 sm:block" aria-hidden="true">
-            <BookOpen className="h-full w-full stroke-[1] text-[#bca7ec]" />
-          </div>
+      {banners.length > 0 && (
+        <div className="mb-4">
+          <CmsBannerCarousel items={banners} aspect="1152 / 228" slideSeconds={slideSeconds} label="เติมเต็มทุกอารมณ์" />
         </div>
-
-        <div className="border-t border-[#e0e2e9] bg-white px-3 py-2 sm:px-5">
+      )}
+      <div className="overflow-hidden rounded-[18px] border border-[#e0e2e9] bg-white shadow-[0_2px_7px_rgba(0,0,0,0.08)]">
+        <div className="bg-white px-3 py-2 sm:px-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 lg:divide-x lg:divide-[#e0e2e9]">
             {primaryOptions.map((option) => (
               <GenreLink key={option.key} option={option} activeGenre={activeGenre} />

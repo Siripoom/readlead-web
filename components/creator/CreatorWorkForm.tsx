@@ -18,10 +18,11 @@ type WorkFormState = {
   origin: 'original' | 'translated'; title: string; category: string; rating: string; creationMethod: string
   tagline: string; synopsis: string; tags: string[]; seriesStatus: string; originalTitle: string
   originalAuthor: string; translatorName: string; originalLanguage: string
+  narrationType: 'human' | 'ai'
 }
 
 function initialState(work?: CreatorWorkDetail): WorkFormState {
-  return { origin: work?.origin ?? 'original', title: work?.title ?? '', category: work?.category ?? '', rating: work?.rating ?? 'general', creationMethod: work?.creationMethod ?? 'self_written', tagline: work?.tagline ?? '', synopsis: work?.synopsis ?? '', tags: work?.tags ?? [], seriesStatus: work?.seriesStatus ?? 'ongoing', originalTitle: work?.originalTitle ?? '', originalAuthor: work?.originalAuthor ?? '', translatorName: work?.translatorName ?? '', originalLanguage: work?.originalLanguage ?? '' }
+  return { origin: work?.origin ?? 'original', title: work?.title ?? '', category: work?.category ?? '', rating: work?.rating ?? 'general', creationMethod: work?.creationMethod ?? 'self_written', tagline: work?.tagline ?? '', synopsis: work?.synopsis ?? '', tags: work?.tags ?? [], seriesStatus: work?.seriesStatus ?? 'ongoing', originalTitle: work?.originalTitle ?? '', originalAuthor: work?.originalAuthor ?? '', translatorName: work?.translatorName ?? '', originalLanguage: work?.originalLanguage ?? '', narrationType: work?.narrationType ?? 'human' }
 }
 
 async function errorText(response: Response, fallback: string) {
@@ -67,7 +68,7 @@ export default function CreatorWorkForm({ type, work }: { type: CreatorWorkType;
       if (form.tags.length > 10) throw new Error('เพิ่มแท็กได้ไม่เกิน 10 แท็ก')
       const editablePayload = coreLocked
         ? { tagline: form.tagline, synopsis: form.synopsis, tags: form.tags, seriesStatus: form.seriesStatus }
-        : { title: form.title, category: form.category, rating: form.rating, creationMethod: form.creationMethod, tagline: form.tagline, synopsis: form.synopsis, tags: form.tags, seriesStatus: form.seriesStatus, ...(form.origin === 'translated' ? { originalTitle: form.originalTitle, originalAuthor: form.originalAuthor, translatorName: form.translatorName, originalLanguage: form.originalLanguage } : {}) }
+        : { title: form.title, category: form.category, rating: form.rating, creationMethod: form.creationMethod, tagline: form.tagline, synopsis: form.synopsis, tags: form.tags, seriesStatus: form.seriesStatus, ...(type === 'audiobook' ? { narrationType: form.narrationType } : {}), ...(form.origin === 'translated' ? { originalTitle: form.originalTitle, originalAuthor: form.originalAuthor, translatorName: form.translatorName, originalLanguage: form.originalLanguage } : {}) }
       const createPayload = { type, origin: form.origin, ...editablePayload }
       let workId = draftId
       if (!workId) {
@@ -111,6 +112,7 @@ export default function CreatorWorkForm({ type, work }: { type: CreatorWorkType;
           <label className={styles.field}><span>เรตเนื้อหา</span><select disabled={coreLocked || allLocked} value={form.rating} onChange={(e) => patch('rating', e.target.value)}><option value="general">ทั่วไป</option><option value="13+">13+</option><option value="15+">15+</option><option value="18+">18+</option></select></label>
           <label className={styles.field}><span>วิธีสร้างผลงาน</span><select disabled={coreLocked || allLocked} value={form.creationMethod} onChange={(e) => patch('creationMethod', e.target.value)}>{methodOptions.map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label className={styles.field}><span>สถานะเรื่อง</span><select disabled={allLocked} value={form.seriesStatus} onChange={(e) => patch('seriesStatus', e.target.value)}><option value="ongoing">กำลังดำเนินเรื่อง</option><option value="completed">จบแล้ว</option><option value="hiatus">พักการอัปเดต</option></select></label>
+          {type === 'audiobook' && <label className={styles.field}><span>ชนิดเสียง *</span><select required disabled={coreLocked || allLocked} value={form.narrationType} onChange={(e) => patch('narrationType', e.target.value as WorkFormState['narrationType'])}><option value="human">เสียงพากย์</option><option value="ai">เสียง AI</option></select></label>}
           <label className={`${styles.field} ${styles.full}`}><span>คำโปรย</span><input maxLength={200} disabled={allLocked} value={form.tagline} onChange={(e) => patch('tagline', e.target.value)} placeholder="ประโยคสั้น ๆ ที่ทำให้นักอ่านสนใจ" /><small className={styles.count}>{form.tagline.length}/200</small></label>
           <label className={`${styles.field} ${styles.full}`}><span>เรื่องย่อ</span><textarea disabled={allLocked} value={form.synopsis} onChange={(e) => patch('synopsis', e.target.value)} placeholder="เล่าเรื่องราว ตัวละคร และจุดเด่นของผลงาน" /><small className={styles.help}>เรื่องย่อเก็บเป็นข้อความธรรมดาเพื่อรองรับทุกหน้าที่แสดงผลงาน</small></label>
           <div className={`${styles.field} ${styles.full}`}><span>แท็ก ({form.tags.length}/10)</span><div className={styles.tagBox}>{form.tags.map((tag) => <span key={tag} className={styles.tag}>#{tag}<button disabled={allLocked} type="button" onClick={() => patch('tags', form.tags.filter((item) => item !== tag))}><X size={12} /></button></span>)}<input disabled={allLocked || form.tags.length >= 10} value={tagDraft} onChange={(e) => setTagDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag() } }} onBlur={() => addTag()} placeholder="พิมพ์แล้วกด Enter" /></div><div className={styles.suggestions}>{tagSuggestions.filter((tag) => !form.tags.includes(tag)).slice(0, 6).map((tag) => <button disabled={allLocked || form.tags.length >= 10} type="button" key={tag} onClick={() => addTag(tag)}>+ {tag}</button>)}</div></div>

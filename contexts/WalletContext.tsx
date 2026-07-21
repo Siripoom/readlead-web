@@ -4,7 +4,11 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { useRole } from '@/contexts/RoleContext'
 import type { PaymentMethod, WalletPackage, WalletTransaction } from '@/lib/types'
 
-export type WalletTopUpMethod = Extract<PaymentMethod, 'credit-card' | 'promptpay' | 'truemoney' | 'counter-service'>
+export type WalletTopUpMethod = Extract<PaymentMethod, 'credit-card' | 'promptpay' | 'truemoney' | 'counter-service' | 'proof-upload'>
+
+export type TopUpSubmissionResult =
+  | { ok: true; reference: string }
+  | { ok: false; error: string }
 
 type WalletSnapshot = {
   balance: number
@@ -21,7 +25,7 @@ interface WalletContextValue {
   loading: boolean
   error: boolean
   spend: (n: number) => boolean
-  topUp: (packageId: string, paymentMethod: WalletTopUpMethod) => Promise<boolean>
+  submitTopUp: (packageId: string, slip: File) => Promise<TopUpSubmissionResult>
   refresh: () => Promise<void>
 }
 
@@ -33,7 +37,7 @@ const WalletContext = createContext<WalletContextValue>({
   loading: false,
   error: false,
   spend: () => false,
-  topUp: async () => false,
+  submitTopUp: async () => ({ ok: false, error: 'กรุณาเข้าสู่ระบบ' }),
   refresh: async () => undefined,
 })
 
@@ -95,22 +99,25 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     return true
   }
 
-  const topUp = async (packageId: string, paymentMethod: WalletTopUpMethod) => {
-    if (!user) return false
+  const submitTopUp = async (packageId: string, slip: File): Promise<TopUpSubmissionResult> => {
+    if (!user) return { ok: false, error: 'กรุณาเข้าสู่ระบบ' }
     try {
-      const response = await fetch('/api/interactions/simulate-topup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ packageId, paymentMethod, idempotencyKey: `demo-topup:${user.id}:${crypto.randomUUID()}` }) })
-      if (!response.ok) return false
-      const data = await response.json() as { balance: number }
-      setBalance(data.balance)
+      const form = new FormData()
+      form.append('packageId', packageId)
+      form.append('slip', slip)
+      form.append('idempotencyKey', `web-${crypto.randomUUID()}`)
+      const response = await fetch('/api/member/wallet/topups', { method: 'POST', body: form })
+      const data = await response.json().catch(() => ({})) as { request?: { reference?: string }; error?: string }
+      if (!response.ok || !data.request?.reference) return { ok: false, error: data.error || 'ส่งหลักฐานไม่สำเร็จ กรุณาลองใหม่' }
       await refresh()
-      return true
+      return { ok: true, reference: data.request.reference }
     } catch {
-      return false
+      return { ok: false, error: 'เชื่อมต่อระบบไม่สำเร็จ กรุณาลองใหม่' }
     }
   }
 
   return (
-    <WalletContext.Provider value={{ balance, topUpEnabled, packages, transactions, loading, error, spend, topUp, refresh }}>
+    <WalletContext.Provider value={{ balance, topUpEnabled, packages, transactions, loading, error, spend, submitTopUp, refresh }}>
       {children}
     </WalletContext.Provider>
   )

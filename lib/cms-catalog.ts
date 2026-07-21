@@ -48,6 +48,7 @@ export type CmsBook = {
   author: string
   category: string
   origin: 'original' | 'translated'
+  narrationType: 'human' | 'ai' | null
   tagline: string
   synopsis: string
   views: number
@@ -117,7 +118,10 @@ export function parseCmsBook(value: unknown): CmsBook | null {
     || typeof value.category !== 'string' || typeof value.tagline !== 'string' || typeof value.synopsis !== 'string'
     || typeof value.views !== 'number' || typeof value.episodeCount !== 'number' || typeof value.hasCover !== 'boolean'
   ) return null
-  return value as CmsBook
+  const narrationType = value.type === 'audiobook'
+    ? value.narrationType === 'ai' ? 'ai' : 'human'
+    : null
+  return { ...value, narrationType } as CmsBook
 }
 
 function parseElements(value: unknown): CmsBannerElement[] {
@@ -193,12 +197,15 @@ export function cmsPlacement(value: unknown) {
   }
 }
 
-export function enabledCmsSection(payload: unknown, key: string): CmsSection | null {
+export function findCmsSection(payload: unknown, key: string): CmsSection | null {
   if (!isRecord(payload) || !Array.isArray(payload.sections)) return null
   const section = payload.sections.find((candidate) => isRecord(candidate) && candidate.key === key)
-  return isRecord(section) && section.enabled === true && Array.isArray(section.items)
-    ? section as CmsSection
-    : null
+  return isRecord(section) && Array.isArray(section.items) ? section as CmsSection : null
+}
+
+export function enabledCmsSection(payload: unknown, key: string): CmsSection | null {
+  const section = findCmsSection(payload, key)
+  return section?.enabled === true ? section : null
 }
 
 export function mapCmsBook(raw: CmsBook, itemId: string, index: number): HomeBookStripItem {
@@ -209,7 +216,7 @@ export function mapCmsBook(raw: CmsBook, itemId: string, index: number): HomeBoo
     title: raw.title,
     author: raw.author,
     genreLabel: genre ? HOME_GENRE_LABELS[genre] : raw.category,
-    originLabel: raw.type === 'audiobook' ? 'พากย์' : raw.origin === 'translated' ? 'แปล' : 'ไทย',
+    originLabel: raw.type === 'audiobook' ? raw.narrationType === 'ai' ? 'เอไอ' : 'พากย์' : raw.origin === 'translated' ? 'แปล' : 'ไทย',
     genreKeys: genre ? [genre] : [],
     mediaType: raw.type === 'audiobook' ? 'audio' : 'read',
     views: compactNumber(raw.views),

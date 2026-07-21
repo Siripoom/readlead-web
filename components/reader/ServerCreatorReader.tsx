@@ -1,86 +1,425 @@
 'use client'
 
-import Link from 'next/link'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useState, type CSSProperties } from 'react'
-import { ArrowRight, BookOpen, Coins, LoaderCircle, Lock, MessageSquare, Send } from 'lucide-react'
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { BookOpen, Coins, LoaderCircle, Lock } from 'lucide-react'
+import CommentPanel from '@/components/reader/CommentPanel'
+import ReaderChapterEnd from '@/components/reader/ReaderChapterEnd'
+import ReaderCommentBadge from '@/components/reader/ReaderCommentBadge'
 import ReaderContent from '@/components/reader/ReaderContent'
+import ReaderFloatingActions from '@/components/reader/ReaderFloatingActions'
 import ReaderToolbar from '@/components/reader/ReaderToolbar'
 import { useRole } from '@/contexts/RoleContext'
-import { DEFAULT_READER_SETTINGS, type ReaderSettings } from '@/lib/reader-repository'
+import {
+  DEFAULT_READER_SETTINGS,
+  localReaderRepository,
+  type ReaderComment,
+  type ReaderSettings,
+} from '@/lib/reader-repository'
+import { getReaderThemeStyle } from '@/lib/reader-theme'
+import { submitReaderContentReport } from '@/lib/reader-content-report'
 import { mapPublicCreatorWork, type PublicCreatorWork } from '@/lib/server-creator-catalog'
 import type { Episode } from '@/lib/types'
 
-interface SecureEpisode { id: string; workId: string; episodeNumber: number; title: string; type: 'text' | 'image' | 'audio'; status: string; priceCoins: number; content: string | null; publishedAt: string | null; durationSeconds: number | null; assets: Array<{ id: string; kind: string; contentType: string; sortOrder: number }> }
+interface SecureEpisode {
+  id: string
+  workId: string
+  episodeNumber: number
+  title: string
+  type: 'text' | 'image' | 'audio'
+  status: string
+  priceCoins: number
+  content: string | null
+  publishedAt: string | null
+  durationSeconds: number | null
+  assets: Array<{ id: string; kind: string; contentType: string; sortOrder: number }>
+}
+
+function readerHref(workId: string, episodeId: string) {
+  return `/reader?bookId=${encodeURIComponent(workId)}&episodeId=${encodeURIComponent(episodeId)}`
+}
+
+function AutoNextMarker({ label, onVisible }: { label: string; onVisible: () => void }) {
+  const markerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!markerRef.current) return
+    let fired = false
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || fired) return
+      fired = true
+      timer = setTimeout(onVisible, 900)
+    }, { threshold: 0.8 })
+    observer.observe(markerRef.current)
+    return () => {
+      observer.disconnect()
+      if (timer) clearTimeout(timer)
+    }
+  }, [onVisible])
+
+  return <div ref={markerRef} className="py-8 text-center text-sm text-[var(--reader-muted)]">จบ {label}</div>
+}
 
 export default function ServerCreatorReader({ workId, episodeId }: { workId: string; episodeId: string }) {
   const router = useRouter()
-  const { isLoggedIn, user } = useRole()
+  const { isLoggedIn, isLoading, user } = useRole()
   const [rawWork, setRawWork] = useState<PublicCreatorWork | null>(null)
   const [secureEpisode, setSecureEpisode] = useState<SecureEpisode | null>(null)
   const [accessStatus, setAccessStatus] = useState<number | null>(null)
   const [error, setError] = useState('')
   const [settings, setSettings] = useState<ReaderSettings>(DEFAULT_READER_SETTINGS)
+  const [settingsScope, setSettingsScope] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [comment, setComment] = useState('')
+  const [commentsEnabled, setCommentsEnabled] = useState(false)
+  const [activeSlotId, setActiveSlotId] = useState<string | null>(null)
+  const [activeSlotLabel, setActiveSlotLabel] = useState('')
+  const [commentPanelOpen, setCommentPanelOpen] = useState(false)
   const [notice, setNotice] = useState('')
+  const navigatingRef = useRef(false)
+  const scopeId = user?.id ?? 'guest'
+
+  const loadWork = useCallback(async (signal?: AbortSignal) => {
+    const response = await fetch(`/api/catalog/works/${encodeURIComponent(workId)}`, {
+      cache: 'no-store',
+      signal,
+    })
+    if (!response.ok) throw new Error('ไม่พบผลงาน')
+    const data = await response.json() as { work: PublicCreatorWork }
+    setRawWork(data.work)
+  }, [workId])
 
   useEffect(() => {
     const controller = new AbortController()
-    fetch(`/api/catalog/works/${encodeURIComponent(workId)}`, { cache: 'no-store', signal: controller.signal }).then(async (response) => { if (!response.ok) throw new Error('ไม่พบผลงาน'); return response.json() as Promise<{ work: PublicCreatorWork }> }).then((data) => setRawWork(data.work)).catch((cause) => { if (cause instanceof Error && cause.name !== 'AbortError') setError(cause.message) })
+    startTransition(() => {
+      void loadWork(controller.signal).catch((cause: unknown) => {
+        if (cause instanceof Error && cause.name !== 'AbortError') setError(cause.message)
+      })
+    })
     return () => controller.abort()
-  }, [workId])
+  }, [loadWork])
 
-  async function loadEpisode() {
-    const response = await fetch(`/api/episodes/${encodeURIComponent(episodeId)}/purchase`, { cache: 'no-store' })
+  const loadEpisode = useCallback(async (signal?: AbortSignal) => {
+    const response = await fetch(`/api/episodes/${encodeURIComponent(episodeId)}/purchase`, {
+      cache: 'no-store',
+      signal,
+    })
     setAccessStatus(response.status)
-    if (!response.ok) { const data = await response.json().catch(() => ({})) as { error?: string }; setNotice(data.error || 'เปิดตอนไม่สำเร็จ'); return }
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({})) as { error?: string }
+      setSecureEpisode(null)
+      setNotice(data.error || 'เปิดตอนไม่สำเร็จ')
+      return
+    }
     const data = await response.json() as { episode: SecureEpisode }
-    setSecureEpisode(data.episode); setNotice('')
-  }
+    setSecureEpisode(data.episode)
+    setNotice('')
+  }, [episodeId])
 
-  useEffect(() => { const timer = window.setTimeout(() => { void loadEpisode() }, 0); return () => window.clearTimeout(timer) }, [episodeId, isLoggedIn]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const controller = new AbortController()
+    navigatingRef.current = false
+    startTransition(() => {
+      setAccessStatus(null)
+      setSecureEpisode(null)
+      setCommentsEnabled(false)
+      setActiveSlotId(null)
+      setActiveSlotLabel('')
+      setCommentPanelOpen(false)
+    })
+    startTransition(() => {
+      void loadEpisode(controller.signal).catch((cause: unknown) => {
+        if (cause instanceof Error && cause.name !== 'AbortError') {
+          setAccessStatus(0)
+          setNotice('เชื่อมต่อระบบอ่านไม่สำเร็จ')
+        }
+      })
+    })
+    return () => controller.abort()
+  }, [isLoggedIn, loadEpisode])
+
+  useEffect(() => {
+    if (isLoading) return
+    const storedSettings = localReaderRepository.getSettings(scopeId)
+    startTransition(() => {
+      setSettings(storedSettings)
+      setSettingsScope(scopeId)
+    })
+  }, [isLoading, scopeId])
+
+  useEffect(() => {
+    if (settingsScope !== scopeId) return
+    localReaderRepository.saveSettings(scopeId, settings)
+  }, [scopeId, settings, settingsScope])
+
+  useEffect(() => {
+    if (!notice || !secureEpisode) return
+    const timer = window.setTimeout(() => setNotice(''), 2800)
+    return () => window.clearTimeout(timer)
+  }, [notice, secureEpisode])
 
   const mapped = useMemo(() => rawWork ? mapPublicCreatorWork(rawWork) : null, [rawWork])
-  const episode = useMemo<Episode | null>(() => secureEpisode ? { id: secureEpisode.id, workId: secureEpisode.workId, title: secureEpisode.title, episodeNum: secureEpisode.episodeNumber, price: secureEpisode.priceCoins, status: 'published', type: secureEpisode.type, content: secureEpisode.content ?? '', wordCount: secureEpisode.content?.length ?? 0, publishedAt: secureEpisode.publishedAt } : null, [secureEpisode])
+  const episode = useMemo<Episode | null>(() => secureEpisode ? {
+    id: secureEpisode.id,
+    workId: secureEpisode.workId,
+    title: secureEpisode.title,
+    episodeNum: secureEpisode.episodeNumber,
+    price: secureEpisode.priceCoins,
+    status: 'published',
+    type: secureEpisode.type,
+    content: secureEpisode.content ?? '',
+    wordCount: secureEpisode.content?.length ?? 0,
+    publishedAt: secureEpisode.publishedAt,
+  } : null, [secureEpisode])
   const toolbarEpisodes = mapped?.episodes ?? []
-  const index = toolbarEpisodes.findIndex((item) => item.id === episodeId)
-  const next = index >= 0 ? toolbarEpisodes[index + 1] : undefined
+  const currentIndex = toolbarEpisodes.findIndex((item) => item.id === episodeId)
+  const nextEpisode = currentIndex >= 0 ? toolbarEpisodes[currentIndex + 1] : undefined
+
+  const serverComments = useMemo<ReaderComment[]>(() => {
+    if (!rawWork || !mapped) return []
+    return rawWork.comments.map((comment) => ({
+      id: comment.id,
+      userId: comment.user.id,
+      authorName: comment.user.name,
+      isAuthor: comment.user.id === mapped.work.authorId,
+      text: comment.body,
+      createdAt: comment.createdAt,
+      likes: [],
+      replies: comment.replies.map((reply) => ({
+        id: reply.id,
+        userId: reply.user.id,
+        authorName: reply.user.name,
+        isAuthor: reply.user.id === mapped.work.authorId,
+        text: reply.body,
+        createdAt: reply.createdAt,
+        likes: [],
+      })),
+    }))
+  }, [mapped, rawWork])
+  const commentCount = Math.max(
+    rawWork?.commentCount ?? 0,
+    serverComments.reduce((count, comment) => count + 1 + comment.replies.length, 0),
+  )
+
+  const goNext = useCallback(() => {
+    if (!nextEpisode || navigatingRef.current) return
+    navigatingRef.current = true
+    router.push(readerHref(workId, nextEpisode.id))
+  }, [nextEpisode, router, workId])
+
+  const handleBottomVisible = useCallback(() => {
+    if (settings.continuous) goNext()
+  }, [goNext, settings.continuous])
+
+  const requireLogin = useCallback(() => {
+    router.push(`/login?next=${encodeURIComponent(readerHref(workId, episodeId))}`)
+  }, [episodeId, router, workId])
+
+  const closeCommentPanel = useCallback(() => {
+    setCommentPanelOpen(false)
+    setActiveSlotId(null)
+  }, [])
+
+  function openCommentSlot(slotId: string, label: string) {
+    setActiveSlotId(slotId)
+    setActiveSlotLabel(label)
+    setCommentPanelOpen(true)
+  }
+
+  function toggleCommentMode() {
+    if (episode?.type !== 'text') {
+      if (commentPanelOpen) closeCommentPanel()
+      else {
+        setActiveSlotLabel(`ความคิดเห็นของเรื่อง ${mapped?.work.title ?? ''}`)
+        setCommentPanelOpen(true)
+      }
+      return
+    }
+
+    setCommentsEnabled((current) => {
+      const next = !current
+      if (!next) closeCommentPanel()
+      return next
+    })
+  }
+
+  async function shareReader() {
+    const url = window.location.href
+    try {
+      if (navigator.share) await navigator.share({ title: `${episode?.title ?? ''} · ${mapped?.work.title ?? ''}`, url })
+      else {
+        await navigator.clipboard.writeText(url)
+        setNotice('คัดลอกลิงก์ตอนนี้แล้ว')
+      }
+    } catch (cause) {
+      if ((cause as DOMException).name !== 'AbortError') setNotice('ไม่สามารถแชร์ลิงก์ได้')
+    }
+  }
 
   async function purchase() {
-    if (!isLoggedIn) { router.push(`/login?next=${encodeURIComponent(`/reader?bookId=${workId}&episodeId=${episodeId}`)}`); return }
+    if (!isLoggedIn) return requireLogin()
     setBusy(true)
-    const response = await fetch(`/api/episodes/${encodeURIComponent(episodeId)}/purchase`, { method: 'POST' })
-    const data = await response.json().catch(() => ({})) as { error?: string }
-    if (!response.ok) setNotice(data.error || 'ซื้อเนื้อหาไม่สำเร็จ')
-    else await loadEpisode()
-    setBusy(false)
+    try {
+      const response = await fetch(`/api/episodes/${encodeURIComponent(episodeId)}/purchase`, { method: 'POST' })
+      const data = await response.json().catch(() => ({})) as { error?: string }
+      if (!response.ok) setNotice(data.error || 'ซื้อเนื้อหาไม่สำเร็จ')
+      else await loadEpisode()
+    } catch {
+      setNotice('เชื่อมต่อระบบซื้อไม่สำเร็จ กรุณาลองใหม่')
+    } finally {
+      setBusy(false)
+    }
   }
 
-  async function sendComment() {
-    if (!comment.trim()) return
-    if (!user) { router.push('/login'); return }
-    const response = await fetch('/api/interactions/comment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workId, body: comment.trim() }) })
-    const data = await response.json().catch(() => ({})) as { error?: string }
-    if (!response.ok) setNotice(data.error || 'ส่งความคิดเห็นไม่สำเร็จ')
-    else { setComment(''); setNotice('ส่งความคิดเห็นแล้ว') }
+  async function sendComment(text: string) {
+    if (!user) {
+      requireLogin()
+      return false
+    }
+    try {
+      const response = await fetch('/api/interactions/comment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workId, body: text }),
+      })
+      const data = await response.json().catch(() => ({})) as { error?: string }
+      if (!response.ok) {
+        setNotice(data.error || 'ส่งความคิดเห็นไม่สำเร็จ')
+        return false
+      }
+      await loadWork()
+      setNotice('ส่งความคิดเห็นแล้ว')
+      return true
+    } catch {
+      setNotice('เชื่อมต่อระบบความคิดเห็นไม่สำเร็จ กรุณาลองใหม่')
+      return false
+    }
   }
 
-  if (error) return <main className="flex min-h-[65vh] flex-col items-center justify-center gap-4 px-4 text-center"><BookOpen className="size-10 text-muted-foreground" /><h1 className="text-xl font-bold">{error}</h1><Link href={`/detail?bookId=${encodeURIComponent(workId)}`} className="text-primary underline">กลับหน้ารายละเอียด</Link></main>
-  if (!mapped || accessStatus === null) return <main className="flex min-h-[65vh] items-center justify-center gap-2 text-sm text-muted-foreground"><LoaderCircle className="size-5 animate-spin" />กำลังเตรียมหน้าอ่าน…</main>
+  async function submitContentReport(text: string) {
+    if (!user || !mapped || !episode) {
+      requireLogin()
+      return false
+    }
+    await submitReaderContentReport({
+      workId,
+      workTitle: mapped.work.title,
+      episodeId,
+      episodeTitle: episode.title,
+      slotLabel: activeSlotLabel || `ความคิดเห็นของเรื่อง ${mapped.work.title}`,
+    }, text)
+    return true
+  }
 
-  const theme = { '--reader-page': '#f4f5f8', '--reader-paper': '#fff', '--reader-ink': '#29242b', '--reader-muted': '#85818a', '--reader-border': '#e7e8ee', '--reader-hover': '#faf5f6', '--reader-highlight': '#fdeff1', '--reader-accent': '#cc4452', '--reader-cover': mapped.work.coverGradient } as CSSProperties
-  return <div className="min-h-screen bg-[var(--reader-page)] pb-16 text-[var(--reader-ink)]" style={theme}>
-    <nav className="mx-auto flex max-w-[822px] gap-2 px-4 py-4 text-xs text-[var(--reader-muted)]"><Link href="/">หน้าหลัก</Link><span>›</span><Link href={`/detail?bookId=${encodeURIComponent(workId)}`}>{mapped.work.title}</Link>{episode && <><span>›</span><b>{episode.title}</b></>}</nav>
-    <article className="mx-auto min-h-[calc(100vh-80px)] max-w-[822px] bg-[var(--reader-paper)] shadow-sm">
-      {episode && <ReaderToolbar work={mapped.work} episode={episode} episodes={toolbarEpisodes} settings={settings} onSettingsChange={setSettings} />}
-      {secureEpisode && episode ? <div className="px-5 py-10 sm:px-10"><h1 className="text-center text-xl font-bold">{episode.title}</h1><Link href={`/profile/${mapped.work.authorId}`} className="mx-auto mt-2 block text-center text-xs font-semibold text-[var(--reader-accent)]">{mapped.work.authorName}</Link>
-        <div className="mt-9">{episode.type === 'text' ? <ReaderContent content={episode.content} fontSize={settings.fontSize} commentsEnabled={false} /> : episode.type === 'image' ? <div className="mx-auto max-w-2xl">{secureEpisode.assets.map((asset, assetIndex) => asset.contentType.startsWith('image/') && <Image unoptimized width={1200} height={1600} key={asset.id} src={`/api/episode-assets/${asset.id}`} alt={`หน้า ${assetIndex + 1}`} className="block h-auto w-full" />)}</div> : <div className="mx-auto max-w-xl rounded-2xl border bg-muted/20 p-6"><audio controls preload="metadata" className="w-full" src={secureEpisode.assets.find((asset) => asset.contentType.startsWith('audio/')) ? `/api/episode-assets/${secureEpisode.assets.find((asset) => asset.contentType.startsWith('audio/'))!.id}` : undefined} /></div>}</div>
-        <div className="mt-12 border-t pt-6"><label className="text-sm font-semibold" htmlFor="server-reader-comment"><MessageSquare className="mr-2 inline size-4" />ความคิดเห็นเกี่ยวกับตอนนี้</label><div className="mt-2 flex gap-2"><input id="server-reader-comment" value={comment} onChange={(event) => setComment(event.target.value)} maxLength={3000} placeholder="เขียนความคิดเห็น…" className="h-10 flex-1 rounded-lg border px-3 text-sm" /><button type="button" onClick={() => void sendComment()} className="rounded-lg bg-primary px-4 text-primary-foreground"><Send className="size-4" /></button></div></div>
-        {next ? <div className="mt-8 text-center"><Link href={`/reader?bookId=${encodeURIComponent(workId)}&episodeId=${encodeURIComponent(next.id)}`} className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">อ่านตอนถัดไป <ArrowRight className="size-4" /></Link></div> : <p className="mt-10 text-center text-sm text-muted-foreground">อ่านถึงตอนล่าสุดแล้ว</p>}
-      </div> : <section className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-6 text-center"><span className="grid size-14 place-items-center rounded-full bg-primary/10 text-primary"><Lock className="size-7" /></span><h1 className="mt-4 text-xl font-bold">ปลดล็อกตอนนี้เพื่ออ่านต่อ</h1><p className="mt-2 text-sm text-muted-foreground">{notice}</p><p className="mt-5 inline-flex items-center gap-2 text-3xl font-bold text-primary"><Coins className="size-6" />{rawWork?.episodes.find((item) => item.id === episodeId)?.priceCoins ?? 0} เหรียญ</p><button type="button" disabled={busy} onClick={() => void purchase()} className="mt-5 w-full rounded-xl bg-primary px-5 py-3 font-bold text-primary-foreground disabled:opacity-50">{busy ? 'กำลังดำเนินการ…' : isLoggedIn ? 'ยืนยันซื้อด้วยยอดบนเซิร์ฟเวอร์' : 'เข้าสู่ระบบเพื่อปลดล็อก'}</button></section>}
-    </article>
-    {notice && secureEpisode && <div className="fixed bottom-5 left-1/2 -translate-x-1/2 rounded-lg bg-foreground px-4 py-3 text-sm text-background">{notice}</div>}
-  </div>
+  if (error) return (
+    <main className="flex min-h-[65vh] flex-col items-center justify-center gap-4 px-4 text-center">
+      <BookOpen className="size-10 text-muted-foreground" />
+      <h1 className="text-xl font-bold">{error}</h1>
+      <Link href={`/detail?bookId=${encodeURIComponent(workId)}`} className="text-primary underline">กลับหน้ารายละเอียด</Link>
+    </main>
+  )
+
+  if (!mapped || accessStatus === null || settingsScope !== scopeId) return (
+    <main className="flex min-h-[65vh] items-center justify-center gap-2 text-sm text-muted-foreground" role="status">
+      <LoaderCircle className="size-5 animate-spin" />กำลังเตรียมหน้าอ่าน…
+    </main>
+  )
+
+  const themeStyle = getReaderThemeStyle(settings.theme, mapped.work.coverGradient)
+
+  return (
+    <div className="min-h-screen bg-[var(--reader-page)] pb-20 text-[var(--reader-ink)] transition-colors duration-200 md:pb-0" style={themeStyle} data-reader-theme={settings.theme}>
+      <nav aria-label="breadcrumb" className="mx-auto flex max-w-[822px] flex-wrap items-center gap-1.5 px-4 pb-2 pt-4 text-xs font-semibold text-[var(--reader-muted)]">
+        <Link href="/" className="hover:text-[var(--reader-accent)]">หน้าหลัก</Link><span aria-hidden>›</span>
+        <Link href={`/detail?bookId=${encodeURIComponent(workId)}`} className="max-w-52 truncate hover:text-[var(--reader-accent)]">{mapped.work.title}</Link>
+        {episode && <><span aria-hidden>›</span><span className="max-w-52 truncate font-bold text-[var(--reader-ink)]" aria-current="page">{episode.title}</span></>}
+      </nav>
+
+      <article className="mx-auto min-h-[calc(100vh-96px)] max-w-[822px] bg-[var(--reader-paper)] shadow-sm transition-colors duration-200">
+        {episode && <ReaderToolbar work={mapped.work} episode={episode} episodes={toolbarEpisodes} settings={settings} onSettingsChange={setSettings} />}
+
+        {secureEpisode && episode ? (
+          <div className="flex min-h-[calc(100vh-140px)] flex-col px-5 pb-16 pt-8 sm:px-10 sm:pb-20">
+            <button
+              type="button"
+              disabled={episode.type !== 'text' || !commentsEnabled}
+              onClick={() => openCommentSlot('title', episode.title)}
+              className={`reader-comment-title mx-auto inline-flex max-w-full items-center px-1 text-center text-xl font-bold ${episode.type === 'text' && commentsEnabled ? 'reader-comment-target' : 'cursor-default'} ${activeSlotId === 'title' ? 'reader-comment-target-active' : ''}`}
+            >
+              <span className="truncate">{episode.title}</span>
+              {episode.type === 'text' && commentsEnabled && commentCount > 0 && <ReaderCommentBadge count={commentCount} />}
+            </button>
+            <Link href={`/profile/${mapped.work.authorId}`} className="mx-auto mb-7 mt-1 block text-center text-xs font-bold text-[var(--reader-accent)] hover:underline">{mapped.work.authorName}</Link>
+
+            <div className="flex-1">
+              {episode.type === 'text' ? (
+                <ReaderContent
+                  content={episode.content}
+                  fontSize={settings.fontSize}
+                  commentsEnabled={commentsEnabled}
+                  sharedCommentCount={commentCount}
+                  activeSlotId={activeSlotId}
+                  onParagraphClick={openCommentSlot}
+                  onBottomVisible={handleBottomVisible}
+                />
+              ) : episode.type === 'image' ? (
+                <div className="mx-auto max-w-2xl overflow-hidden bg-[#171522] shadow-2xl sm:rounded-xl">
+                  {secureEpisode.assets.map((asset, assetIndex) => asset.contentType.startsWith('image/') && (
+                    <Image unoptimized width={1200} height={1600} key={asset.id} src={`/api/episode-assets/${asset.id}`} alt={`หน้า ${assetIndex + 1}`} className="block h-auto w-full" />
+                  ))}
+                  <AutoNextMarker label={episode.title} onVisible={handleBottomVisible} />
+                </div>
+              ) : (
+                <section className="mx-auto max-w-xl rounded-2xl border border-[var(--reader-border)] bg-[var(--reader-hover)] p-6">
+                  <audio
+                    controls
+                    preload="metadata"
+                    className="w-full"
+                    onEnded={handleBottomVisible}
+                    src={secureEpisode.assets.find((asset) => asset.contentType.startsWith('audio/')) ? `/api/episode-assets/${secureEpisode.assets.find((asset) => asset.contentType.startsWith('audio/'))!.id}` : undefined}
+                  />
+                </section>
+              )}
+            </div>
+
+            <ReaderChapterEnd
+              nextEpisode={nextEpisode}
+              continuous={settings.continuous}
+              onNext={goNext}
+              onContinuousChange={(continuous) => setSettings((current) => ({ ...current, continuous }))}
+            />
+          </div>
+        ) : (
+          <section className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-6 text-center">
+            <span className="grid size-14 place-items-center rounded-full bg-primary/10 text-primary"><Lock className="size-7" /></span>
+            <h1 className="mt-4 text-xl font-bold">ปลดล็อกตอนนี้เพื่ออ่านต่อ</h1>
+            <p className="mt-2 text-sm text-muted-foreground">{notice}</p>
+            <p className="mt-5 inline-flex items-center gap-2 text-3xl font-bold text-primary"><Coins className="size-6" />{rawWork?.episodes.find((item) => item.id === episodeId)?.priceCoins ?? 0} เหรียญ</p>
+            <button type="button" disabled={busy} onClick={() => void purchase()} className="mt-5 w-full rounded-xl bg-primary px-5 py-3 font-bold text-primary-foreground disabled:opacity-50">{busy ? 'กำลังดำเนินการ…' : isLoggedIn ? 'ยืนยันซื้อด้วยยอดบนเซิร์ฟเวอร์' : 'เข้าสู่ระบบเพื่อปลดล็อก'}</button>
+          </section>
+        )}
+      </article>
+
+      {secureEpisode && <ReaderFloatingActions commentsActive={episode?.type === 'text' ? commentsEnabled : commentPanelOpen} onToggleComments={toggleCommentMode} onShare={shareReader} />}
+
+      <CommentPanel
+        key={activeSlotLabel || 'work-comments'}
+        open={commentPanelOpen}
+        onClose={closeCommentPanel}
+        slotLabel={activeSlotLabel || `ความคิดเห็นของเรื่อง ${mapped.work.title}`}
+        comments={serverComments}
+        totalCount={commentCount}
+        isLoggedIn={isLoggedIn}
+        viewerId={user?.id ?? null}
+        onLogin={requireLogin}
+        onAddComment={sendComment}
+        onSubmitContentReport={submitContentReport}
+        maxCommentLength={3000}
+      />
+
+      {notice && secureEpisode && <div role="status" aria-live="polite" className="fixed bottom-20 left-1/2 z-[60] -translate-x-1/2 rounded-xl bg-foreground px-4 py-3 text-sm text-background shadow-xl md:bottom-6">{notice}</div>}
+    </div>
+  )
 }

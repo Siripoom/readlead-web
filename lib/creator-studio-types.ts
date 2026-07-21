@@ -23,6 +23,7 @@ export interface CreatorDashboardWork {
   status: CreatorWorkStatus
   title: string
   category: string
+  narrationType: 'human' | 'ai' | null
   rating: string
   tagline: string
   seriesStatus: string

@@ -1,9 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
-import { BookOpen, ChevronDown, ChevronLeft, ChevronRight, Eye, List, Sparkles } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, Eye, List } from 'lucide-react'
+import { CmsBannerCarousel } from '@/components/home/landing/CmsBannerCarousel'
 import type { HomeBookStripItem } from '@/lib/home-landing-data'
+import type { CmsBanner } from '@/lib/cms-catalog'
 import type { NovelGenreOption } from '@/lib/novel-landing-data'
 import type { Genre } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -15,9 +18,11 @@ type Props = {
   items: HomeBookStripItem[]
   options: NovelGenreOption[]
   activeGenre: Genre | null
+  banners: CmsBanner[]
+  slideSeconds: number
 }
 
-export function NovelGenreSpotlight({ items, options, activeGenre }: Props) {
+export function NovelGenreSpotlight({ items, options, activeGenre, banners, slideSeconds }: Props) {
   const [isExpanded, setIsExpanded] = useState(false)
   const { rowRef, canScrollBack, canScrollForward, updateControls, scroll, pointerHandlers } =
     useHorizontalScroll()
@@ -26,25 +31,16 @@ export function NovelGenreSpotlight({ items, options, activeGenre }: Props) {
 
   return (
     <div>
-      <div className="overflow-hidden rounded-[18px] bg-white shadow-[0_2px_7px_rgba(0,0,0,0.12)]">
-        <div className="relative min-h-[228px] overflow-hidden bg-[radial-gradient(130%_150%_at_88%_8%,#f6ecff_0%,rgba(246,236,255,0)_46%),linear-gradient(110deg,#ece1ff_0%,#f1e8ff_30%,#f9ebf4_64%,#ffeef5_100%)] px-6 py-8 sm:px-10">
-          <div className="relative z-10 max-w-[660px]">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#cc4452]/20 bg-white/75 px-4 py-1.5 text-xs font-semibold text-[#cc4452] sm:text-sm">
-              <Sparkles className="h-3.5 w-3.5" /> นิยายดี ๆ ที่รอให้คุณค้นพบ
-            </span>
-            <h3 className="mt-5 text-[30px] font-extrabold leading-tight text-[#2a2540] sm:text-[40px]">
-              เติมเต็มทุกอารมณ์
-            </h3>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#6b6580] sm:text-base">
-              คัดสรรนิยายคุณภาพ หลากหลายแนว ครบทุกอารมณ์ ให้คุณสนุกได้ไม่รู้จบ
-            </p>
-          </div>
-          <div className="absolute bottom-[-35px] right-[-20px] hidden h-[230px] w-[330px] opacity-80 sm:block" aria-hidden="true">
-            <BookOpen className="h-full w-full stroke-[1] text-[#bca7ec]" />
-          </div>
-        </div>
-
-        <div className="border-t border-[#e0e2e9] bg-white px-3 py-2 sm:px-5">
+      {banners.length > 0 && (
+        <CmsBannerCarousel
+          items={banners}
+          aspect="1152 / 228"
+          slideSeconds={slideSeconds}
+          label="แบนเนอร์เติมเต็มทุกอารมณ์"
+        />
+      )}
+      <div className={`${banners.length > 0 ? 'mt-0 rounded-b-[18px]' : 'rounded-[18px]'} overflow-hidden bg-white shadow-[0_2px_7px_rgba(0,0,0,0.12)]`}>
+        <div className="bg-white px-3 py-2 sm:px-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
             {primaryOptions.map((option) => (
               <GenreLink key={option.genre} option={option} activeGenre={activeGenre} />
@@ -100,9 +96,7 @@ export function NovelGenreSpotlight({ items, options, activeGenre }: Props) {
                   className="group min-w-0 snap-start"
                 >
                   <div className="relative aspect-[2/3] overflow-hidden rounded-[13px] shadow-[0_2px_7px_rgba(0,0,0,0.12)]" style={{ background: item.gradient }}>
-                    <div className="absolute inset-0 transition-transform duration-300 group-hover:scale-[1.03]">
-                      <NovelCoverArt index={index} />
-                    </div>
+                    <GenreCover item={item} index={index} />
                   </div>
                   <h4 className="mt-2.5 truncate text-sm font-semibold text-[var(--home-ink)]">{item.title}</h4>
                   <p className="mt-0.5 truncate text-xs text-[var(--home-ink-3)]">{item.author}</p>
@@ -132,6 +126,26 @@ export function NovelGenreSpotlight({ items, options, activeGenre }: Props) {
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+function GenreCover({ item, index }: { item: HomeBookStripItem; index: number }) {
+  const [coverFailed, setCoverFailed] = useState(false)
+  return (
+    <div className="absolute inset-0 transition-transform duration-300 group-hover:scale-[1.03]">
+      <NovelCoverArt index={index} />
+      {item.coverUrl && !coverFailed && (
+        <Image
+          unoptimized
+          fill
+          sizes="(max-width: 640px) 144px, 160px"
+          src={item.coverUrl}
+          alt={`ภาพปก ${item.title}`}
+          className="object-cover"
+          onError={() => setCoverFailed(true)}
+        />
+      )}
     </div>
   )
 }

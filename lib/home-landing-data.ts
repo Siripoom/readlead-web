@@ -47,6 +47,7 @@ export interface HomeBookStripItem {
   workId?: string
   coverUrl?: string
   availability?: 'coming_soon' | 'published'
+  contentType?: 'novel' | 'manga' | 'audiobook'
   gradient: string
 }
 
@@ -58,6 +59,11 @@ export interface HomeLimitedOffer {
   initialSeconds: number
   gradient: string
   workId?: string
+  coverUrl?: string
+  discount?: string
+  mediaType?: LandingMediaType
+  views?: string
+  chapters?: string
 }
 
 export interface HomeRankingItem {
@@ -70,8 +76,9 @@ export interface HomeRankingItem {
   originLabel: string
   genreKeys: Genre[]
   tagline: string
-  coverUrl: string
+  coverUrl?: string
   workId?: string
+  contentType?: 'novel' | 'manga' | 'audiobook'
 }
 
 export interface HomeRankingColumn {
@@ -95,6 +102,7 @@ export interface HomeLatestUpdate {
   gradient: string
   workId?: string
   coverUrl?: string
+  contentType?: 'novel' | 'manga' | 'audiobook'
 }
 
 const COVER_GRADIENTS = [

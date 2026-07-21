@@ -18,6 +18,17 @@ const medalStyles = {
   3: 'border-[#a96b3c] bg-[linear-gradient(145deg,#eab381,#a96839)] text-[#563015]',
 } as const
 
+const CONTENT_TYPE_LABELS = { novel: 'นิยาย', manga: 'เว็บตูน', audiobook: 'หนังสือเสียง' } as const
+
+function RankingCover({ item, sizes }: { item: HomeRankingItem; sizes: string }) {
+  if (item.coverUrl) return <Image src={item.coverUrl} alt={item.title} fill sizes={sizes} className="object-cover" />
+  return (
+    <span className="absolute inset-0 grid place-items-center bg-[linear-gradient(155deg,#8d76aa,#382952)] text-lg font-black text-white/85" aria-hidden="true">
+      {item.title.trim().charAt(0) || 'R'}
+    </span>
+  )
+}
+
 function RankBadge({ rank, featured = false }: { rank: number; featured?: boolean }) {
   if (rank > 3) {
     return <span className="flex h-6 w-6 shrink-0 items-center justify-center text-xs font-extrabold text-[var(--home-ink-3)]">{rank}</span>
@@ -53,12 +64,14 @@ function FeaturedRank({ item }: { item: HomeRankingItem }) {
       <div className="flex items-center gap-2.5">
         <RankBadge rank={1} featured />
         <div className="relative h-[90px] w-[60px] shrink-0 overflow-hidden rounded-md bg-[#e7e4ee] shadow-sm">
-          <Image src={item.coverUrl} alt={item.title} fill sizes="60px" className="object-cover" />
+          <RankingCover item={item} sizes="60px" />
         </div>
         <div className="min-w-0 flex-1">
           <h4 className="truncate text-xs font-extrabold text-black">{item.title}</h4>
           <p className="mt-0.5 truncate text-[10px] text-[var(--home-ink-3)]">{item.author}</p>
-          <p className="truncate text-[10px] text-[var(--home-ink-3)]">{item.genreLabel} · {item.originLabel}</p>
+          <p className="truncate text-[10px] text-[var(--home-ink-3)]">
+            {item.contentType ? `${CONTENT_TYPE_LABELS[item.contentType]} · ` : ''}{item.genreLabel} · {item.originLabel}
+          </p>
           <p className="mt-1 text-[13px] font-black text-[var(--home-red-deep)]">{item.value}</p>
         </div>
       </div>
@@ -89,11 +102,11 @@ function RankingRow({ item, rank }: { item: HomeRankingItem; rank: number }) {
         <div>
           <div className="flex gap-2.5 pl-8 pt-2">
             <div className="relative h-[66px] w-11 shrink-0 overflow-hidden rounded bg-[#e7e4ee]">
-              <Image src={item.coverUrl} alt="" fill sizes="44px" className="object-cover" />
+              <RankingCover item={item} sizes="44px" />
             </div>
             <div className="min-w-0 pt-0.5 text-[10px] text-[var(--home-ink-3)]">
               <p className="truncate">{item.author}</p>
-              <p className="truncate">{item.genreLabel} · {item.originLabel}</p>
+              <p className="truncate">{item.contentType ? `${CONTENT_TYPE_LABELS[item.contentType]} · ` : ''}{item.genreLabel} · {item.originLabel}</p>
               <p className="mt-1 line-clamp-2 leading-relaxed">{item.tagline}</p>
             </div>
           </div>

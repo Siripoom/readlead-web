@@ -1,15 +1,18 @@
-import type { HomeBookStripItem, HomeLatestUpdate } from '@/lib/home-landing-data'
+import type { HomeBookStripItem, HomeLatestUpdate, HomeRankingColumn } from '@/lib/home-landing-data'
 import { HOME_GENRE_LABELS } from '@/lib/home-landing-data'
-import type { Genre } from '@/lib/types'
+import { compactNumber as compact, genreFor, isRecord } from '@/lib/cms-catalog'
 
 type RawNovelCard = {
   id: string
+  type: 'novel'
   title: string
   category: string
   origin: 'original' | 'translated'
   tagline: string
   synopsis: string
   views: number
+  dailyVotes: number
+  monthlyVotes: number
   publishedAt: string | null
   displayedAt: string
   availability: 'coming_soon' | 'published'
@@ -30,12 +33,25 @@ type RawNovelUpdate = RawNovelCard & {
 type RawNovelLandingPayload = {
   newWorks: RawNovelCard[]
   newThaiWorks: RawNovelCard[]
+  translatedWorks: RawNovelCard[]
+  categoryPopular: RawNovelCard[]
+  popular: RawNovelCard[]
+  rankings: {
+    daily: RawNovelCard[]
+    monthly: RawNovelCard[]
+    views: RawNovelCard[]
+    new: RawNovelCard[]
+  }
   latestUpdates: RawNovelUpdate[]
 }
 
 export type NovelLandingCatalog = {
   newWorks: HomeBookStripItem[]
   newThaiWorks: HomeBookStripItem[]
+  translatedWorks: HomeBookStripItem[]
+  categoryPopular: HomeBookStripItem[]
+  popular: HomeBookStripItem[]
+  rankings: HomeRankingColumn[]
   latestUpdates: HomeLatestUpdate[]
 }
 
@@ -44,11 +60,21 @@ export type NovelLandingCatalogResult = {
   error: string | null
 }
 
-const EMPTY_CATALOG: NovelLandingCatalog = { newWorks: [], newThaiWorks: [], latestUpdates: [] }
-const GENRES = new Set<Genre>([
-  'romance', 'fantasy', 'action', 'mystery', 'horror', 'comedy',
-  'drama', 'historical', 'sci-fi', 'slice-of-life', 'bl', 'gl',
-])
+const RANKING_TITLES: Record<HomeRankingColumn['id'], string> = {
+  daily: 'ตั๋วรายวัน',
+  monthly: 'ตั๋วรายเดือน',
+  views: 'ยอดวิว',
+  new: 'เรื่องใหม่',
+}
+const EMPTY_CATALOG: NovelLandingCatalog = {
+  newWorks: [],
+  newThaiWorks: [],
+  translatedWorks: [],
+  categoryPopular: [],
+  popular: [],
+  rankings: (['daily', 'monthly', 'views', 'new'] as const).map((id) => ({ id, title: RANKING_TITLES[id], items: [] })),
+  latestUpdates: [],
+}
 const REAL_COVER_GRADIENTS = [
   'linear-gradient(155deg,#7886ad,#273556)',
   'linear-gradient(155deg,#986978,#412638)',
@@ -58,10 +84,6 @@ const REAL_COVER_GRADIENTS = [
   'linear-gradient(155deg,#607b9f,#24364f)',
 ]
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
-}
-
 function isDateString(value: unknown): value is string {
   return typeof value === 'string' && !Number.isNaN(Date.parse(value))
 }
@@ -70,12 +92,15 @@ function isNovelCard(value: unknown): value is RawNovelCard {
   if (!isRecord(value) || !isRecord(value.creator)) return false
   const writerApplication = value.creator.writerApplication
   return typeof value.id === 'string'
+    && value.type === 'novel'
     && typeof value.title === 'string'
     && typeof value.category === 'string'
     && (value.origin === 'original' || value.origin === 'translated')
     && typeof value.tagline === 'string'
     && typeof value.synopsis === 'string'
     && typeof value.views === 'number'
+    && typeof value.dailyVotes === 'number'
+    && typeof value.monthlyVotes === 'number'
     && (value.publishedAt === null || isDateString(value.publishedAt))
     && isDateString(value.displayedAt)
     && (value.availability === 'coming_soon' || value.availability === 'published')
@@ -100,18 +125,15 @@ function isPayload(value: unknown): value is RawNovelLandingPayload {
   return isRecord(value)
     && Array.isArray(value.newWorks) && value.newWorks.every(isNovelCard)
     && Array.isArray(value.newThaiWorks) && value.newThaiWorks.every(isNovelCard)
+    && Array.isArray(value.translatedWorks) && value.translatedWorks.every(isNovelCard)
+    && Array.isArray(value.categoryPopular) && value.categoryPopular.every(isNovelCard)
+    && Array.isArray(value.popular) && value.popular.every(isNovelCard)
+    && isRecord(value.rankings)
+    && Array.isArray(value.rankings.daily) && value.rankings.daily.every(isNovelCard)
+    && Array.isArray(value.rankings.monthly) && value.rankings.monthly.every(isNovelCard)
+    && Array.isArray(value.rankings.views) && value.rankings.views.every(isNovelCard)
+    && Array.isArray(value.rankings.new) && value.rankings.new.every(isNovelCard)
     && Array.isArray(value.latestUpdates) && value.latestUpdates.every(isNovelUpdate)
-}
-
-function genreFor(category: string): Genre | null {
-  return GENRES.has(category as Genre) ? category as Genre : null
-}
-
-function compact(value: number) {
-  return new Intl.NumberFormat('en-US', {
-    notation: 'compact',
-    maximumFractionDigits: 1,
-  }).format(Math.max(0, value))
 }
 
 function mapCard(raw: RawNovelCard, index: number): HomeBookStripItem {
@@ -130,7 +152,37 @@ function mapCard(raw: RawNovelCard, index: number): HomeBookStripItem {
     workId: raw.id,
     coverUrl: raw.hasCover ? `/api/catalog/works/${encodeURIComponent(raw.id)}/cover` : undefined,
     availability: raw.availability,
+    contentType: 'novel',
     gradient: REAL_COVER_GRADIENTS[index % REAL_COVER_GRADIENTS.length],
+  }
+}
+
+function mapRankingColumn(id: HomeRankingColumn['id'], items: RawNovelCard[]): HomeRankingColumn {
+  return {
+    id,
+    title: RANKING_TITLES[id],
+    items: items.map((raw) => {
+      const card = mapCard(raw, 0)
+      const value = id === 'daily'
+        ? raw.dailyVotes.toLocaleString('th-TH')
+        : id === 'monthly'
+          ? raw.monthlyVotes.toLocaleString('th-TH')
+          : compact(raw.views)
+      return {
+        id: `${id}-${raw.id}`,
+        detailId: raw.id,
+        title: raw.title,
+        author: card.author,
+        value,
+        genreLabel: card.genreLabel,
+        originLabel: card.originLabel,
+        genreKeys: card.genreKeys,
+        tagline: raw.tagline,
+        coverUrl: card.coverUrl,
+        workId: raw.id,
+        contentType: 'novel' as const,
+      }
+    }),
   }
 }
 
@@ -154,12 +206,14 @@ function mapUpdate(raw: RawNovelUpdate, index: number): HomeLatestUpdate {
   }
 }
 
-export async function getNovelLandingCatalog(): Promise<NovelLandingCatalogResult> {
+export async function getNovelLandingCatalog(category?: string | null): Promise<NovelLandingCatalogResult> {
   const baseUrl = process.env.BACKOFFICE_API_URL?.replace(/\/+$/, '')
   if (!baseUrl) return { catalog: EMPTY_CATALOG, error: 'ระบบข้อมูลนิยายยังไม่พร้อมใช้งาน' }
 
   try {
-    const response = await fetch(`${baseUrl}/api/public/catalog/novel-landing`, {
+    const url = new URL('/api/public/catalog/novel-landing', `${baseUrl}/`)
+    if (category) url.searchParams.set('category', category)
+    const response = await fetch(url, {
       headers: { Accept: 'application/json' },
       next: { revalidate: 30 },
     })
@@ -170,6 +224,10 @@ export async function getNovelLandingCatalog(): Promise<NovelLandingCatalogResul
       catalog: {
         newWorks: payload.newWorks.map(mapCard),
         newThaiWorks: payload.newThaiWorks.map(mapCard),
+        translatedWorks: payload.translatedWorks.map(mapCard),
+        categoryPopular: payload.categoryPopular.map(mapCard),
+        popular: payload.popular.map(mapCard),
+        rankings: (['daily', 'monthly', 'views', 'new'] as const).map((id) => mapRankingColumn(id, payload.rankings[id])),
         latestUpdates: payload.latestUpdates.map(mapUpdate),
       },
       error: null,

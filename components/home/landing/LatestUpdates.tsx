@@ -7,6 +7,7 @@ import type { HomeLatestUpdate } from '@/lib/home-landing-data'
 
 const INITIAL_COUNT = 6
 const EXPANDED_COUNT = 26
+const TYPE_LABELS = { novel: 'นิยาย', manga: 'เว็บตูน', audiobook: 'หนังสือเสียง' } as const
 
 function normalizedDate(value: string) {
   if (value.includes('T')) {
@@ -57,7 +58,10 @@ function UpdateCard({ item }: { item: HomeLatestUpdate }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <h3 className="truncate text-[15px] font-bold text-[var(--home-ink)] sm:text-base">{item.title}</h3>
         <p className="mt-0.5 text-xs text-[var(--home-ink-2)] sm:text-[13px]">{item.author}</p>
-        <p className="mt-1.5 text-[11px] text-[var(--home-ink-2)] sm:text-xs">{item.genreLabel} · {item.originLabel === 'แปล' ? 'แปล' : 'ไทย'}</p>
+        <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--home-ink-2)] sm:text-xs">
+          {item.contentType && <span className="rounded-full bg-[var(--home-purple-soft)] px-2 py-0.5 font-semibold text-[var(--home-purple)]">{TYPE_LABELS[item.contentType]}</span>}
+          <span>{item.genreLabel} · {item.originLabel}</span>
+        </p>
         <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-[var(--home-ink-3)] sm:text-[13px]">{item.description}</p>
         <p className="mt-auto truncate pt-2 text-[10px] text-[var(--home-ink-3)] sm:text-[11px]">
           <span className="mr-1 font-semibold text-[var(--home-ink-2)]">อัปเดตล่าสุด</span>
@@ -68,13 +72,17 @@ function UpdateCard({ item }: { item: HomeLatestUpdate }) {
   )
 }
 
-export function LatestUpdates({ items }: { items: HomeLatestUpdate[] }) {
+export function LatestUpdates({ items, error = null }: { items: HomeLatestUpdate[]; error?: string | null }) {
   const [expanded, setExpanded] = useState(false)
   const visibleItems = items.slice(0, expanded ? EXPANDED_COUNT : INITIAL_COUNT)
 
   return (
     <div>
-      {visibleItems.length > 0 ? (
+      {error ? (
+        <div role="alert" className="rounded-2xl border border-dashed border-[#e8c9cf] bg-[#fff7f8] px-6 py-10 text-center text-sm text-[var(--home-red-deep)]">
+          {error}
+        </div>
+      ) : visibleItems.length > 0 ? (
         <div className="grid grid-cols-1 gap-[18px] lg:grid-cols-2">
           {visibleItems.map((item) => <UpdateCard key={item.id} item={item} />)}
         </div>

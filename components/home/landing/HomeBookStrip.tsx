@@ -9,6 +9,8 @@ import { cn } from '@/lib/utils'
 import styles from './HomeLanding.module.css'
 import { useHorizontalScroll } from './useHorizontalScroll'
 
+const CONTENT_TYPE_LABELS = { novel: 'นิยาย', manga: 'เว็บตูน', audiobook: 'หนังสือเสียง' } as const
+
 function CoverScene({ index }: { index: number }) {
   const variant = index % 4
   if (variant === 0) {
@@ -74,6 +76,11 @@ function BookCover({ item, index }: { item: HomeBookStripItem; index: number }) 
       {item.availability === 'coming_soon' && (
         <span className="absolute right-2 top-2 z-[2] rounded-full bg-[#cc4452] px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
           เร็ว ๆ นี้
+        </span>
+      )}
+      {item.contentType && item.availability !== 'coming_soon' && (
+        <span className="absolute right-2 top-2 z-[2] rounded-full bg-[#2e2a3d]/80 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm backdrop-blur-sm">
+          {CONTENT_TYPE_LABELS[item.contentType]}
         </span>
       )}
     </>

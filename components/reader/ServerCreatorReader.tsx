@@ -10,8 +10,10 @@ import ReaderChapterEnd from '@/components/reader/ReaderChapterEnd'
 import ReaderCommentBadge from '@/components/reader/ReaderCommentBadge'
 import ReaderContent from '@/components/reader/ReaderContent'
 import ReaderFloatingActions from '@/components/reader/ReaderFloatingActions'
+import { browserSupportsSpeech, ReaderSpeechPlayer, ReaderSpeechPurchaseDialog, SPEECH_AUTOPLAY_KEY } from '@/components/reader/ReaderSpeech'
 import ReaderToolbar from '@/components/reader/ReaderToolbar'
 import { useRole } from '@/contexts/RoleContext'
+import { useWallet } from '@/contexts/WalletContext'
 import {
   DEFAULT_READER_SETTINGS,
   localReaderRepository,
@@ -66,6 +68,7 @@ function AutoNextMarker({ label, onVisible }: { label: string; onVisible: () => 
 export default function ServerCreatorReader({ workId, episodeId }: { workId: string; episodeId: string }) {
   const router = useRouter()
   const { isLoggedIn, isLoading, user } = useRole()
+  const { balance, refresh: refreshWallet } = useWallet()
   const [rawWork, setRawWork] = useState<PublicCreatorWork | null>(null)
   const [secureEpisode, setSecureEpisode] = useState<SecureEpisode | null>(null)
   const [accessStatus, setAccessStatus] = useState<number | null>(null)
@@ -78,6 +81,13 @@ export default function ServerCreatorReader({ workId, episodeId }: { workId: str
   const [activeSlotLabel, setActiveSlotLabel] = useState('')
   const [commentPanelOpen, setCommentPanelOpen] = useState(false)
   const [notice, setNotice] = useState('')
+  const [speechSupported, setSpeechSupported] = useState(false)
+  const [speechAccess, setSpeechAccess] = useState<{ eligible: boolean; entitled: boolean; priceCoins: number } | null>(null)
+  const [speechPanelOpen, setSpeechPanelOpen] = useState(false)
+  const [speechPurchaseOpen, setSpeechPurchaseOpen] = useState(false)
+  const [speechPurchaseBusy, setSpeechPurchaseBusy] = useState(false)
+  const [speechPurchaseError, setSpeechPurchaseError] = useState('')
+  const [speechAutoPlay, setSpeechAutoPlay] = useState(false)
   const navigatingRef = useRef(false)
   const scopeId = user?.id ?? 'guest'
 
@@ -101,6 +111,28 @@ export default function ServerCreatorReader({ workId, episodeId }: { workId: str
     return () => controller.abort()
   }, [loadWork])
 
+  useEffect(() => {
+    startTransition(() => setSpeechSupported(browserSupportsSpeech()))
+  }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    startTransition(() => {
+      setSpeechAccess(null)
+      setSpeechPanelOpen(false)
+    })
+    fetch(`/api/works/${encodeURIComponent(workId)}/speech-access`, { cache: 'no-store', signal: controller.signal })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({})) as { eligible?: boolean; entitled?: boolean; priceCoins?: number; error?: string }
+        if (!response.ok) throw new Error(data.error || 'ตรวจสอบสิทธิ์อ่านออกเสียงไม่สำเร็จ')
+        startTransition(() => setSpeechAccess({ eligible: Boolean(data.eligible), entitled: Boolean(data.entitled), priceCoins: data.priceCoins ?? 300 }))
+      })
+      .catch((cause: unknown) => {
+        if (!(cause instanceof DOMException && cause.name === 'AbortError')) setNotice(cause instanceof Error ? cause.message : 'ตรวจสอบสิทธิ์อ่านออกเสียงไม่สำเร็จ')
+      })
+    return () => controller.abort()
+  }, [isLoggedIn, workId])
+
   const loadEpisode = useCallback(async (signal?: AbortSignal) => {
     const response = await fetch(`/api/episodes/${encodeURIComponent(episodeId)}/purchase`, {
       cache: 'no-store',
@@ -111,6 +143,7 @@ export default function ServerCreatorReader({ workId, episodeId }: { workId: str
       const data = await response.json().catch(() => ({})) as { error?: string }
       setSecureEpisode(null)
       setNotice(data.error || 'เปิดตอนไม่สำเร็จ')
+      sessionStorage.removeItem(SPEECH_AUTOPLAY_KEY)
       return
     }
     const data = await response.json() as { episode: SecureEpisode }
@@ -177,6 +210,21 @@ export default function ServerCreatorReader({ workId, episodeId }: { workId: str
   const currentIndex = toolbarEpisodes.findIndex((item) => item.id === episodeId)
   const nextEpisode = currentIndex >= 0 ? toolbarEpisodes[currentIndex + 1] : undefined
 
+  useEffect(() => {
+    if (!secureEpisode || secureEpisode.type !== 'text' || !speechAccess?.entitled) return
+    try {
+      const pending = JSON.parse(sessionStorage.getItem(SPEECH_AUTOPLAY_KEY) ?? 'null') as { workId?: string; episodeId?: string } | null
+      if (pending?.workId !== workId || pending.episodeId !== episodeId) return
+      sessionStorage.removeItem(SPEECH_AUTOPLAY_KEY)
+      startTransition(() => {
+        setSpeechPanelOpen(true)
+        setSpeechAutoPlay(true)
+      })
+    } catch {
+      sessionStorage.removeItem(SPEECH_AUTOPLAY_KEY)
+    }
+  }, [episodeId, secureEpisode, speechAccess?.entitled, workId])
+
   const serverComments = useMemo<ReaderComment[]>(() => {
     if (!rawWork || !mapped) return []
     return rawWork.comments.map((comment) => ({
@@ -212,6 +260,20 @@ export default function ServerCreatorReader({ workId, episodeId }: { workId: str
   const handleBottomVisible = useCallback(() => {
     if (settings.continuous) goNext()
   }, [goNext, settings.continuous])
+
+  const handleSpeechFinished = useCallback(() => {
+    if (!settings.continuous || !nextEpisode) return
+    void fetch(`/api/episodes/${encodeURIComponent(nextEpisode.id)}/purchase`, { cache: 'no-store' })
+      .then((response) => {
+        if (!response.ok) {
+          setNotice('ตอนถัดไปยังไม่ได้ปลดล็อก เสียงอ่านจึงหยุดที่ตอนนี้')
+          return
+        }
+        sessionStorage.setItem(SPEECH_AUTOPLAY_KEY, JSON.stringify({ workId, episodeId: nextEpisode.id }))
+        goNext()
+      })
+      .catch(() => setNotice('ตรวจสอบสิทธิ์ตอนถัดไปไม่สำเร็จ เสียงอ่านจึงหยุดที่ตอนนี้'))
+  }, [goNext, nextEpisode, settings.continuous, workId])
 
   const requireLogin = useCallback(() => {
     router.push(`/login?next=${encodeURIComponent(readerHref(workId, episodeId))}`)
@@ -270,6 +332,43 @@ export default function ServerCreatorReader({ workId, episodeId }: { workId: str
       setNotice('เชื่อมต่อระบบซื้อไม่สำเร็จ กรุณาลองใหม่')
     } finally {
       setBusy(false)
+    }
+  }
+
+  function toggleSpeech() {
+    if (!speechSupported) {
+      setNotice('เบราว์เซอร์นี้ไม่รองรับการอ่านออกเสียง')
+      return
+    }
+    if (!isLoggedIn) return requireLogin()
+    if (!speechAccess?.entitled) {
+      setSpeechPurchaseError('')
+      setSpeechPurchaseOpen(true)
+      return
+    }
+    setSpeechPanelOpen((current) => !current)
+  }
+
+  async function purchaseSpeech() {
+    if (!isLoggedIn) return requireLogin()
+    setSpeechPurchaseBusy(true)
+    setSpeechPurchaseError('')
+    try {
+      const response = await fetch(`/api/works/${encodeURIComponent(workId)}/speech-access`, { method: 'POST' })
+      const data = await response.json().catch(() => ({})) as { coinBalance?: number; error?: string }
+      if (!response.ok) {
+        setSpeechPurchaseError(data.error || 'ซื้อฟีเจอร์อ่านออกเสียงไม่สำเร็จ')
+        return
+      }
+      setSpeechAccess((current) => ({ eligible: true, entitled: true, priceCoins: current?.priceCoins ?? 300 }))
+      setSpeechPurchaseOpen(false)
+      setSpeechPanelOpen(true)
+      setNotice('ปลดล็อกอ่านออกเสียงทุกตอนของเรื่องนี้แล้ว')
+      await refreshWallet()
+    } catch {
+      setSpeechPurchaseError('เชื่อมต่อระบบซื้อไม่สำเร็จ กรุณาลองใหม่')
+    } finally {
+      setSpeechPurchaseBusy(false)
     }
   }
 
@@ -402,7 +501,11 @@ export default function ServerCreatorReader({ workId, episodeId }: { workId: str
         )}
       </article>
 
-      {secureEpisode && <ReaderFloatingActions commentsActive={episode?.type === 'text' ? commentsEnabled : commentPanelOpen} onToggleComments={toggleCommentMode} onShare={shareReader} />}
+      {secureEpisode && <ReaderFloatingActions commentsActive={episode?.type === 'text' ? commentsEnabled : commentPanelOpen} onToggleComments={toggleCommentMode} onShare={shareReader} speech={rawWork?.type === 'novel' && episode?.type === 'text' && speechAccess?.eligible ? { active: speechPanelOpen, locked: !speechAccess.entitled, disabled: !speechSupported, onClick: toggleSpeech } : undefined} />}
+
+      {episode?.type === 'text' && <ReaderSpeechPlayer open={speechPanelOpen && Boolean(speechAccess?.entitled)} title={episode.title} content={episode.content} rate={settings.speechRate} autoPlay={speechAutoPlay} onAutoPlayConsumed={() => setSpeechAutoPlay(false)} onRateChange={(speechRate) => setSettings((current) => ({ ...current, speechRate }))} onClose={() => setSpeechPanelOpen(false)} onFinished={handleSpeechFinished} onError={setNotice} />}
+
+      <ReaderSpeechPurchaseDialog open={speechPurchaseOpen} workTitle={mapped.work.title} balance={balance} userId={user?.id ?? null} busy={speechPurchaseBusy} error={speechPurchaseError} onOpenChange={setSpeechPurchaseOpen} onPurchase={() => void purchaseSpeech()} />
 
       <CommentPanel
         key={activeSlotLabel || 'work-comments'}

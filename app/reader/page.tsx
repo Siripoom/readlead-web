@@ -10,6 +10,7 @@ import CommentPanel from '@/components/reader/CommentPanel'
 import ReaderCommentBadge from '@/components/reader/ReaderCommentBadge'
 import ReaderChapterEnd from '@/components/reader/ReaderChapterEnd'
 import ReaderFloatingActions from '@/components/reader/ReaderFloatingActions'
+import { browserSupportsSpeech, ReaderSpeechPlayer, ReaderSpeechPurchaseDialog, SPEECH_AUTOPLAY_KEY, SPEECH_PRICE_COINS } from '@/components/reader/ReaderSpeech'
 import ServerCreatorReader from '@/components/reader/ServerCreatorReader'
 import { getDetailEpisodes, getDetailWork, type DetailCatalogItem } from '@/lib/detail-catalog'
 import type { Episode, Work } from '@/lib/types'
@@ -60,6 +61,13 @@ function ReaderClient({ work, episode, episodes }: { work: DetailCatalogItem; ep
   const [activeSlotLabel, setActiveSlotLabel] = useState('')
   const [commentPanelOpen, setCommentPanelOpen] = useState(false)
   const [notice, setNotice] = useState('')
+  const [speechSupported, setSpeechSupported] = useState(false)
+  const [speechEntitled, setSpeechEntitled] = useState(false)
+  const [speechPanelOpen, setSpeechPanelOpen] = useState(false)
+  const [speechPurchaseOpen, setSpeechPurchaseOpen] = useState(false)
+  const [speechPurchaseBusy, setSpeechPurchaseBusy] = useState(false)
+  const [speechPurchaseError, setSpeechPurchaseError] = useState('')
+  const [speechAutoPlay, setSpeechAutoPlay] = useState(false)
   const restoredProgress = useRef(false)
   const navigatingRef = useRef(false)
 
@@ -82,13 +90,34 @@ function ReaderClient({ work, episode, episodes }: { work: DetailCatalogItem; ep
     }
     const nextSettings = localReaderRepository.getSettings(scopeId)
     const nextComments = localReaderRepository.getEpisodeComments(work.id, episode.id)
+    const nextSpeechEntitled = Boolean(user) && (user?.id === work.authorId || localReaderRepository.hasSpeechEntitlement(scopeId, work.id))
     startTransition(() => {
       setPurchased(nextPurchased)
       setSettings(nextSettings)
       setCommentStore(nextComments)
+      setSpeechEntitled(nextSpeechEntitled)
       setReaderReady(true)
     })
-  }, [episode.id, isLoading, scopeId, user, work.id])
+  }, [episode.id, isLoading, scopeId, user, work.authorId, work.id])
+
+  useEffect(() => {
+    startTransition(() => setSpeechSupported(browserSupportsSpeech()))
+  }, [])
+
+  useEffect(() => {
+    if (!accessReady || !unlocked || episode.type !== 'text' || !speechEntitled) return
+    try {
+      const pending = JSON.parse(sessionStorage.getItem(SPEECH_AUTOPLAY_KEY) ?? 'null') as { workId?: string; episodeId?: string } | null
+      if (pending?.workId !== work.id || pending.episodeId !== episode.id) return
+      sessionStorage.removeItem(SPEECH_AUTOPLAY_KEY)
+      startTransition(() => {
+        setSpeechPanelOpen(true)
+        setSpeechAutoPlay(true)
+      })
+    } catch {
+      sessionStorage.removeItem(SPEECH_AUTOPLAY_KEY)
+    }
+  }, [accessReady, episode.id, episode.type, speechEntitled, unlocked, work.id])
 
   useEffect(() => {
     if (!readerReady) return
@@ -250,11 +279,56 @@ function ReaderClient({ work, episode, episodes }: { work: DetailCatalogItem; ep
     setNotice(`ปลดล็อก ${episode.title} แล้ว`)
   }
 
+  function toggleSpeech() {
+    if (!speechSupported) {
+      setNotice('เบราว์เซอร์นี้ไม่รองรับการอ่านออกเสียง')
+      return
+    }
+    if (!user) return requireLogin()
+    if (!speechEntitled) {
+      setSpeechPurchaseError('')
+      setSpeechPurchaseOpen(true)
+      return
+    }
+    setSpeechPanelOpen((current) => !current)
+  }
+
+  function buySpeech() {
+    if (!user) return requireLogin()
+    if (balance < SPEECH_PRICE_COINS) {
+      setSpeechPurchaseError('เหรียญไม่เพียงพอ กรุณาเติมเหรียญ')
+      return
+    }
+    setSpeechPurchaseBusy(true)
+    if (!spend(SPEECH_PRICE_COINS)) {
+      setSpeechPurchaseError('ไม่สามารถหักเหรียญได้ กรุณาลองใหม่')
+      setSpeechPurchaseBusy(false)
+      return
+    }
+    localReaderRepository.grantSpeechEntitlement(user.id, work.id)
+    setSpeechEntitled(true)
+    setSpeechPurchaseOpen(false)
+    setSpeechPanelOpen(true)
+    setSpeechPurchaseBusy(false)
+    setNotice('ปลดล็อกอ่านออกเสียงทุกตอนของเรื่องนี้แล้ว')
+  }
+
   const goNext = useCallback(() => {
     if (!nextEpisode || navigatingRef.current) return
     navigatingRef.current = true
     router.push(readerHref(work.id, nextEpisode.id))
   }, [nextEpisode, router, work.id])
+
+  const handleSpeechFinished = useCallback(() => {
+    if (!settings.continuous || !nextEpisode) return
+    const canReadNext = nextEpisode.price === 0 || purchased.has(nextEpisode.id)
+    if (!canReadNext) {
+      setNotice('ตอนถัดไปยังไม่ได้ปลดล็อก เสียงอ่านจึงหยุดที่ตอนนี้')
+      return
+    }
+    sessionStorage.setItem(SPEECH_AUTOPLAY_KEY, JSON.stringify({ workId: work.id, episodeId: nextEpisode.id }))
+    goNext()
+  }, [goNext, nextEpisode, purchased, settings.continuous, work.id])
 
   const handleBottomVisible = useCallback(() => {
     if (settings.continuous) goNext()
@@ -359,7 +433,11 @@ function ReaderClient({ work, episode, episodes }: { work: DetailCatalogItem; ep
         )}
       </article>
 
-      {accessReady && unlocked && <ReaderFloatingActions commentsActive={episode.type === 'text' ? commentsEnabled : commentPanelOpen} onToggleComments={toggleCommentMode} onShare={shareReader} />}
+      {accessReady && unlocked && <ReaderFloatingActions commentsActive={episode.type === 'text' ? commentsEnabled : commentPanelOpen} onToggleComments={toggleCommentMode} onShare={shareReader} speech={work.type === 'novel' && episode.type === 'text' ? { active: speechPanelOpen, locked: !speechEntitled, disabled: !speechSupported, onClick: toggleSpeech } : undefined} />}
+
+      {episode.type === 'text' && <ReaderSpeechPlayer open={speechPanelOpen && unlocked && speechEntitled} title={episode.title} content={episode.content} rate={settings.speechRate} autoPlay={speechAutoPlay} onAutoPlayConsumed={() => setSpeechAutoPlay(false)} onRateChange={(speechRate) => setSettings((current) => ({ ...current, speechRate }))} onClose={() => setSpeechPanelOpen(false)} onFinished={handleSpeechFinished} onError={setNotice} />}
+
+      <ReaderSpeechPurchaseDialog open={speechPurchaseOpen} workTitle={work.title} balance={balance} userId={user?.id ?? null} busy={speechPurchaseBusy} error={speechPurchaseError} onOpenChange={setSpeechPurchaseOpen} onPurchase={buySpeech} />
 
       <CommentPanel
         key={activeSlotLabel || 'work-comments'}

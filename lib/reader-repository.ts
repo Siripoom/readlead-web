@@ -4,6 +4,7 @@ export interface ReaderSettings {
   theme: ReaderTheme
   fontSize: number
   continuous: boolean
+  speechRate: number
 }
 
 export interface ReaderProgress {
@@ -68,18 +69,22 @@ export interface ReaderRepository {
   getEpisodeComments(workId: string, episodeId: string): ReaderCommentMap
   saveEpisodeComments(workId: string, episodeId: string, comments: ReaderCommentMap): void
   saveReport(report: ReaderReport): void
+  hasSpeechEntitlement(scopeId: string, workId: string): boolean
+  grantSpeechEntitlement(scopeId: string, workId: string): void
 }
 
 export const DEFAULT_READER_SETTINGS: ReaderSettings = {
   theme: 'light',
   fontSize: 16,
   continuous: false,
+  speechRate: 1,
 }
 
 const SETTINGS_PREFIX = 'rl_reader_settings_v2:'
 const PROGRESS_PREFIX = 'rl_reader_progress_v2:'
 const COMMENTS_KEY = 'rl_reader_comments_v2'
 const REPORTS_KEY = 'rl_reader_reports_v2'
+const SPEECH_ENTITLEMENTS_PREFIX = 'rl_reader_speech_entitlements_v1:'
 
 function safeParse<T>(value: string | null, fallback: T): T {
   if (!value) return fallback
@@ -101,6 +106,7 @@ function normalizeSettings(value: Partial<ReaderSettings>): ReaderSettings {
     theme,
     fontSize: Number.isFinite(rawFontSize) ? Math.min(24, Math.max(14, rawFontSize)) : 16,
     continuous: Boolean(value.continuous),
+    speechRate: [0.75, 1, 1.25, 1.5].includes(Number(value.speechRate)) ? Number(value.speechRate) : 1,
   }
 }
 
@@ -156,5 +162,18 @@ export const localReaderRepository: ReaderRepository = {
     const reports = safeParse<ReaderReport[]>(localStorage.getItem(REPORTS_KEY), [])
     reports.unshift(report)
     localStorage.setItem(REPORTS_KEY, JSON.stringify(reports))
+  },
+
+  hasSpeechEntitlement(scopeId, workId) {
+    if (typeof window === 'undefined') return false
+    return safeParse<string[]>(localStorage.getItem(`${SPEECH_ENTITLEMENTS_PREFIX}${scopeId}`), []).includes(workId)
+  },
+
+  grantSpeechEntitlement(scopeId, workId) {
+    if (typeof window === 'undefined') return
+    const key = `${SPEECH_ENTITLEMENTS_PREFIX}${scopeId}`
+    const workIds = new Set(safeParse<string[]>(localStorage.getItem(key), []))
+    workIds.add(workId)
+    localStorage.setItem(key, JSON.stringify([...workIds]))
   },
 }

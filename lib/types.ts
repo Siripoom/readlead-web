@@ -134,6 +134,18 @@ export interface PurchaseRecord {
   purchasedAt: string
 }
 
+export type PurchaseHistoryRecord =
+  | (PurchaseRecord & { id: string; kind: 'episode' })
+  | {
+      id: string
+      kind: 'feature'
+      feature: 'text_to_speech'
+      workId: string
+      workTitle: string
+      coinsSpent: number
+      purchasedAt: string
+    }
+
 export interface TopUpOption {
   coins: number
   price: number

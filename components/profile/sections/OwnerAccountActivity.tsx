@@ -12,7 +12,7 @@ import styles from '../profile.module.css'
 
 export function OwnerAccount({ onDataChange }: { onDataChange: () => void }) {
   const { profile, updateProfile } = useProfile()
-  const { user } = useRole()
+  const { user, continueWithGoogle, continueWithFacebook, continueWithApple } = useRole()
   const [displayName, setDisplayName] = useState(profile.displayName)
   const [handle, setHandle] = useState(profile.handle ?? '')
   const [bio, setBio] = useState(profile.bio ?? '')
@@ -21,6 +21,13 @@ export function OwnerAccount({ onDataChange }: { onDataChange: () => void }) {
   const [editingProfile, setEditingProfile] = useState(false)
   const [workNotifications, setWorkNotifications] = useState(true)
   const [promotionNotifications, setPromotionNotifications] = useState(false)
+  const [googleBusy, setGoogleBusy] = useState(false)
+  const [googleConnectionError, setGoogleConnectionError] = useState('')
+  const [facebookBusy, setFacebookBusy] = useState(false)
+  const [facebookConnectionError, setFacebookConnectionError] = useState('')
+  const [appleBusy, setAppleBusy] = useState(false)
+  const [appleConnectionError, setAppleConnectionError] = useState('')
+  const [appleConsentOpen, setAppleConsentOpen] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -43,6 +50,40 @@ export function OwnerAccount({ onDataChange }: { onDataChange: () => void }) {
     setWorkNotifications(next.work)
     setPromotionNotifications(next.promotions)
     if (user) localStorage.setItem(`rl_account_notifications:${user.id}`, JSON.stringify(next))
+  }
+
+  const connectGoogle = async () => {
+    if (googleBusy) return
+    setGoogleConnectionError('')
+    setGoogleBusy(true)
+    const result = await continueWithGoogle('connect')
+    setGoogleBusy(false)
+    if (!result.ok && !result.cancelled) {
+      setGoogleConnectionError(result.error ?? 'เชื่อมต่อ Google ไม่สำเร็จ กรุณาลองใหม่')
+    }
+  }
+
+  const connectFacebook = async () => {
+    if (facebookBusy) return
+    setFacebookConnectionError('')
+    setFacebookBusy(true)
+    const result = await continueWithFacebook('connect')
+    setFacebookBusy(false)
+    if (!result.ok && !result.cancelled) {
+      setFacebookConnectionError(result.error ?? 'เชื่อมต่อ Facebook ไม่สำเร็จ กรุณาลองใหม่')
+    }
+  }
+
+  const connectApple = async () => {
+    if (appleBusy) return
+    setAppleConsentOpen(false)
+    setAppleConnectionError('')
+    setAppleBusy(true)
+    const result = await continueWithApple('connect', true)
+    setAppleBusy(false)
+    if (!result.ok && !result.cancelled) {
+      setAppleConnectionError(result.error ?? 'เชื่อมต่อ Apple ไม่สำเร็จ กรุณาลองใหม่')
+    }
   }
 
   const save = (event: React.FormEvent) => {
@@ -102,9 +143,33 @@ export function OwnerAccount({ onDataChange }: { onDataChange: () => void }) {
 
         <section className={`${styles.card} ${styles.settingsGroup}`}>
           <SettingsHeading icon={<Link2 />} iconClass={styles.connectedIcon} title="บัญชีที่เชื่อมต่อ" description="เข้าสู่ระบบได้เร็วขึ้นด้วยบัญชีโซเชียล" />
-          <ProviderRow icon={<GoogleIcon />} iconClass={styles.googleProvider} name="Google" />
-          <ProviderRow icon={<FacebookIcon />} iconClass={styles.facebookProvider} name="Facebook" />
-          <ProviderRow icon={<AppleIcon />} iconClass={styles.appleProvider} name="Apple" />
+          <ProviderRow
+            icon={<GoogleIcon />}
+            iconClass={styles.googleProvider}
+            name="Google"
+            connected={user?.authProviders?.includes('google') === true}
+            busy={googleBusy}
+            onConnect={connectGoogle}
+          />
+          {googleConnectionError && <p role="alert" className={styles.providerError}>{googleConnectionError}</p>}
+          <ProviderRow
+            icon={<FacebookIcon />}
+            iconClass={styles.facebookProvider}
+            name="Facebook"
+            connected={user?.authProviders?.includes('facebook') === true}
+            busy={facebookBusy}
+            onConnect={connectFacebook}
+          />
+          {facebookConnectionError && <p role="alert" className={styles.providerError}>{facebookConnectionError}</p>}
+          <ProviderRow
+            icon={<AppleIcon />}
+            iconClass={styles.appleProvider}
+            name="Apple"
+            connected={user?.authProviders?.includes('apple') === true}
+            busy={appleBusy}
+            onConnect={() => setAppleConsentOpen(true)}
+          />
+          {appleConnectionError && <p role="alert" className={styles.providerError}>{appleConnectionError}</p>}
         </section>
 
         <section className={`${styles.card} ${styles.settingsGroup} ${styles.dangerGroup}`}>
@@ -113,6 +178,36 @@ export function OwnerAccount({ onDataChange }: { onDataChange: () => void }) {
           <button type="button" className={styles.deleteButton} disabled title="รอ API ยืนยันตัวตนซ้ำและลบบัญชีอย่างปลอดภัย"><Trash2 />ลบบัญชีถาวร</button>
         </section>
       </div>
+
+      <Dialog open={appleConsentOpen} onOpenChange={setAppleConsentOpen}>
+        <DialogContent className="max-w-md rounded-2xl p-6">
+          <DialogTitle className="text-lg font-bold text-[#373244]">เชื่อม Apple ID</DialogTitle>
+          <DialogDescription className="mt-2 text-sm leading-6 text-[#716c84]">
+            หากเลือก Hide My Email อีเมล relay ของ Apple จะถูกเชื่อมกับบัญชี ReadLead นี้
+            เพื่อให้คุณเข้าสู่ระบบด้วย Apple ได้ โดยข้อมูลบัญชี ReadLead เดิมจะยังคงอยู่
+          </DialogDescription>
+          <p className="mt-3 rounded-xl bg-[#f4f1f8] px-4 py-3 text-xs leading-5 text-[#716c84]">
+            เมื่อกด “ยินยอมและเชื่อมต่อ” ถือว่าคุณยินยอมให้ ReadLead เชื่อม Apple ID
+            แบบไม่เปิดเผยอีเมลกับบัญชีปัจจุบัน
+          </p>
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              className="rounded-lg border border-[#e8e3f0] px-4 py-2 text-sm font-semibold text-[#716c84]"
+              onClick={() => setAppleConsentOpen(false)}
+            >
+              ยกเลิก
+            </button>
+            <button
+              type="button"
+              className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white"
+              onClick={() => void connectApple()}
+            >
+              ยินยอมและเชื่อมต่อ
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -125,8 +220,44 @@ function SettingRow({ label, description, children }: { label: string; descripti
   return <div className={styles.settingRow}><div className={styles.settingLabel}><b>{label}</b><span>{description}</span></div><div className={styles.settingValue}>{children}</div></div>
 }
 
-function ProviderRow({ icon, iconClass, name }: { icon: React.ReactNode; iconClass: string; name: string }) {
-  return <div className={styles.settingRow}><div className={styles.provider}><span className={`${styles.providerIcon} ${iconClass}`}>{icon}</span><div><b>{name}</b><span>ยังไม่เชื่อมต่อ</span></div></div><div className={styles.settingValue}><span className={styles.notConnected}>ยังไม่เชื่อมต่อ</span><button type="button" className={`${styles.settingButton} ${styles.ghostSettingButton}`} disabled title={`ระบบเชื่อมต่อ ${name} ยังไม่เปิดใช้งาน`}>เชื่อมต่อ</button></div></div>
+function ProviderRow({
+  icon,
+  iconClass,
+  name,
+  connected = false,
+  busy = false,
+  onConnect,
+}: {
+  icon: React.ReactNode
+  iconClass: string
+  name: string
+  connected?: boolean
+  busy?: boolean
+  onConnect?: () => void
+}) {
+  const available = Boolean(onConnect)
+  return (
+    <div className={styles.settingRow}>
+      <div className={styles.provider}>
+        <span className={`${styles.providerIcon} ${iconClass}`}>{icon}</span>
+        <div><b>{name}</b><span>{connected ? 'ใช้เข้าสู่ระบบ ReadLead ได้' : 'ยังไม่เชื่อมต่อ'}</span></div>
+      </div>
+      <div className={styles.settingValue}>
+        <span className={connected ? styles.connectedProvider : styles.notConnected}>{connected ? 'เชื่อมต่อแล้ว' : 'ยังไม่เชื่อมต่อ'}</span>
+        {!connected && (
+          <button
+            type="button"
+            className={`${styles.settingButton} ${styles.ghostSettingButton}`}
+            disabled={!available || busy}
+            title={available ? undefined : `ระบบเชื่อมต่อ ${name} ยังไม่เปิดใช้งาน`}
+            onClick={onConnect}
+          >
+            {busy ? 'กำลังเชื่อมต่อ...' : 'เชื่อมต่อ'}
+          </button>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export function OwnerActivity({

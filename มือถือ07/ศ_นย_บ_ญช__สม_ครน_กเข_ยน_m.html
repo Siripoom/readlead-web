@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ReadLead — สมัครนักเขียน (มือถือ)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800;900&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#cc4452; --brand-d:#b23a48; --brand-soft:#fae8ea;
+  --ink:#1c1b22; --ink2:#4a4656; --mut:#8a8894; --line:#ececf1; --bg:#ffffff; --soft:#f2f3f6; --red:#e2453a;
+  --mxw:480px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg)}
+body{font-family:'Noto Sans Thai',sans-serif;color:var(--ink)}
+a{text-decoration:none;color:inherit}
+svg{display:block}
+button,input,select{font-family:inherit}
+
+#stop{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:var(--mxw);height:52px;background:#fff;border-bottom:1px solid #E9EDF2;display:flex;align-items:center;gap:4px;padding:0 6px;z-index:9000}
+#stop .back{width:38px;height:38px;border:none;background:none;display:flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;flex:none}
+#stop .back svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#stop h1{font-size:15px;font-weight:800;flex:1}
+
+#swrap{max-width:var(--mxw);margin:52px auto 0;padding:16px 16px 32px}
+.phead{margin-bottom:16px}
+.phead p{margin:0;font-size:12px;color:var(--mut);line-height:1.6}
+
+.sec{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.sh{font-size:14.5px;font-weight:800;margin:0 0 2px;display:flex;align-items:center;gap:9px}
+.sh .nbox{width:22px;height:22px;border-radius:7px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex:0 0 22px}
+.sd{font-size:11.5px;color:var(--mut);margin:0 0 14px}
+
+.typegrid{display:flex;flex-direction:column;gap:10px}
+.typec{display:flex;align-items:center;gap:12px;padding:13px;border:1.6px solid var(--line);border-radius:13px;cursor:pointer}
+.typec.on{border-color:var(--brand)}
+.typec .ti{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:0 0 38px;background:#fff;border:1px solid var(--line)}
+.typec.on .ti{background:var(--brand);border-color:var(--brand)}
+.typec .ti svg{width:19px;height:19px;stroke:var(--ink2);fill:none;stroke-width:1.7}
+.typec.on .ti svg{stroke:#fff}
+.typec b{font-size:13.5px;font-weight:700;display:block}
+.typec span{font-size:11px;color:var(--mut)}
+.typec .rd{margin-left:auto;width:18px;height:18px;border-radius:50%;border:2px solid #d3d5df;flex:0 0 18px}
+.typec.on .rd{border-color:var(--brand);background:var(--brand)}
+
+.fg{display:grid;gap:14px;margin-bottom:16px}
+.fg.g2{grid-template-columns:1fr 1fr}
+.fg:last-child{margin-bottom:0}
+.field label{font-weight:700;font-size:12.5px;display:block;margin-bottom:6px}
+.field label .req{color:var(--red)}
+.inp{width:100%;border:1.6px solid var(--line);border-radius:10px;padding:11px 12px;font-size:13.5px;color:var(--ink);outline:none;background:#fff}
+.inp::placeholder{color:var(--mut)}
+input.inp{height:33px;padding-top:0;padding-bottom:0;font-family:'Sarabun',sans-serif;font-size:13px}
+/* ═══ dropdown popup มาตรฐาน (ชุดเดียวกับหน้าสร้างผลงาน) ═══ */
+.cdd{position:relative}
+.cdd-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;border:1.6px solid var(--line);border-radius:10px;padding:0 12px;height:33px;font-size:13px;font-family:'Sarabun',sans-serif;color:var(--ink);background:#fff;cursor:pointer;text-align:left}
+.cdd-btn.ph{color:var(--mut)}
+.cdd-btn svg{width:15px;height:15px;stroke:var(--mut);fill:none;stroke-width:2;flex:none;transition:transform .15s}
+.cdd.open .cdd-btn svg{transform:rotate(180deg)}
+.cdd-list{position:absolute;left:0;right:0;top:calc(100% + 6px);background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 26px rgba(0,0,0,.12);z-index:60;overflow:hidden;display:none;max-height:280px;overflow-y:auto}
+.cdd.open .cdd-list{display:block}
+.cdd-opt{padding:11px 14px;font-size:13px;font-family:'Sarabun',sans-serif;color:var(--ink);cursor:pointer}
+.cdd-opt:active{background:var(--soft)}
+.cdd-opt.on{color:var(--brand);font-weight:700}
+.inp:disabled{background:var(--soft);color:var(--mut)}
+select.inp{appearance:none;-webkit-appearance:none;background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%23a6abb8' stroke-width='2'><path d='M2 4l5 5 5-5'/></svg>") no-repeat right 12px center;padding-right:34px;cursor:pointer}
+.fnote{font-size:11px;color:var(--red);margin-top:7px;display:flex;align-items:center;gap:5px}
+.fnote svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;flex:none;stroke-linecap:round}
+
+.dropzone{border:1.8px dashed #cfd1db;border-radius:12px;padding:18px;text-align:center;cursor:pointer;color:var(--mut)}
+.dropzone svg{width:26px;height:26px;margin:0 auto 8px;stroke:var(--brand);fill:none;stroke-width:1.5}
+.dropzone b{color:var(--ink);font-weight:600;font-size:12.5px;display:block}
+.dropzone .u{color:var(--brand-d)}
+.thumbs{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.thumb{width:78px;height:78px;border-radius:10px;overflow:hidden;position:relative;border:1px solid var(--line);background:var(--soft)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .x{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer}
+.upnote{background:#fdf6e7;border:1px solid #f1e2b8;border-radius:11px;padding:11px 13px;font-size:11px;color:#8a6516;line-height:1.6;margin-top:12px;display:flex;gap:8px}
+.upnote svg{width:15px;height:15px;stroke:#d99a1c;fill:none;stroke-width:2;flex:0 0 15px;margin-top:1px}
+.upnote b{color:#a06a0a;font-weight:700}
+.upnote .fmt{display:block;margin-top:4px;color:#9a7a3a}
+
+.terms{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;cursor:pointer;color:var(--ink2);line-height:1.6}
+.chk{width:20px;height:20px;border:1.8px solid #cfd1db;border-radius:6px;flex:0 0 20px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-top:1px}
+.chk svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;opacity:0}
+.chk.on{background:var(--brand);border-color:var(--brand)}
+.chk.on svg{opacity:1}
+.terms a{color:var(--brand-d);font-weight:700;text-decoration:none}
+.submitbtn{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;width:100%;background:linear-gradient(120deg,#cc4452,#b23a48);color:#fff;font-weight:700;font-size:14.5px;padding:14px;border:none;border-radius:12px;cursor:pointer}
+.submitbtn svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2}
+.submitbtn.off{opacity:.45;pointer-events:none}
+</style>
+</head>
+<body>
+
+<div id="stop">
+  <a href="#" class="rl-brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>ReadLead</a>
+  <button class="tbtn" aria-label="ค้นหา"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
+  <button class="tbtn" aria-label="แจ้งเตือน"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></button>
+  <button id="mLogin">เข้าสู่ระบบ</button>
+  <button class="tbtn" id="mAva" style="display:none" aria-label="โปรไฟล์"><span class="ava-c" id="mAvaC"></span></button>
+</div>
+
+<!-- ═══ หน้าโปรไฟล์ (กดรูปโปรไฟล์บน topbar) ═══ -->
+<div id="mprof">
+  <div class="ph">
+    <div class="pava" id="mProfAva"></div>
+    <div class="pwho"><b id="mProfName"></b><span id="mProfHandle"></span></div>
+  </div>
+  <div class="pcoin">
+    <span class="ci"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8.5 10.5h5a1.75 1.75 0 010 3.5h-3a1.75 1.75 0 000 3.5h5"/></svg></span>
+    <b id="mProfCoins">0.00</b>
+    <a class="topup" href="#">เติมเหรียญ</a>
+  </div>
+  <nav>
+    <a href="ศูนย์บัญชี_สมัครนักเขียน_m.html" id="mProfApply"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>สมัครนักเขียน</a>
+    <a href="ศูนย์บัญชี_ศูนย์นักเขียน_m.html" id="mProfDash" style="display:none"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>ศูนย์นักเขียน</a>
+    <a href="ศูนย์บัญชี_กระเป๋าเงิน_m.html"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><path d="M16 14h2"/></svg>กระเป๋าเงิน</a>
+    <a href="ศูนย์บัญชี_แจ้งปัญหา_m.html"><svg viewBox="0 0 24 24"><path d="M4 13a8 8 0 0 1 16 0"/><rect x="2.5" y="13" width="4" height="7" rx="2"/><rect x="17.5" y="13" width="4" height="7" rx="2"/><path d="M20 19a3 3 0 0 1-3 3h-3"/></svg>แจ้งปัญหา</a>
+    <a href="ศูนย์บัญชี_คอมเม้นและรีวิว_m.html"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.8-.8L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/><path d="M8.5 11h7M8.5 14h4"/></svg>คอมเมนต์ & รีวิวของฉัน</a>
+    <a href="ศูนย์บัญชี_คู่มือ_m.html"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2V5z"/><path d="M19 3v18"/><path d="M8 8h7M8 12h7"/></svg>คู่มือผู้ใช้</a>
+    <a href="ศูนย์บัญชี_ตั้งค่า_m.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33h0a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h0a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>การตั้งค่า</a>
+  </nav>
+  <div class="psep"></div>
+  <nav>
+    <a href="#"><svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 11-12.72 0"/><path d="M12 2v10"/></svg>ออกจากระบบ</a>
+  </nav>
+</div>
+
+<div id="swrap">
+  <div class="phead"><p>กรอกข้อมูลเพื่อลงทะเบียนเป็นนักเขียนกับ ReadLead และเริ่มสร้างรายได้จากผลงานของคุณ</p></div>
+
+  <section class="sec">
+    <h3 class="sh"><span class="nbox">1</span>ประเภทผู้สมัคร</h3>
+    <p class="sd">เลือกประเภทบัญชีที่ต้องการลงทะเบียน</p>
+    <div class="typegrid" id="typegrid">
+      <div class="typec on" data-type="person"><span class="ti"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 21a7 7 0 0 1 14 0"/></svg></span><div><b>บุคคลธรรมดา</b><span>สมัครในนามตัวบุคคล</span></div><span class="rd"></span></div>
+      <div class="typec" data-type="corp"><span class="ti"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5M9 10h.01M15 10h.01M9 13h.01M15 13h.01"/></svg></span><div><b>นิติบุคคล</b><span>สมัครในนามบริษัท/ห้างหุ้นส่วน</span></div><span class="rd"></span></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h3 class="sh"><span class="nbox">2</span>ข้อมูลส่วนตัว</h3>
+    <p class="sd">ข้อมูลต้องตรงกับบัตรประชาชนเพื่อใช้ยืนยันตัวตน</p>
+
+    <div class="fg" id="corpfields" style="display:none">
+      <div class="field"><label>ชื่อนิติบุคคล / บริษัท <span class="req">*</span></label><input class="inp" id="fCorpName" placeholder="เช่น บริษัท ตัวอย่าง จำกัด"></div>
+      <div class="field"><label>เลขประจำตัวผู้เสียภาษีอากร (13 หลัก) <span class="req">*</span></label><input class="inp" id="fTaxId" placeholder="0-0000-00000-00-0"></div>
+    </div>
+
+    <div class="fg g2">
+      <div class="field"><label>นามปากกา <span class="req">*</span></label><input class="inp" id="fPenname" placeholder="ชื่อที่จะแสดงบนผลงาน"></div>
+      <div class="field"><label>บัตรประชาชน (13 หลัก) <span class="req">*</span></label><input class="inp" id="fIdcard" placeholder="0-0000-00000-00-0" maxlength="13"></div>
+    </div>
+
+    <div class="fg" style="grid-template-columns:100px 1fr 1fr">
+      <div class="field"><label>คำนำหน้า <span class="req">*</span></label><select class="inp" id="fPrefix"><option>นาย</option><option>นาง</option><option>นางสาว</option></select></div>
+      <div class="field"><label>ชื่อจริง <span class="req">*</span></label><input class="inp" id="fFirst" placeholder="ชื่อจริง"></div>
+      <div class="field"><label>นามสกุล <span class="req">*</span></label><input class="inp" id="fLast" placeholder="นามสกุล"></div>
+    </div>
+
+    <div class="fg g2">
+      <div class="field"><label>เบอร์โทรศัพท์ <span class="req">*</span></label><input class="inp" id="fPhone" placeholder="08x-xxx-xxxx"></div>
+      <div class="field"><label>อีเมล <span class="req">*</span></label><input class="inp" id="fEmail" type="email" placeholder="you@email.com"></div>
+    </div>
+
+    <div class="fg"><div class="field"><label>ที่อยู่ (บ้านเลขที่ / หมู่ / ซอย / ถนน) <span class="req">*</span></label><input class="inp" id="fAddr" placeholder="เช่น 123/45 หมู่ 6 ถ.สุขุมวิท"></div></div>
+
+    <div class="fg" style="grid-template-columns:1fr 1fr">
+      <div class="field"><label>จังหวัด <span class="req">*</span></label><input class="inp" id="fProv" placeholder="เช่น กรุงเทพมหานคร"></div>
+      <div class="field"><label>อำเภอ / เขต <span class="req">*</span></label><input class="inp" id="fDist" placeholder="เช่น เขตวัฒนา"></div>
+    </div>
+    <div class="fg" style="grid-template-columns:1fr 1fr">
+      <div class="field"><label>ตำบล / แขวง <span class="req">*</span></label><input class="inp" id="fSubd" placeholder="เช่น แขวงคลองตันเหนือ"></div>
+      <div class="field"><label>รหัสไปรษณีย์ <span class="req">*</span></label><input class="inp" id="fZip" placeholder="10110" maxlength="5"></div>
+    </div>
+
+    <div class="field"><label>รูปบัตรประชาชน <span class="req">*</span></label>
+      <input type="file" id="idfile" accept="image/jpeg,image/png" multiple hidden>
+      <div class="dropzone" id="idzone"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><path d="M14 9h5M14 13h5M5 16h8"/></svg><b>แตะ<span class="u">เลือกรูปบัตรประชาชน</span></b></div>
+      <div class="thumbs" id="idthumbs"></div>
+      <div class="upnote"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg><div><b>* กรุณาเซ็นรับรองสำเนาเอกสาร</b> และระบุว่า 'ใช้สำหรับการลงทะเบียนเป็นนักเขียนกับบริษัท รีดลีด จำกัด' ทุกครั้งก่อนอัปโหลด<span class="fmt">** รองรับไฟล์ภาพ .JPG, .PNG เท่านั้น ขนาดไม่เกิน 5 MB</span></div></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h3 class="sh"><span class="nbox">3</span>บัญชีธนาคาร</h3>
+    <p class="sd">ใช้สำหรับรับรายได้จากผลงานของคุณ</p>
+
+    <div class="fg">
+      <div class="field"><label>ชื่อบัญชี <span class="req">*</span></label><input class="inp" id="fBankName" placeholder="ชื่อ-นามสกุล เจ้าของบัญชี">
+        <div class="fnote"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>* ชื่อบัญชีต้องตรงกับชื่อในบัตรประชาชน</div>
+      </div>
+    </div>
+
+    <div class="fg g2">
+      <div class="field"><label>เลือกธนาคาร <span class="req">*</span></label><select class="inp" id="fBank"><option value="" disabled selected>— เลือกธนาคาร —</option><option>ธนาคารกสิกรไทย</option><option>ธนาคารไทยพาณิชย์</option><option>ธนาคารกรุงเทพ</option><option>ธนาคารกรุงไทย</option><option>ธนาคารกรุงศรีอยุธยา</option><option>ธนาคารทหารไทยธนชาต (ttb)</option><option>ธนาคารออมสิน</option><option>ธนาคารเพื่อการเกษตรฯ (ธ.ก.ส.)</option><option>ธนาคารซีไอเอ็มบีไทย</option></select></div>
+      <div class="field"><label>เลขที่บัญชี <span class="req">*</span></label><input class="inp" id="fBankNo" placeholder="เลขบัญชี 10-12 หลัก"></div>
+    </div>
+
+    <div class="field"><label>รูปหน้าสมุดบัญชี <span class="req">*</span></label>
+      <input type="file" id="bankfile" accept="image/jpeg,image/png" multiple hidden>
+      <div class="dropzone" id="bankzone"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M7 14h6"/></svg><b>แตะ<span class="u">เลือกรูปหน้าสมุดบัญชี</span></b></div>
+      <div class="thumbs" id="bankthumbs"></div>
+      <div class="upnote"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg><div><b>* กรุณาเซ็นรับรองสำเนาเอกสาร</b> และระบุว่า 'ใช้สำหรับการลงทะเบียนเป็นนักเขียนกับบริษัท รีดลีด จำกัด' ทุกครั้งก่อนอัปโหลด<span class="fmt">** รองรับไฟล์ภาพ .JPG, .PNG เท่านั้น ขนาดไม่เกิน 5 MB</span></div></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <label class="terms" id="termsLabel"><span class="chk" id="agree"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span>ฉันได้อ่านและยอมรับ <a href="#" id="linkTerms">ข้อกำหนดและเงื่อนไขการเป็นนักเขียน</a> และ <a href="#" id="linkPrivacy">นโยบายความเป็นส่วนตัว</a> ของบริษัท รีดลีด จำกัด และยืนยันว่าข้อมูลทั้งหมดเป็นความจริง</span></label>
+    <button class="submitbtn off" id="submitBtn" type="button"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>ส่งใบสมัคร</button>
+  </section>
+
+</div>
+
+<style id="rlAuthCSS">
+/* ── modal ── */
+#rlAuthModal{position:fixed;inset:0;z-index:99990;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(30,25,50,.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+#rlAuthModal.show{display:flex}
+#rlAuthModal,#rlAuthModal *{box-sizing:border-box;font-family:'Noto Sans Thai',system-ui,sans-serif}
+#rlAuthModal{--line:#ece8f4;--ink:#2e2a3d;--ink2:#6b6580;--ink3:#a8a2bd;--red:#cc4452;--red-deep:#9c3340}
+.rlau{width:100%;max-width:430px;zoom:.9}
+.rlau-card{background:#fff;border-radius:22px;padding:34px 30px 30px;position:relative;animation:rlauPop .24s cubic-bezier(.34,1.2,.64,1)}
+@keyframes rlauPop{from{transform:translateY(12px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+.rlau-back{display:none;position:absolute;top:16px;left:16px;align-items:center;gap:2px;border:none;background:none;color:var(--ink2);font-size:14px;font-weight:600;cursor:pointer;padding:6px 6px 6px 2px;line-height:1}
+.rlau-back svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#rlAuthModal[data-mode="register"] .rlau-back,#rlAuthModal[data-mode="forgot"] .rlau-back{display:inline-flex}
+.rlau-brand{display:flex;align-items:center;justify-content:center;gap:10px;font-size:26px;font-weight:800;color:var(--red);margin-bottom:6px}
+.rlau-brand svg{width:29px;height:29px;fill:none;stroke:currentColor;stroke-width:2.5}
+.rlau-title{text-align:center;font-size:22px;font-weight:800;color:var(--ink);margin:14px 0 22px}
+.rlau .soc{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.rlau .soc-btn{display:flex;align-items:center;justify-content:center;gap:11px;width:100%;height:46px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:filter .15s}
+.rlau .soc-btn:hover{filter:brightness(.96)}
+.rlau .soc-btn .ic{width:19px;height:19px;flex:0 0 19px;display:grid;place-items:center}
+.rlau .soc-google{background:#fff;border:1px solid var(--line);color:#3c4043}
+.rlau .soc-facebook{background:#1877F2;color:#fff}
+.rlau .soc-apple{background:#000;color:#fff}
+.rlau .soc-btn svg{width:19px;height:19px;display:block}
+.rlau .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--ink3);font-size:12.5px}
+.rlau .divider::before,.rlau .divider::after{content:"";flex:1;height:1px;background:var(--line)}
+.rlau .field{margin-bottom:15px}
+.rlau .field label{display:block;font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:7px}
+.rlau .inp-wrap{position:relative}
+.rlau .field input{width:100%;height:46px;border:1px solid var(--line);border-radius:12px;padding:0 14px;font-family:inherit;font-size:14px;color:var(--ink);background:#fff;outline:none;transition:border-color .15s}
+.rlau .field input::placeholder{color:var(--ink3)}
+.rlau .eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--ink3);display:grid;place-items:center;padding:4px}
+.rlau .eye svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8}
+.rlau .hint{font-size:12px;color:var(--ink3);margin-top:6px}
+.rlau .field.pw input{padding-right:44px}
+.rlau .pw-check{margin-top:9px;display:none;flex-direction:column;gap:5px}
+.rlau .pw-check.show{display:flex}
+.rlau .pw-item{display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--ink3);line-height:1.45}
+.rlau .pw-item .ci{flex:0 0 16px;width:16px;height:16px;border-radius:50%;border:1.6px solid var(--line);display:grid;place-items:center;margin-top:1px;transition:.15s}
+.rlau .pw-item .ci svg{width:10px;height:10px;stroke:#fff;fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:.15s}
+.rlau .pw-item.ok{color:#17a673}
+.rlau .pw-item.ok .ci{background:#17a673;border-color:#17a673}
+.rlau .pw-item.ok .ci svg{opacity:1}
+.rlau .forgot{text-align:right;margin:-6px 0 16px}
+.rlau .forgot a{font-size:13px;font-weight:600;color:var(--red);text-decoration:none;cursor:pointer}
+.rlau .terms{display:flex;align-items:flex-start;gap:10px;margin:4px 0 20px;cursor:pointer}
+.rlau .terms input{display:none}
+.rlau .terms .box{flex:0 0 20px;width:20px;height:20px;border:1.8px solid var(--line);border-radius:6px;display:grid;place-items:center;margin-top:1px;transition:.15s}
+.rlau .terms .box svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:.15s}
+.rlau .terms input:checked+.box{background:var(--red);border-color:var(--red)}
+.rlau .terms input:checked+.box svg{opacity:1}
+.rlau .terms .txt{font-size:13px;color:var(--ink2);line-height:1.55}
+.rlau .terms .txt a{color:var(--red);font-weight:600;text-decoration:none}
+.rlau .submit{width:100%;height:46px;border-radius:12px;background:var(--red);color:#fff;border:none;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:background .15s}
+.rlau .submit:hover{background:var(--red-deep)}
+.rlau .submit:disabled{background:#e2ddec;color:#fff;cursor:not-allowed}
+.rlau .switch{text-align:center;font-size:13.5px;color:var(--ink2);margin-top:20px}
+.rlau .switch a{color:var(--red);font-weight:700;text-decoration:none;cursor:pointer}
+.rlau .auth-err{display:none;font-size:12.5px;font-weight:600;color:#d8353f;background:#fdecee;border-radius:9px;padding:8px 12px;margin-bottom:14px}
+.rlau .auth-err.show{display:block}
+.rlau .auth-ok{display:none;font-size:12.5px;font-weight:600;color:#17a673;background:#e7f7f0;border-radius:9px;padding:8px 12px;margin-top:12px}
+.rlau .auth-ok.show{display:block}
+.rlau .only-login,.rlau .only-register,.rlau .only-forgot{display:none}
+#rlAuthModal[data-mode="login"] .only-login{display:block}
+#rlAuthModal[data-mode="register"] .only-register{display:block}
+#rlAuthModal[data-mode="forgot"] .only-forgot{display:block}
+#rlAuthModal[data-mode="login"] .switch .to-login,#rlAuthModal[data-mode="register"] .switch .to-register{display:none}
+#rlAuthModal[data-mode="forgot"] .divider,#rlAuthModal[data-mode="forgot"] .soc,#rlAuthModal[data-mode="forgot"] .switch{display:none}
+.rlau .forgot-sub{font-size:13px;color:var(--ink3);margin:-4px 0 18px;line-height:1.55}
+.rlau .forgot-back{text-align:center;font-size:13.5px;color:var(--ink2);margin-top:18px}
+.rlau .forgot-back a{color:var(--red);font-weight:600;cursor:pointer;text-decoration:none}
+
+/* ── avatar + เมนูผู้ใช้บน header ── */
+#rlhdrwrap{position:relative;z-index:900;overflow:visible}
+.rl-header .rl-user{position:relative;display:none}
+.rl-header .rl-user.on{display:block!important}
+.rl-header .rl-login.off{display:none}
+.rl-header .rl-ava{width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;font-family:'Noto Sans Thai',sans-serif;font-size:16px;font-weight:800;display:grid;place-items:center;line-height:1;padding:0;transition:box-shadow .15s}
+.rl-header .rl-ava:hover{box-shadow:0 0 0 3px rgba(204,68,82,.18)}
+.rl-menu{position:absolute;top:46px;right:0;width:284px;background:#fff;border:1px solid #e3e5ea;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.035),0 14px 34px -12px rgba(20,20,40,.18);padding:8px 0;display:none;z-index:9000;font-family:'Noto Sans Thai',sans-serif}
+.rl-menu.show{display:block!important}
+.rl-menu-head{display:flex;align-items:center;gap:12px;padding:12px 16px 12px}
+.rl-menu-head .ava2{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:20px;font-weight:800;flex-shrink:0}
+.rl-menu-head .nm{font-size:15.5px;font-weight:800;color:#2b2d3a;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rl-menu-head .hd{font-size:12.5px;color:#8b91a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rl-menu-sep{height:1px;background:#eef0f5;margin:6px 0}
+.rl-menu-coin{display:flex;align-items:center;gap:9px;padding:10px 16px}
+.rl-menu-coin .cico{width:26px;height:26px;border-radius:50%;background:#f6b01e;color:#fff;display:grid;place-items:center;font-size:10px;font-weight:800;flex-shrink:0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12)}
+.rl-menu-coin .cval{flex:1;font-size:16px;font-weight:800;color:#2b2d3a;font-variant-numeric:tabular-nums}
+.rl-menu-coin .topup{height:32px;padding:0 16px;border:none;border-radius:9px;background:#e0981f;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.rl-menu-coin .topup:hover{background:#c9881b}
+.rl-menu-item{display:flex;align-items:center;gap:13px;width:100%;padding:11px 16px;border:none;background:none;font-family:inherit;font-size:14px;font-weight:600;color:#3d4152;cursor:pointer;text-align:left;transition:.12s}
+.rl-menu-item:hover{background:#f7f8fa}
+.rl-menu-item svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;color:#6b7080;flex-shrink:0}
+.rl-menu-item.out{color:#d8353f}
+.rl-menu-item.out svg{color:#d8353f}
+</style>
+
+<div id="rlAuthModal" data-mode="login">
+  <div class="rlau">
+    <div class="rlau-card">
+      <button class="rlau-back" onclick="RLAuth.mode('login')" aria-label="กลับ"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>กลับ</button>
+      <div class="rlau-brand"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>ReadLead</div>
+      <h1 class="rlau-title"><span class="only-login">เข้าสู่ระบบ</span><span class="only-register">สมัครสมาชิก</span><span class="only-forgot">ลืมรหัสผ่าน</span></h1>
+
+      <!-- LOGIN -->
+      <div class="only-login">
+        <div class="auth-err" id="rlLoginErr"></div>
+        <div class="field"><label>ชื่อผู้ใช้ หรืออีเมล</label><input type="text" id="rlLoginUser" placeholder="ชื่อผู้ใช้ หรืออีเมล"></div>
+        <div class="field pw"><label>รหัสผ่าน</label>
+          <div class="inp-wrap">
+            <input type="password" id="rlLoginPass" placeholder="รหัสผ่าน">
+            <button class="eye" type="button" onclick="RLAuth.eye('rlLoginPass',this)"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
+        <div class="forgot"><a onclick="RLAuth.mode('forgot')">ลืมรหัสผ่าน?</a></div>
+        <button class="submit" type="button" onclick="RLAuth.login()">เข้าสู่ระบบ</button>
+      </div>
+
+      <!-- REGISTER -->
+      <div class="only-register">
+        <div class="auth-err" id="rlRegErr"></div>
+        <div class="field"><label>ชื่อผู้ใช้</label><input type="text" id="rlRegUser" placeholder="ชื่อผู้ใช้" oninput="RLAuth.pwcheck()"><div class="hint">ใช้ได้เฉพาะ a–z, 0–9 และ _ โดยไม่เว้นวรรค</div></div>
+        <div class="field"><label>อีเมล</label><input type="email" id="rlRegEmail" placeholder="อีเมล"></div>
+        <div class="field pw"><label>รหัสผ่าน</label>
+          <div class="inp-wrap">
+            <input type="password" id="rlRegPass" placeholder="รหัสผ่าน" oninput="RLAuth.pwcheck()">
+            <button class="eye" type="button" onclick="RLAuth.eye('rlRegPass',this)"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <div class="pw-check">
+            <div class="pw-item" data-rule="len"><span class="ci"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>มีอักขระอย่างน้อย 8 ตัวขึ้นไป</div>
+            <div class="pw-item" data-rule="case"><span class="ci"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>มีทั้งตัวพิมพ์เล็ก (a-z) และตัวพิมพ์ใหญ่ (A-Z)</div>
+            <div class="pw-item" data-rule="num"><span class="ci"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>มีตัวเลขอย่างน้อยหนึ่ง (0-9) หรือสัญลักษณ์หนึ่งตัว</div>
+            <div class="pw-item" data-rule="sp"><span class="ci"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>มีอักขระพิเศษ ! @ # $ % ^ &amp; * _ + - = ? อย่างน้อยหนึ่งตัว</div>
+          </div>
+        </div>
+        <label class="terms">
+          <input type="checkbox" id="rlAgree" onchange="RLAuth.pwcheck()">
+          <span class="box"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span class="txt">ฉันได้อ่านและยอมรับ <a href="#">ข้อตกลงและเงื่อนไขการใช้บริการ</a> และ <a href="#">นโยบายความเป็นส่วนตัว</a> ของบริษัท รีดลีด จำกัด</span>
+        </label>
+        <button class="submit" type="button" id="rlRegSubmit" disabled onclick="RLAuth.register()">สมัครสมาชิก</button>
+      </div>
+
+      <!-- FORGOT -->
+      <div class="only-forgot">
+        <p class="forgot-sub">กรอกอีเมลที่ใช้สมัคร ระบบจะส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ไปให้คุณ</p>
+        <div class="auth-err" id="rlForgotErr"></div>
+        <div class="field"><label>อีเมล</label><input type="email" id="rlForgotEmail" placeholder="อีเมลของคุณ"></div>
+        <button class="submit" type="button" onclick="RLAuth.forgot()">ยืนยัน</button>
+        <div class="auth-ok" id="rlForgotOk">ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่อีเมลแล้ว (จำลอง)</div>
+        <div class="forgot-back">จำรหัสผ่านได้แล้ว? <a onclick="RLAuth.mode('login')">กลับไปเข้าสู่ระบบ</a></div>
+      </div>
+
+      <div class="divider">หรือ</div>
+      <div class="soc">
+        <button class="soc-btn soc-google" type="button"><span class="ic"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 0 0-9.82 6.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38z"/></svg></span>ดำเนินการต่อด้วย Google</button>
+        <button class="soc-btn soc-facebook" type="button"><span class="ic"><svg viewBox="0 0 24 24" fill="#fff"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.02 4.39 11.01 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.08 24 18.09 24 12.07z"/></svg></span>ดำเนินการต่อด้วย Facebook</button>
+        <button class="soc-btn soc-apple" type="button"><span class="ic"><svg viewBox="0 0 24 24" fill="#fff"><path d="M17.05 12.54c-.02-2.06 1.68-3.05 1.76-3.1-.96-1.4-2.45-1.6-2.98-1.62-1.27-.13-2.48.75-3.12.75-.64 0-1.64-.73-2.7-.71-1.39.02-2.67.81-3.38 2.05-1.44 2.5-.37 6.2 1.03 8.23.69.99 1.5 2.1 2.57 2.06 1.03-.04 1.42-.67 2.67-.67 1.24 0 1.6.67 2.69.65 1.11-.02 1.81-1.01 2.49-2.01.78-1.15 1.11-2.26 1.12-2.32-.02-.01-2.15-.83-2.17-3.28zM15 6.24c.57-.69.95-1.65.85-2.6-.82.03-1.81.54-2.4 1.23-.52.6-.98 1.58-.86 2.51.91.07 1.84-.46 2.41-1.14z"/></svg></span>ดำเนินการต่อด้วย Apple</button>
+      </div>
+
+      <div class="switch">
+        <span class="to-register">ยังไม่มีบัญชีผู้ใช้? <a onclick="RLAuth.mode('register')">สมัครสมาชิก</a></span>
+        <span class="to-login">มีบัญชีผู้ใช้อยู่แล้ว? <a onclick="RLAuth.mode('login')">เข้าสู่ระบบ</a></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script id="rlAuthJS">
+window.RLAuth = (function(){
+  var K_USERS='rl_users', K_SES='rl_session';
+  /* คู่สีพาสเทล [พื้น, ตัวอักษร] — สุ่มครั้งเดียวตอนสมัคร แล้วติดตัวผู้ใช้ตลอด */
+  var PALETTE=[['#fde2e4','#b2455a'],['#e2ecfd','#3a62b2'],['#e4f7e9','#2d7a4f'],['#fdf3d8','#a3771b'],['#f0e4fd','#6b3ab2'],['#e0f5f5','#1f7a7a'],['#fde9d8','#b25e2a'],['#e8ecf4','#4a5568']];
+
+  function users(){ try{return JSON.parse(localStorage.getItem(K_USERS))||[];}catch(e){return [];} }
+  function saveUsers(a){ localStorage.setItem(K_USERS, JSON.stringify(a)); }
+  function session(){ try{return JSON.parse(localStorage.getItem(K_SES))||null;}catch(e){return null;} }
+  function me(){ var s=session(); if(!s)return null;
+    var u=users().find(function(x){return x&&x.id===s.uid&&typeof x.user==='string';})||null;
+    if(u&&u.status==='banned'){ try{localStorage.removeItem(K_SES);}catch(e){} return null; }  /* บัญชีถูกระงับ — เด้งออกทันที */
+    return u; }
+
+  function el(id){return document.getElementById(id);}
+  function err(id,msg){ var e=el(id); if(!e)return; if(msg){e.textContent=msg;e.classList.add('show');} else e.classList.remove('show'); }
+
+  /* ── modal ── */
+  function storageOK(){ try{localStorage.setItem('__rl_probe','1');localStorage.removeItem('__rl_probe');return true;}catch(e){return false;} }
+  var STORAGE_MSG='เบราว์เซอร์ไม่อนุญาตให้เว็บนี้บันทึกข้อมูลในเครื่อง ระบบสมาชิก (จำลอง) จึงทำงานไม่ได้ มักเกิดจากโหมดไม่ระบุตัวตน/InPrivate, การตั้งค่าบล็อกคุกกี้และข้อมูลไซต์ หรือส่วนขยายด้านความเป็นส่วนตัว ลองเปิดในหน้าต่างปกติหรือเบราว์เซอร์อื่นดูครับ';
+  function open(m){ mode(m||'login'); el('rlAuthModal').classList.add('show');
+    if(!storageOK()){ err('rlLoginErr',STORAGE_MSG); err('rlRegErr',STORAGE_MSG); err('rlForgotErr',STORAGE_MSG); } }
+  function close(){ el('rlAuthModal').classList.remove('show'); }
+  function mode(m){
+    el('rlAuthModal').setAttribute('data-mode',m);
+    if(storageOK()){ err('rlLoginErr');err('rlRegErr');err('rlForgotErr'); }
+    else{ err('rlLoginErr',STORAGE_MSG); err('rlRegErr',STORAGE_MSG); err('rlForgotErr',STORAGE_MSG); }
+    var ok=el('rlForgotOk'); if(ok)ok.classList.remove('show');
+  }
+  function eye(id,btn){var i=el(id);var on=i.type==='password';i.type=on?'text':'password';
+    btn.innerHTML=on?'<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18" stroke-width="1.8"/></svg>':'<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';}
+
+  /* ── validate รหัสผ่าน (เกณฑ์เดียวกับหน้า login เดิม) ── */
+  function pwcheck(){
+    var v=(el('rlRegPass')||{}).value||'';
+    var len=v.length>=8, cse=/[a-z]/.test(v)&&/[A-Z]/.test(v);
+    var sp=/[!@#$%^&*_+\-=?]/.test(v), num=/[0-9]/.test(v)||sp;
+    [['len',len],['case',cse],['num',num],['sp',sp]].forEach(function(r){
+      var e=document.querySelector('#rlAuthModal .pw-item[data-rule="'+r[0]+'"]'); if(e)e.classList.toggle('ok',r[1]);
+    });
+    var pc=document.querySelector('#rlAuthModal .pw-check'); if(pc)pc.classList.toggle('show',v.length>0);
+    var agree=(el('rlAgree')||{}).checked;
+    var btn=el('rlRegSubmit'); if(btn)btn.disabled=!(len&&cse&&num&&sp&&agree);
+  }
+
+  /* ── สมัครสมาชิก ── */
+  function register(){ try{ registerInner(); }catch(e){ err('rlRegErr', storageOK()? 'สมัครไม่สำเร็จ ระบบขัดข้อง กรุณาแคปหน้าจอนี้ส่งให้ผู้พัฒนา (รายละเอียด: '+e.message+')' : 'สมัครไม่สำเร็จ '+STORAGE_MSG); } }
+  function registerInner(){
+    var u=(el('rlRegUser').value||'').trim();
+    var em=(el('rlRegEmail').value||'').trim().toLowerCase();
+    var pw=el('rlRegPass').value||'';
+    if(!/^[A-Za-z0-9_]{3,20}$/.test(u)){ err('rlRegErr','ชื่อผู้ใช้ต้องยาว 3–20 ตัว ใช้ได้เฉพาะ a–z, 0–9 และ _'); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ err('rlRegErr','รูปแบบอีเมลไม่ถูกต้อง'); return; }
+    var all=users();
+    if(all.some(function(x){return x&&typeof x.user==='string'&&x.user.toLowerCase()===u.toLowerCase();})){ err('rlRegErr','ชื่อผู้ใช้นี้ถูกใช้แล้ว'); return; }
+    if(all.some(function(x){return x&&typeof x.email==='string'&&x.email.toLowerCase()===em;})){ err('rlRegErr','อีเมลนี้ถูกใช้สมัครแล้ว'); return; }
+    var color=PALETTE[Math.floor(Math.random()*PALETTE.length)];
+    var rec={ id:'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+      user:u, email:em, pass:pw, /* เว็บจริง: hash ฝั่ง server เท่านั้น */
+      color:color, coins:0, exp:0, level:0, createdAt:new Date().toISOString() };
+    all.push(rec); saveUsers(all);
+    localStorage.setItem(K_SES, JSON.stringify({uid:rec.id, at:Date.now()}));
+    close(); render();
+  }
+
+  /* ── เข้าสู่ระบบ ── */
+  function login(){ try{ loginInner(); }catch(e){ err('rlLoginErr', storageOK()? 'เข้าสู่ระบบไม่สำเร็จ ระบบขัดข้อง กรุณาแคปหน้าจอนี้ส่งให้ผู้พัฒนา (รายละเอียด: '+e.message+')' : 'เข้าสู่ระบบไม่สำเร็จ '+STORAGE_MSG); } }
+  function loginInner(){
+    var q=(el('rlLoginUser').value||'').trim().toLowerCase();
+    var pw=el('rlLoginPass').value||'';
+    var u=users().find(function(x){return x&&(String(x.user||'').toLowerCase()===q||String(x.email||'').toLowerCase()===q);});
+    if(!u||u.pass!==pw){ err('rlLoginErr','ชื่อผู้ใช้/อีเมล หรือรหัสผ่านไม่ถูกต้อง'); return; }
+    if(u.status==='banned'){ err('rlLoginErr','บัญชีนี้ถูกระงับการใช้งาน ติดต่อทีมงานผ่านหน้าแจ้งปัญหา'); return; }
+    localStorage.setItem(K_SES, JSON.stringify({uid:u.id, at:Date.now()}));
+    close(); render();
+  }
+
+  /* ── ลืมรหัสผ่าน (จำลอง) ── */
+  function forgot(){
+    var em=(el('rlForgotEmail').value||'').trim().toLowerCase();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ err('rlForgotErr','รูปแบบอีเมลไม่ถูกต้อง'); return; }
+    err('rlForgotErr'); el('rlForgotOk').classList.add('show');
+  }
+
+  function logout(){ localStorage.removeItem(K_SES); toggleMenu(false); render(); }
+
+  /* ── header: สลับ ปุ่มเข้าสู่ระบบ ↔ avatar ── */
+  function render(){
+    try{document.dispatchEvent(new CustomEvent('rlauth:render'));}catch(e){}
+    var u=me();
+    var btn=document.querySelector('.rl-header .rl-login');
+    var box=el('rlUserBox');
+    if(!btn||!box)return;
+    if(u){
+      btn.classList.add('off'); box.classList.add('on');
+      var ch=((u.user||'?')[0]||'?').toUpperCase();
+      var uc=(u.color&&u.color.length>=2)?u.color:['#e2ecfd','#3a62b2'];   /* บัญชีเก่าไม่มีสี → สีสำรอง */
+      var a=el('rlAvaBtn'); if(a){ a.textContent=ch; a.style.background=uc[0]; a.style.color=uc[1]; }
+      var a2=el('rlMenuAva'); if(a2){ a2.textContent=ch; a2.style.background=uc[0]; a2.style.color=uc[1]; }
+      el('rlMenuName').textContent=u.user;
+      el('rlMenuHandle').textContent='@'+u.user.toLowerCase();
+      el('rlMenuCoins').textContent=(u.coins||0).toFixed(2);
+    }else{
+      btn.classList.remove('off'); box.classList.remove('on'); toggleMenu(false);
+    }
+  }
+  function toggleMenu(force){
+    var m=el('rlUserMenu'); if(!m)return;
+    var show=(typeof force==='boolean')?force:!m.classList.contains('show');
+    m.classList.toggle('show',show);
+  }
+
+  document.addEventListener('click',function(ev){
+    var box=el('rlUserBox');
+    if(box&&!box.contains(ev.target)) toggleMenu(false);
+    if(ev.target===el('rlAuthModal')) close();
+  });
+
+  document.addEventListener('DOMContentLoaded',render);
+
+  return {open:open, close:close, mode:mode, eye:eye, pwcheck:pwcheck,
+          register:register, login:login, forgot:forgot, logout:logout,
+          render:render, toggleMenu:toggleMenu, me:me};
+})();
+</script>
+
+<script>
+/* ═══ สมัครนักเขียน — validate จริง + สมัครจริง (set u.isWriter=true ใน rl_users) ═══ */
+(function(){
+  var curType='person';
+
+  function setupUpload(zoneId, fileId, thumbsId, maxN){
+    var zone=document.getElementById(zoneId), fi=document.getElementById(fileId), thumbs=document.getElementById(thumbsId);
+    zone.addEventListener('click', function(){ fi.click(); });
+    thumbs.addEventListener('click', function(e){ e.stopPropagation(); });
+    fi.addEventListener('change', function(){
+      var remain = maxN - thumbs.children.length;
+      if(remain<=0){ alert('แนบรูปได้สูงสุด '+maxN+' รูป'); fi.value=''; return; }
+      var files = [...fi.files].filter(function(f){ return f.type.startsWith('image/'); });
+      files.slice(0, remain).forEach(function(file){
+        var r = new FileReader();
+        r.onload = function(e){
+          if(thumbs.children.length>=maxN) return;
+          var d = document.createElement('div');
+          d.className = 'thumb';
+          d.innerHTML = '<img src="'+e.target.result+'"><span class="x">×</span>';
+          d.querySelector('.x').onclick = function(){ d.remove(); };
+          thumbs.appendChild(d);
+        };
+        r.readAsDataURL(file);
+      });
+      fi.value = '';
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+
+    /* ประเภทผู้สมัคร */
+    var typecs = [].slice.call(document.querySelectorAll('.typec'));
+    typecs.forEach(function(el){
+      el.addEventListener('click', function(){
+        typecs.forEach(function(x){ x.classList.remove('on'); });
+        el.classList.add('on');
+        curType = el.getAttribute('data-type');
+        document.getElementById('corpfields').style.display = (curType==='corp') ? 'grid' : 'none';
+      });
+    });
+
+    setupUpload('idzone','idfile','idthumbs',3);
+    setupUpload('bankzone','bankfile','bankthumbs',2);
+
+    /* ยอมรับเงื่อนไข */
+    var agree = document.getElementById('agree'), submitBtn = document.getElementById('submitBtn');
+    document.getElementById('termsLabel').addEventListener('click', function(e){
+      if(e.target.closest('a')) return;
+      agree.classList.toggle('on');
+      submitBtn.classList.toggle('off', !agree.classList.contains('on'));
+    });
+    ['linkTerms','linkPrivacy'].forEach(function(id){
+      document.getElementById(id).addEventListener('click', function(e){
+        e.preventDefault();
+        alert('เอกสารฉบับเต็ม — ยังไม่มีหน้ามือถือ เร็วๆ นี้');
+      });
+    });
+
+    /* ส่งใบสมัคร */
+    submitBtn.addEventListener('click', function(){
+      var u = window.RLAuth && RLAuth.me && RLAuth.me();
+      if(!u){ if(window.RLAuth) RLAuth.open('login'); return; }
+      if(!agree.classList.contains('on')){ alert('กรุณายอมรับข้อกำหนดและเงื่อนไขก่อน'); return; }
+
+      var required = curType==='corp'
+        ? ['fCorpName','fTaxId','fPenname','fIdcard','fFirst','fLast','fPhone','fEmail','fAddr','fProv','fDist','fSubd','fZip','fBankName','fBankNo']
+        : ['fPenname','fIdcard','fFirst','fLast','fPhone','fEmail','fAddr','fProv','fDist','fSubd','fZip','fBankName','fBankNo'];
+      for(var i=0;i<required.length;i++){
+        var el=document.getElementById(required[i]);
+        if(!el.value.trim()){ alert('กรุณากรอกข้อมูลให้ครบทุกช่องที่มี *'); el.focus(); return; }
+      }
+      if(!/^[0-9]{13}$/.test(document.getElementById('fIdcard').value.replace(/[^0-9]/g,''))){
+        alert('เลขบัตรประชาชนต้องมี 13 หลัก'); document.getElementById('fIdcard').focus(); return;
+      }
+      if(!document.getElementById('fBank').value){ alert('กรุณาเลือกธนาคาร'); return; }
+      if(document.getElementById('idthumbs').children.length===0){ alert('กรุณาแนบรูปบัตรประชาชน'); return; }
+      if(document.getElementById('bankthumbs').children.length===0){ alert('กรุณาแนบรูปหน้าสมุดบัญชี'); return; }
+
+      /* สมัครจริง — เขียนสถานะนักเขียนกลับเข้า rl_users */
+      try{
+        var all = JSON.parse(localStorage.getItem('rl_users'))||[];
+        var m = all.find(function(x){ return x && x.id===u.id; });
+        if(m){
+          m.isWriter = true;
+          m.writerSince = Date.now();
+          m.penname = document.getElementById('fPenname').value.trim();
+          localStorage.setItem('rl_users', JSON.stringify(all));
+        }
+      }catch(e){}
+
+      alert('ส่งใบสมัครสำเร็จ ยินดีต้อนรับสู่ครอบครัวนักเขียน ReadLead');
+      location.href = 'ศูนย์บัญชี_m.html';
+    });
+  });
+})();
+</script>
+
+<script id="rlCddJS">
+/* ═══ แปลง select เป็น dropdown popup มาตรฐาน — select เดิมซ่อนไว้เก็บค่า ═══ */
+(function(){
+  document.querySelectorAll('select.inp').forEach(function(sel){
+    var wrap=document.createElement('div'); wrap.className='cdd';
+    var btn=document.createElement('button'); btn.type='button'; btn.className='cdd-btn';
+    var lab=document.createElement('span'); btn.appendChild(lab);
+    btn.insertAdjacentHTML('beforeend','<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>');
+    var list=document.createElement('div'); list.className='cdd-list';
+    function renderLabel(){
+      var o=sel.options[sel.selectedIndex];
+      var isPh=!sel.value;
+      lab.textContent=o?o.textContent:''; btn.classList.toggle('ph',isPh);
+    }
+    Array.prototype.forEach.call(sel.options,function(o){
+      if(o.disabled) return;   /* ข้าม placeholder */
+      var it=document.createElement('div'); it.className='cdd-opt'; it.textContent=o.textContent;
+      it.addEventListener('click',function(){
+        sel.value=o.value||o.textContent;
+        sel.dispatchEvent(new Event('change',{bubbles:true}));
+        list.querySelectorAll('.cdd-opt.on').forEach(function(x){x.classList.remove('on');});
+        it.classList.add('on');
+        renderLabel(); wrap.classList.remove('open');
+      });
+      if(o.selected&&!o.disabled) it.classList.add('on');
+      list.appendChild(it);
+    });
+    btn.addEventListener('click',function(e){ e.stopPropagation(); wrap.classList.toggle('open'); });
+    document.addEventListener('click',function(e){ if(!wrap.contains(e.target)) wrap.classList.remove('open'); });
+    wrap.appendChild(btn); wrap.appendChild(list);
+    sel.style.display='none';
+    sel.parentNode.insertBefore(wrap, sel.nextSibling);
+    renderLabel();
+  });
+})();
+</script>
+<style id="rlSTopRightCSS">
+#stop .rl-brand{display:flex;align-items:center;gap:7px;font-size:19px;font-weight:800;color:#cc4452;flex:1;text-decoration:none}
+#stop .rl-brand svg{width:21px;height:21px}
+#stop .tbtn{width:38px;height:38px;border:none;background:none;display:flex;align-items:center;justify-content:center;color:#4a4656;cursor:pointer;flex:none}
+#stop .tbtn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#mLogin{background:#cc4452;color:#fff;font-family:'Noto Sans Thai',sans-serif;font-size:13px;font-weight:800;padding:8px 14px;border-radius:8px;border:none;cursor:pointer;flex:none}
+#stop .ava-c{width:32px;height:32px;border-radius:50%;background:#f1eef6;display:flex;align-items:center;justify-content:center;color:#a8a2bd;overflow:hidden;font-size:14.5px;font-weight:800}
+#mprof{--mxw2:480px}
+/* ── หน้าโปรไฟล์เต็มจอ (สไตล์ Fictionlog) ── */
+#mprof{position:fixed;top:52px;bottom:0;left:50%;transform:translateX(calc(-50% + 100vw));width:100%;max-width:var(--mxw2,480px);background:#fff;z-index:9500;transition:transform .28s cubic-bezier(.33,1,.68,1);overflow-y:auto;font-family:'Noto Sans Thai',sans-serif;visibility:hidden}
+#mprof.show{transform:translateX(-50%);visibility:visible}
+#mprof .ph{padding:22px 20px;border-bottom:1px solid #ececf1;display:flex;align-items:center;gap:14px}
+#mprof .pava{width:56px;height:56px;border-radius:50%;background:#f1eef6;display:flex;align-items:center;justify-content:center;color:#a8a2bd;flex:none;font-size:24px;font-weight:800}
+#mprof .pwho b{display:block;font-size:17px;font-weight:800;color:#cc4452}
+#mprof .pwho span{font-size:13px;color:#8a8894;font-weight:600}
+#mprof .pcoin{padding:16px 20px;border-bottom:1px solid #ececf1;display:flex;align-items:center;gap:10px}
+#mprof .pcoin .ci{width:26px;height:26px;border-radius:50%;background:#fdf3e0;display:flex;align-items:center;justify-content:center;color:#dfa321;flex:none}
+#mprof .pcoin .ci svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#mprof .pcoin b{font-size:16.5px;font-weight:800;color:var(--ink);flex:1}
+#mprof .pcoin .topup{background:#cc4452;color:#fff;font-size:14px;font-weight:800;padding:9px 20px;border-radius:9px}
+#mprof nav{padding:8px 0}
+#mprof nav a{display:flex;align-items:center;gap:15px;padding:14px 20px;font-size:15.5px;font-weight:700;color:#3a3644}
+#mprof nav a svg{width:21px;height:21px;stroke:#6b6580;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#mprof nav a:active{background:#faf8fc}
+#mprof .psep{height:1px;background:#ececf1;margin:4px 0}
+</style>
+
+<script id="rlSTopSyncJS">
+(function(){
+  var login=document.getElementById('mLogin'),ava=document.getElementById('mAva'),p=document.getElementById('mprof');
+  var avaC=document.getElementById('mAvaC'),pAva=document.getElementById('mProfAva');
+  var pName=document.getElementById('mProfName'),pHandle=document.getElementById('mProfHandle'),pCoins=document.getElementById('mProfCoins');
+  function sync(){
+    var u=window.RLAuth&&RLAuth.me();
+    login.style.display=u?'none':'';
+    ava.style.display=u?'':'none';
+    if(u){
+      var ch=((u.user||'?')[0]||'?').toUpperCase();
+      var uc=(u.color&&u.color.length>=2)?u.color:['#e2ecfd','#3a62b2'];
+      avaC.textContent=ch; avaC.style.background=uc[0]; avaC.style.color=uc[1];
+      pAva.textContent=ch; pAva.style.background=uc[0]; pAva.style.color=uc[1];
+      pName.textContent=u.user;
+      pHandle.textContent='@'+(u.user||'').toLowerCase();
+      pCoins.textContent=(u.coins||0).toFixed(2);
+    }else{
+      p.classList.remove('show'); document.body.style.overflow='';
+    }
+  }
+  login.addEventListener('click',function(){ if(window.RLAuth) RLAuth.open('login'); });
+  ava.addEventListener('click',function(){
+    var on=p.classList.toggle('show');
+    document.body.style.overflow=on?'hidden':'';
+  });
+  p.querySelector('nav:last-of-type a').addEventListener('click',function(e){ e.preventDefault(); RLAuth.logout(); });
+  document.addEventListener('rlauth:render',sync);
+  document.addEventListener('DOMContentLoaded',sync);
+  sync();
+})();
+</script>
+
+<script id="rlWriterToggleJS">
+/* ═══ สมัครนักเขียนเสร็จแล้วถึงขึ้นศูนย์นักเขียน (ตรรกะเดียวกับหน้าศูนย์บัญชีหลัก) ═══ */
+(function(){
+  function isWriter(u){
+    if(!u) return false;
+    if(u.isWriter) return true;
+    try{
+      var L=JSON.parse(localStorage.getItem('rl_novels'))||[];
+      if(Array.isArray(L)) return L.some(function(n){return n&&n.ownerUid===u.id;});
+    }catch(e){}
+    return false;
+  }
+  function refresh(){
+    var u=window.RLAuth&&RLAuth.me&&RLAuth.me();
+    var w=isWriter(u);
+    var aApply=document.getElementById('mProfApply'), aDash=document.getElementById('mProfDash');
+    if(aApply) aApply.style.display = w?'none':'';
+    if(aDash)  aDash.style.display  = w?'':'none';
+  }
+  document.addEventListener('rlauth:render', refresh);
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(refresh, 300); });
+  refresh();
+  setInterval(refresh, 3000);
+})();
+</script>
+</body>
+</html>

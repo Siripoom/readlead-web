@@ -22,6 +22,17 @@ import {
 
 export type { CmsBanner, CmsBannerElement } from '@/lib/cms-catalog'
 
+export type HomeRecommendColumns = {
+  novel: HomeBookStripItem[]
+  manga: HomeBookStripItem[]
+  audio: HomeBookStripItem[]
+}
+
+export type HomeCuratedPicks = {
+  top: HomeBookStripItem[]
+  bottom: HomeBookStripItem[]
+}
+
 export type HomeCmsCatalog = {
   slideSeconds: number
   limitedOffers: HomeLimitedOffer[]
@@ -29,6 +40,11 @@ export type HomeCmsCatalog = {
   act4: CmsBanner[]
   recommendBanners: CmsBanner[][]
   recommendedBooks: HomeBookStripItem[]
+  side: CmsBanner[]
+  editorsChoice: CmsBanner[]
+  promoSlots: CmsBanner[][]
+  recommendColumns: HomeRecommendColumns
+  curatedPicks: HomeCuratedPicks
 }
 
 export type HomeLatestCatalogResult = {
@@ -49,6 +65,11 @@ const EMPTY_CMS: HomeCmsCatalog = {
   act4: [],
   recommendBanners: [[], [], []],
   recommendedBooks: [],
+  side: [],
+  editorsChoice: [],
+  promoSlots: [[], [], [], []],
+  recommendColumns: { novel: [], manga: [], audio: [] },
+  curatedPicks: { top: [], bottom: [] },
 }
 
 const RANKING_TITLES: Record<HomeRankingColumn['id'], string> = {
@@ -126,6 +147,11 @@ export async function getHomeCmsCatalog(): Promise<HomeCmsCatalog> {
     const recommend = enabledSection(payload, 'recommend')
     const act3 = enabledSection(payload, 'act3')
     const act4 = enabledSection(payload, 'act4')
+    const side = enabledSection(payload, 'side')
+    const editorsChoiceSection = enabledSection(payload, 'editors-choice')
+    const promo4 = enabledSection(payload, 'promo-4')
+    const recommendColumnsSection = enabledSection(payload, 'recommend-columns')
+    const curatedPicksSection = enabledSection(payload, 'curated-picks')
 
     const limitedOffers = (sale?.items ?? []).flatMap((item, index) => {
       if (!isRecord(item) || typeof item.id !== 'string' || placement(item.placement).variant !== 'book') return []
@@ -153,6 +179,28 @@ export async function getHomeCmsCatalog(): Promise<HomeCmsCatalog> {
       return banner ? [banner] : []
     })
 
+    const promoSlots = [0, 1, 2, 3].map((column) => (promo4?.items ?? []).flatMap((item) => {
+      if (!isRecord(item) || placement(item.placement).column !== column) return []
+      const banner = parseBanner(item, baseUrl)
+      return banner ? [banner] : []
+    }))
+
+    const booksByGroup = (section: RawSection | null, group: string) => (section?.items ?? []).flatMap((item, index) => {
+      if (!isRecord(item) || typeof item.id !== 'string' || placement(item.placement).group !== group) return []
+      const book = parseBook(item.book)
+      return book ? [mapBook(book, item.id, index)] : []
+    })
+
+    const recommendColumns: HomeRecommendColumns = {
+      novel: booksByGroup(recommendColumnsSection, 'novel'),
+      manga: booksByGroup(recommendColumnsSection, 'manga'),
+      audio: booksByGroup(recommendColumnsSection, 'audio'),
+    }
+    const curatedPicks: HomeCuratedPicks = {
+      top: booksByGroup(curatedPicksSection, 'top'),
+      bottom: booksByGroup(curatedPicksSection, 'bottom'),
+    }
+
     return {
       slideSeconds,
       limitedOffers,
@@ -160,6 +208,11 @@ export async function getHomeCmsCatalog(): Promise<HomeCmsCatalog> {
       act4: bannersFor(act4),
       recommendBanners,
       recommendedBooks,
+      side: bannersFor(side),
+      editorsChoice: bannersFor(editorsChoiceSection),
+      promoSlots,
+      recommendColumns,
+      curatedPicks,
     }
   } catch (error) {
     console.error('Home CMS catalog load failed', error instanceof Error ? error.message : 'UnknownError')

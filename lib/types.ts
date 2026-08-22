@@ -7,7 +7,55 @@ export type Genre =
   | 'comedy' | 'drama' | 'historical' | 'sci-fi' | 'slice-of-life' | 'bl' | 'gl'
 export type WorkStatus = 'ongoing' | 'completed' | 'hiatus'
 export type EpisodeStatus = 'draft' | 'scheduled' | 'published'
-export type PaymentMethod = 'credit-card' | 'promptpay' | 'truemoney' | 'counter-service' | 'paypal' | 'bank-transfer' | 'proof-upload'
+// Historical/display id space — every id a transaction has ever used. Kept
+// stable even after a channel is removed from the selectable set, since old
+// WalletTransaction/ledger rows keep referencing it forever.
+export type PaymentMethod =
+  | 'credit-card' | 'promptpay' | 'truemoney' | 'counter-service'
+  | 'paypal' | 'bank-transfer' | 'proof-upload'
+  | 'shopeepay' | 'apple-pay' | 'google-pay' | 'google-play' | 'app-store'
+
+export type ChannelKind = 'slip' | 'gateway' | 'iap'
+export type Platform = 'web' | 'ios' | 'android'
+
+interface PaymentChannelBase {
+  id: PaymentMethod
+  label: string
+  description: string
+  enabled: boolean
+  platforms: Platform[]
+}
+
+export interface SlipChannel extends PaymentChannelBase {
+  kind: 'slip'
+}
+
+export interface GatewayChannel extends PaymentChannelBase {
+  kind: 'gateway'
+  provider: 'omise'
+  instrument: 'card' | 'promptpay' | 'truemoney' | 'shopeepay' | 'apple-pay' | 'google-pay'
+}
+
+export interface IapChannel extends PaymentChannelBase {
+  kind: 'iap'
+  store: 'google-play' | 'app-store'
+}
+
+// What the wallet snapshot returns to describe what's currently offered,
+// per platform — the source both this web app and a future native app
+// render their payment pickers from.
+export type PaymentChannel = SlipChannel | GatewayChannel | IapChannel
+
+export interface GatewayChargeResult {
+  chargeId: string
+  status: 'pending' | 'authorizing' | 'approved' | 'failed' | 'expired'
+  // discriminator the UI branches on rather than hardcoding per-channel behavior
+  flow: 'redirect' | 'qr' | 'completed'
+  authorizeUri?: string
+  qrImageUri?: string
+  expiresAt?: string
+  reference: string | null
+}
 
 export interface WalletPackage {
   id: string
@@ -26,7 +74,7 @@ export interface WalletTransaction {
   bonusCoins: number
   paidAmountBaht: number | null
   paymentMethod: PaymentMethod | null
-  status: 'pending' | 'approved' | 'rejected'
+  status: 'pending' | 'approved' | 'rejected' | 'authorizing' | 'failed' | 'expired'
   rejectionReason: string | null
   reviewedAt: string | null
   balanceAfter: number | null

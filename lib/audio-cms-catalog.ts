@@ -26,22 +26,69 @@ export type AudioCmsCatalog = {
   webBooksEnabled: boolean
   categoryBanners: CmsBanner[]
   bottomCta: CmsBanner[][]
+  bottomCtaSlotEnabled: boolean[]
   webRecommend: CmsBanner[][]
   launch: CmsBanner[][]
   launchEnabled: boolean
+  sectionState: Record<AudioCmsSectionKey, AudioCmsSectionState>
+}
+
+export type AudioCmsSectionKey =
+  | 'hero'
+  | 'activity'
+  | 'sale'
+  | 'row-3'
+  | 'narrator'
+  | 'web-sides'
+  | 'web-books'
+  | 'category'
+  | 'bottom-cta'
+  | 'web-recommend'
+  | 'launch'
+
+export type AudioCmsSectionState = 'enabled' | 'disabled' | 'unavailable'
+
+const SECTION_KEYS: AudioCmsSectionKey[] = [
+  'hero', 'activity', 'sale', 'row-3', 'narrator', 'web-sides', 'web-books',
+  'category', 'bottom-cta', 'web-recommend', 'launch',
+]
+
+function unavailableSectionState() {
+  return Object.fromEntries(SECTION_KEYS.map((key) => [key, 'unavailable'])) as Record<AudioCmsSectionKey, AudioCmsSectionState>
+}
+
+function cmsSectionState(payload: unknown) {
+  return Object.fromEntries(SECTION_KEYS.map((key) => {
+    const section = findCmsSection(payload, key)
+    if (!section) return [key, 'unavailable']
+    return [key, section.enabled === false ? 'disabled' : 'enabled']
+  })) as Record<AudioCmsSectionKey, AudioCmsSectionState>
 }
 
 const EMPTY_CMS: AudioCmsCatalog = {
   slideSeconds: 5,
   hero: [], activity: [[], []], limitedOffers: [], row3: [], narrator: [], webSides: [[], []], webBooks: [],
   webBooksEnabled: true, categoryBanners: [], bottomCta: [[], [], [], []], webRecommend: [[], []],
+  bottomCtaSlotEnabled: [true, true, true, true],
   launch: [[], []], launchEnabled: true,
+  sectionState: unavailableSectionState(),
+}
+
+const STARTER_BANNER_TEXT = new Set(['หัวข้อแบนเนอร์', 'คำอธิบายสั้น ๆ ของแบนเนอร์', 'อ่านเลย ›'])
+
+function meaningfulBanner(banner: CmsBanner) {
+  if (banner.imageUrl) return true
+  return banner.elements.some((element) => {
+    if (element.type === 'countdown') return true
+    const text = element.text.trim()
+    return Boolean(text) && !STARTER_BANNER_TEXT.has(text)
+  })
 }
 
 function bannersFor(section: CmsSection | null, baseUrl: string) {
   return (section?.items ?? []).flatMap((item) => {
     const banner = parseCmsBanner(item, baseUrl)
-    return banner ? [banner] : []
+    return banner && meaningfulBanner(banner) ? [banner] : []
   })
 }
 
@@ -52,7 +99,7 @@ function bannerColumns(section: CmsSection | null, columns: number, baseUrl: str
     const position = useSlots && Number.isInteger(placement.slot) ? Number(placement.slot) : cmsPlacement(placement).column
     if (position !== column) return []
     const banner = parseCmsBanner(item, baseUrl)
-    return banner ? [banner] : []
+    return banner && meaningfulBanner(banner) ? [banner] : []
   }))
 }
 
@@ -65,6 +112,13 @@ function ctaColumns(section: CmsSection | null, baseUrl: string) {
   const slotEnabled = isRecord(section.config) && isRecord(section.config.slotEnabled) ? section.config.slotEnabled : {}
   return bannerColumns(section, 4, baseUrl, true)
     .map((items, slot) => slotEnabled[String(slot)] === false ? [] : items)
+}
+
+function ctaSlotEnabled(section: CmsSection | null) {
+  const slotEnabled = section && isRecord(section.config) && isRecord(section.config.slotEnabled)
+    ? section.config.slotEnabled
+    : {}
+  return Array.from({ length: 4 }, (_, slot) => slotEnabled[String(slot)] !== false)
 }
 
 export async function getAudioCmsCatalog(): Promise<AudioCmsCatalog> {
@@ -122,9 +176,11 @@ export async function getAudioCmsCatalog(): Promise<AudioCmsCatalog> {
       webBooksEnabled: sectionIsEnabled(payload, 'web-books'),
       categoryBanners: bannersFor(category, baseUrl),
       bottomCta: ctaColumns(bottomCta, baseUrl),
+      bottomCtaSlotEnabled: ctaSlotEnabled(findCmsSection(payload, 'bottom-cta')),
       webRecommend: bannerColumns(webRecommend, 2, baseUrl),
       launch: bannerColumns(launch, 2, baseUrl),
       launchEnabled: sectionIsEnabled(payload, 'launch'),
+      sectionState: cmsSectionState(payload),
     }
   } catch (error) {
     console.error('Audio CMS catalog load failed', error instanceof Error ? error.message : 'UnknownError')

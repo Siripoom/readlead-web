@@ -51,7 +51,7 @@ function UpdateCover({ item }: { item: HomeLatestUpdate }) {
 function UpdateCard({ item }: { item: HomeLatestUpdate }) {
   return (
     <Link
-      href={`/detail?bookId=${encodeURIComponent(item.detailId)}`}
+      href={item.href ?? `/detail?bookId=${encodeURIComponent(item.detailId)}`}
       className="group flex gap-4 rounded-2xl border border-[var(--home-line)] bg-white p-3.5 transition hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(80,60,140,0.10)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#cc4452] sm:p-4"
     >
       <UpdateCover item={item} />

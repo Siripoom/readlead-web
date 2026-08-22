@@ -9,12 +9,13 @@ import styles from './HomeLanding.module.css'
 type Props = {
   items: CmsBanner[]
   aspect: string
+  mobileAspect?: string
   slideSeconds: number
   label: string
   fullWidth?: boolean
 }
 
-type BannerStyle = CSSProperties & { '--cms-banner-aspect': string }
+type BannerStyle = CSSProperties & { '--cms-banner-aspect': string; '--cms-banner-mobile-aspect'?: string }
 
 function countdownLabel(totalSeconds: number) {
   const seconds = Math.max(0, totalSeconds)
@@ -57,11 +58,12 @@ function BannerElement({ element, elapsedSeconds }: { element: CmsBannerElement;
   return <span className={className} style={elementStyle(element)}>{content}</span>
 }
 
-export function CmsBannerCarousel({ items, aspect, slideSeconds, label, fullWidth = false }: Props) {
+export function CmsBannerCarousel({ items, aspect, mobileAspect, slideSeconds, label, fullWidth = false }: Props) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [paused, setPaused] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
+  const [documentHidden, setDocumentHidden] = useState(false)
   const dragStartX = useRef<number | null>(null)
   const active = items.length ? activeIndex % items.length : 0
   const duration = Math.min(60, Math.max(1, slideSeconds)) * 1000
@@ -75,16 +77,23 @@ export function CmsBannerCarousel({ items, aspect, slideSeconds, label, fullWidt
   }, [])
 
   useEffect(() => {
+    const sync = () => setDocumentHidden(document.hidden)
+    sync()
+    document.addEventListener('visibilitychange', sync)
+    return () => document.removeEventListener('visibilitychange', sync)
+  }, [])
+
+  useEffect(() => {
     if (!items.some((item) => item.elements.some((element) => element.type === 'countdown'))) return
     const timer = window.setInterval(() => setElapsedSeconds((current) => current + 1), 1000)
     return () => window.clearInterval(timer)
   }, [items])
 
   useEffect(() => {
-    if (items.length <= 1 || paused || reducedMotion) return
+    if (items.length <= 1 || paused || reducedMotion || documentHidden) return
     const timer = window.setInterval(() => setActiveIndex((current) => (current + 1) % items.length), duration)
     return () => window.clearInterval(timer)
-  }, [duration, items.length, paused, reducedMotion])
+  }, [documentHidden, duration, items.length, paused, reducedMotion])
 
   if (!items.length) return null
 
@@ -105,7 +114,7 @@ export function CmsBannerCarousel({ items, aspect, slideSeconds, label, fullWidt
     >
       <div
         className={cn(styles.cmsBannerViewport, fullWidth && styles.cmsBannerViewportHero)}
-        style={{ '--cms-banner-aspect': aspect } as BannerStyle}
+        style={{ '--cms-banner-aspect': aspect, '--cms-banner-mobile-aspect': mobileAspect } as BannerStyle}
         onPointerDown={(event) => {
           if (event.button !== 0 || items.length <= 1) return
           dragStartX.current = event.clientX

@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server'
 const ACTION_METHODS = {
   login: 'POST',
   register: 'POST',
+  google: 'POST',
+  facebook: 'POST',
+  apple: 'POST',
   session: 'GET',
   logout: 'POST',
 } as const

@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:docs.omise.co)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(node verify-home-labels.mjs)",
+      "Bash(node -e ' *)",
+      "WebFetch(domain:developers.google.com)",
+      "Bash(curl -s -o /dev/null -w \"status=%{http_code}\\\\n\" \"http://localhost:3000/.well-known/apple-developer-merchantid-domain-association.tmp\")",
+      "Bash(curl -s \"http://localhost:3000/.well-known/apple-developer-merchantid-domain-association.tmp\")"
+    ],
+    "additionalDirectories": [
+      "/Users/a.siripoom/.npm/_npx/e41f203b7505f1fb/node_modules"
+    ]
+  }
+}

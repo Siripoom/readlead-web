@@ -1,18 +1,21 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   BookOpen,
   ChevronDown,
   Coins,
+  Headphones,
   History,
   LayoutDashboard,
   LogOut,
   Menu,
+  MessageSquareText,
   PenSquare,
   Search,
+  Settings,
   WalletCards,
 } from 'lucide-react'
 import { NotificationDropdown } from '@/components/ui/NotificationDropdown'
@@ -58,6 +61,7 @@ export function Navbar() {
   const { profile } = useProfile()
   const { balance } = useWallet()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMobileAccountOpen, setIsMobileAccountOpen] = useState(false)
 
   const canOpenCreator = role === 'creator' || role === 'admin'
   const profileHref = user ? `/profile/${encodeURIComponent(user.id)}` : '/dashboard'
@@ -73,19 +77,42 @@ export function Navbar() {
 
   const logout = async () => {
     setIsMobileMenuOpen(false)
+    setIsMobileAccountOpen(false)
     const result = await endSession()
     if (!result.ok) return
     router.push('/')
     router.refresh()
   }
 
+  useEffect(() => {
+    if (!isMobileAccountOpen) return
+    const mobile = window.matchMedia('(max-width: 639px)')
+    if (!mobile.matches) return
+    const previousOverflow = document.body.style.overflow
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMobileAccountOpen(false)
+    }
+    const closeAtDesktop = (event: MediaQueryListEvent) => {
+      if (!event.matches) setIsMobileAccountOpen(false)
+    }
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', closeOnEscape)
+    mobile.addEventListener('change', closeAtDesktop)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', closeOnEscape)
+      mobile.removeEventListener('change', closeAtDesktop)
+    }
+  }, [isMobileAccountOpen])
+
   return (
-    <header data-site-header className="sticky top-0 z-50 w-full border-b border-[#e9edf2] bg-white xl:h-[55px]">
-      <div className="flex min-h-[55px] w-full items-center gap-4 px-4 sm:px-6 xl:h-[54px] xl:min-h-0 xl:gap-10 xl:px-10 xl:py-[9px]">
+    <header data-site-header className="sticky top-0 z-50 w-full border-b border-[#e9edf2] bg-white max-sm:mx-auto max-sm:h-[52px] max-sm:max-w-[480px] xl:h-[55px]">
+      <div className="flex min-h-[55px] w-full items-center gap-4 px-4 max-sm:h-[51px] max-sm:min-h-[51px] max-sm:gap-2 max-sm:px-3 sm:px-6 xl:h-[54px] xl:min-h-0 xl:gap-10 xl:px-10 xl:py-[9px]">
         <Link
           href="/"
+          onClick={() => setIsMobileAccountOpen(false)}
           aria-label="ReadLead หน้าหลัก"
-          className="flex shrink-0 items-center gap-2 text-xl font-extrabold text-[#cc4452] focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#cc4452]"
+          className="flex shrink-0 items-center gap-2 text-xl font-extrabold text-[#cc4452] focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#cc4452] max-sm:flex-1 max-sm:gap-[7px] max-sm:text-[19px]"
         >
           <BookOpen className="h-[22px] w-[22px]" strokeWidth={2.5} />
           <span>ReadLead</span>
@@ -119,13 +146,41 @@ export function Navbar() {
         <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2 xl:gap-5">
           <Link
             href="/discover"
+            onClick={() => setIsMobileAccountOpen(false)}
             aria-label="ค้นหา"
-            className="grid h-10 w-10 place-items-center rounded-full text-[#475569] transition-colors hover:bg-[#f5f6f8] hover:text-[#1e293b] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452] xl:h-[22px] xl:w-[22px]"
+            className="grid h-10 w-10 place-items-center rounded-full text-[#475569] transition-colors hover:bg-[#f5f6f8] hover:text-[#1e293b] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452] max-sm:h-[38px] max-sm:w-[38px] xl:h-[22px] xl:w-[22px]"
           >
             <Search className="h-[22px] w-[22px]" />
           </Link>
 
-          <NotificationDropdown />
+          <NotificationDropdown triggerClassName="max-sm:h-[38px] max-sm:w-[38px]" />
+
+          <div className="sm:hidden">
+            {isLoading ? (
+              <div className="h-8 w-[78px] animate-pulse rounded-lg bg-[#f1f3f5]" aria-label="กำลังตรวจสอบสถานะเข้าสู่ระบบ" />
+            ) : isLoggedIn ? (
+              <button
+                type="button"
+                aria-label={isMobileAccountOpen ? 'ปิดเมนูโปรไฟล์' : 'เปิดเมนูโปรไฟล์'}
+                aria-expanded={isMobileAccountOpen}
+                aria-controls="mobile-account-panel"
+                onClick={() => setIsMobileAccountOpen((open) => !open)}
+                className="grid h-[38px] w-[38px] place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452]"
+              >
+                <Avatar className="size-8">
+                  <AvatarImage src={profile.avatarUrl} alt="" />
+                  <AvatarFallback className="bg-[#f1eef6] font-bold text-[#9c3340]">{avatarFallback}</AvatarFallback>
+                </Avatar>
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex h-8 items-center rounded-lg bg-[#cc4452] px-3.5 text-[13px] font-extrabold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#cc4452]"
+              >
+                เข้าสู่ระบบ
+              </Link>
+            )}
+          </div>
 
           <div className="hidden xl:block">
             {isLoading ? (
@@ -216,7 +271,7 @@ export function Navbar() {
             aria-label="เปิดเมนู"
             aria-expanded={isMobileMenuOpen}
             onClick={() => setIsMobileMenuOpen(true)}
-            className="grid h-10 w-10 place-items-center rounded-full text-[#475569] transition-colors hover:bg-[#f5f6f8] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452] xl:hidden"
+            className="grid h-10 w-10 place-items-center rounded-full text-[#475569] transition-colors hover:bg-[#f5f6f8] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452] max-sm:hidden xl:hidden"
           >
             <Menu className="h-6 w-6" />
           </button>
@@ -313,7 +368,120 @@ export function Navbar() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {isLoggedIn && isMobileAccountOpen && (
+        <MobileAccountPanel
+          profileHref={profileHref}
+          displayName={profile.displayName}
+          handle={profile.handle || user?.email.split('@')[0] || user?.id || ''}
+          avatarUrl={profile.avatarUrl}
+          avatarFallback={avatarFallback}
+          balance={formattedBalance}
+          canOpenCreator={canOpenCreator}
+          onClose={() => setIsMobileAccountOpen(false)}
+          onLogout={logout}
+        />
+      )}
     </header>
+  )
+}
+
+function MobileAccountPanel({
+  profileHref,
+  displayName,
+  handle,
+  avatarUrl,
+  avatarFallback,
+  balance,
+  canOpenCreator,
+  onClose,
+  onLogout,
+}: {
+  profileHref: string
+  displayName: string
+  handle: string
+  avatarUrl: string
+  avatarFallback: string
+  balance: string
+  canOpenCreator: boolean
+  onClose: () => void
+  onLogout: () => Promise<void>
+}) {
+  const accountItems = [
+    canOpenCreator
+      ? { href: `${profileHref}?tab=creator`, label: 'ศูนย์นักเขียน', Icon: LayoutDashboard }
+      : { href: `${profileHref}?tab=writer-application`, label: 'สมัครนักเขียน', Icon: PenSquare },
+    { href: `${profileHref}?tab=wallet`, label: 'กระเป๋าเงิน', Icon: WalletCards },
+    { href: `${profileHref}?tab=report`, label: 'แจ้งปัญหา', Icon: Headphones },
+    { href: `${profileHref}?tab=activity`, label: 'คอมเมนต์ & รีวิวของฉัน', Icon: MessageSquareText },
+    { href: `${profileHref}?tab=help`, label: 'คู่มือผู้ใช้', Icon: BookOpen },
+    { href: `${profileHref}?tab=account`, label: 'การตั้งค่า', Icon: Settings },
+  ]
+
+  return (
+    <>
+      <button
+        type="button"
+        aria-label="ปิดเมนูโปรไฟล์"
+        onClick={onClose}
+        className="fixed inset-x-0 bottom-0 top-[52px] z-[51] hidden bg-black/5 max-sm:block"
+      />
+      <section
+        id="mobile-account-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mobile-account-title"
+        className="fixed bottom-0 left-1/2 top-[52px] z-[52] hidden w-full max-w-[480px] -translate-x-1/2 overflow-y-auto bg-white shadow-xl max-sm:block"
+      >
+        <h2 id="mobile-account-title" className="sr-only">เมนูบัญชีผู้ใช้</h2>
+        <div className="flex items-center gap-3.5 border-b border-[#ececf1] px-5 py-[22px]">
+          <Avatar className="size-14">
+            <AvatarImage src={avatarUrl} alt="" />
+            <AvatarFallback className="bg-[#f1eef6] text-2xl font-extrabold text-[#9c3340]">{avatarFallback}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="truncate text-[17px] font-extrabold text-[#cc4452]">{displayName}</p>
+            <p className="truncate text-[13px] font-semibold text-[#8a8894]">@{handle.replace(/^@/, '')}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 border-b border-[#ececf1] px-5 py-4">
+          <span className="grid size-[26px] place-items-center rounded-full bg-[#fdf3e0] text-[#dfa321]">
+            <Coins className="size-4" />
+          </span>
+          <strong className="flex-1 text-[16.5px] font-extrabold text-[#1c1b22]">{balance}</strong>
+          <Link href={`${profileHref}?tab=wallet`} onClick={onClose} className="rounded-[9px] bg-[#cc4452] px-5 py-2.5 text-sm font-extrabold text-white">
+            เติมเหรียญ
+          </Link>
+        </div>
+
+        <nav className="py-2" aria-label="เมนูบัญชีบนมือถือ">
+          {accountItems.map(({ href, label, Icon }) => (
+            <Link
+              key={label}
+              href={href}
+              onClick={onClose}
+              className="flex min-h-[49px] items-center gap-[15px] px-5 text-[15.5px] font-bold text-[#3a3644] active:bg-[#faf8fc] focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[#cc4452]"
+            >
+              <Icon className="size-[21px] text-[#6b6580]" strokeWidth={2} />
+              {label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="h-px bg-[#ececf1]" />
+        <div className="py-2">
+          <button
+            type="button"
+            onClick={() => void onLogout()}
+            className="flex min-h-[49px] w-full items-center gap-[15px] px-5 text-left text-[15.5px] font-bold text-[#3a3644] active:bg-[#faf8fc] focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[#cc4452]"
+          >
+            <LogOut className="size-[21px] text-[#6b6580]" strokeWidth={2} />
+            ออกจากระบบ
+          </button>
+        </div>
+      </section>
+    </>
   )
 }
 

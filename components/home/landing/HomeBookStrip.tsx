@@ -7,6 +7,7 @@ import { useState } from 'react'
 import type { HomeBookStripItem } from '@/lib/home-landing-data'
 import { cn } from '@/lib/utils'
 import styles from './HomeLanding.module.css'
+import { MobileRailDots } from './MobileRailDots'
 import { useHorizontalScroll } from './useHorizontalScroll'
 
 const CONTENT_TYPE_LABELS = { novel: 'นิยาย', manga: 'เว็บตูน', audiobook: 'หนังสือเสียง' } as const
@@ -55,7 +56,7 @@ function CoverScene({ index }: { index: number }) {
   )
 }
 
-function BookCover({ item, index }: { item: HomeBookStripItem; index: number }) {
+function BookCover({ item, index, showBadge = true }: { item: HomeBookStripItem; index: number; showBadge?: boolean }) {
   const [coverFailed, setCoverFailed] = useState(false)
   return (
     <>
@@ -73,12 +74,12 @@ function BookCover({ item, index }: { item: HomeBookStripItem; index: number }) 
           onError={() => setCoverFailed(true)}
         />
       )}
-      {item.availability === 'coming_soon' && (
+      {showBadge && item.availability === 'coming_soon' && (
         <span className="absolute right-2 top-2 z-[2] rounded-full bg-[#cc4452] px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
           เร็ว ๆ นี้
         </span>
       )}
-      {item.contentType && item.availability !== 'coming_soon' && (
+      {showBadge && item.contentType && item.availability !== 'coming_soon' && (
         <span className="absolute right-2 top-2 z-[2] rounded-full bg-[#2e2a3d]/80 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm backdrop-blur-sm">
           {CONTENT_TYPE_LABELS[item.contentType]}
         </span>
@@ -89,7 +90,7 @@ function BookCover({ item, index }: { item: HomeBookStripItem; index: number }) 
 
 type Props = {
   items: HomeBookStripItem[]
-  variant?: 'popular' | 'recommended'
+  variant?: 'popular' | 'recommended' | 'compact'
 }
 
 export function HomeBookStrip({ items, variant = 'popular' }: Props) {
@@ -100,7 +101,10 @@ export function HomeBookStrip({ items, variant = 'popular' }: Props) {
     updateControls,
     scroll,
     pointerHandlers,
-  } = useHorizontalScroll()
+    activePage,
+    pageCount,
+    scrollToPage,
+  } = useHorizontalScroll({ autoplayMs: variant === 'compact' ? 4200 : undefined })
 
   if (items.length === 0) {
     return (
@@ -110,8 +114,8 @@ export function HomeBookStrip({ items, variant = 'popular' }: Props) {
     )
   }
 
-  const cardWidth = variant === 'popular' ? 'w-40 sm:w-44' : 'w-40'
-  const gap = variant === 'popular' ? 'gap-5 lg:gap-[48px]' : 'gap-5 lg:gap-[38px]'
+  const cardWidth = variant === 'compact' ? 'w-[81.75px]' : variant === 'popular' ? 'w-40 sm:w-44' : 'w-40'
+  const gap = variant === 'compact' ? 'gap-[13px]' : variant === 'popular' ? 'gap-5 lg:gap-[48px]' : 'gap-5 lg:gap-[38px]'
 
   return (
     <div className="relative">
@@ -120,7 +124,7 @@ export function HomeBookStrip({ items, variant = 'popular' }: Props) {
           type="button"
           aria-label="รายการก่อนหน้า"
           onClick={() => scroll(-1)}
-          className="absolute left-0 top-[36%] z-10 grid h-[38px] w-[38px] -translate-x-1/3 -translate-y-1/2 place-items-center rounded-full border border-white/50 bg-[#23193c]/45 text-white shadow-md backdrop-blur transition hover:bg-[#23193c]/65 sm:-translate-x-1/2"
+          className="absolute left-0 top-[36%] z-10 hidden h-[38px] w-[38px] -translate-x-1/3 -translate-y-1/2 place-items-center rounded-full border border-white/50 bg-[#23193c]/45 text-white shadow-md backdrop-blur transition hover:bg-[#23193c]/65 sm:grid sm:-translate-x-1/2"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
@@ -129,7 +133,7 @@ export function HomeBookStrip({ items, variant = 'popular' }: Props) {
       <div
         ref={rowRef}
         onScroll={updateControls}
-        className={cn(styles.scrollRow, 'flex cursor-grab overflow-x-auto px-1 pb-2 pt-1 active:cursor-grabbing', gap)}
+        className={cn(styles.scrollRow, 'flex cursor-grab overflow-x-auto pb-2 pt-1 active:cursor-grabbing', variant === 'compact' ? 'px-0' : 'px-1', gap)}
         {...pointerHandlers}
       >
         {items.map((item, index) => {
@@ -137,28 +141,35 @@ export function HomeBookStrip({ items, variant = 'popular' }: Props) {
           return (
             <Link
               key={item.id}
-              href={`/detail?bookId=${encodeURIComponent(item.detailId)}`}
+              href={item.href ?? `/detail?bookId=${encodeURIComponent(item.detailId)}`}
               className={cn('group shrink-0 snap-start', cardWidth)}
             >
               <div
                 className="relative aspect-[2/3] overflow-hidden rounded-[13px] shadow-[0_2px_7px_rgba(0,0,0,0.12)]"
                 style={{ background: item.gradient }}
               >
-                <BookCover item={item} index={index} />
+                <BookCover item={item} index={index} showBadge={variant !== 'compact'} />
               </div>
-              <div className="mt-2.5 min-w-0">
-                <h3 className="truncate text-[14px] font-semibold leading-snug text-[var(--home-ink)]">{item.title}</h3>
-                <p className="mt-0.5 truncate text-xs text-[var(--home-ink-3)]">{item.author}</p>
-                <p className="mt-0.5 truncate text-xs text-[var(--home-ink)]">{item.genreLabel} · {item.originLabel}</p>
-                {item.availability === 'coming_soon' ? (
-                  <p className="mt-1.5 text-[11px] font-semibold text-[var(--home-red)]">ผ่านการอนุมัติแล้ว · รอตอนแรก</p>
-                ) : (
-                  <div className="mt-1.5 flex items-center gap-3 text-xs font-bold text-[var(--home-ink-2)]">
-                    <span className="inline-flex items-center gap-1"><StatIcon className="h-3.5 w-3.5" />{item.views}</span>
-                    <span className="inline-flex items-center gap-1"><List className="h-3.5 w-3.5" />{item.chapters}</span>
-                  </div>
-                )}
-              </div>
+              {variant === 'compact' ? (
+                <div className="mt-1.5 min-w-0">
+                  <h3 className="truncate text-[12px] font-semibold leading-snug text-[var(--home-ink)]">{item.title}</h3>
+                  <p className="mt-0.5 truncate text-[9px] text-[var(--home-ink-3)]">{item.genreLabel}</p>
+                </div>
+              ) : (
+                <div className="mt-2.5 min-w-0">
+                  <h3 className="truncate text-[14px] font-semibold leading-snug text-[var(--home-ink)]">{item.title}</h3>
+                  <p className="mt-0.5 truncate text-xs text-[var(--home-ink-3)]">{item.author}</p>
+                  <p className="mt-0.5 truncate text-xs text-[var(--home-ink)]">{item.genreLabel} · {item.originLabel}</p>
+                  {item.availability === 'coming_soon' ? (
+                    <p className="mt-1.5 text-[11px] font-semibold text-[var(--home-red)]">ผ่านการอนุมัติแล้ว · รอตอนแรก</p>
+                  ) : (
+                    <div className="mt-1.5 flex items-center gap-3 text-xs font-bold text-[var(--home-ink-2)]">
+                      <span className="inline-flex items-center gap-1"><StatIcon className="h-3.5 w-3.5" />{item.views}</span>
+                      <span className="inline-flex items-center gap-1"><List className="h-3.5 w-3.5" />{item.chapters}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </Link>
           )
         })}
@@ -169,10 +180,19 @@ export function HomeBookStrip({ items, variant = 'popular' }: Props) {
           type="button"
           aria-label="รายการถัดไป"
           onClick={() => scroll(1)}
-          className="absolute right-0 top-[36%] z-10 grid h-[38px] w-[38px] translate-x-1/3 -translate-y-1/2 place-items-center rounded-full border border-white/50 bg-[#23193c]/45 text-white shadow-md backdrop-blur transition hover:bg-[#23193c]/65 sm:translate-x-1/2"
+          className="absolute right-0 top-[36%] z-10 hidden h-[38px] w-[38px] translate-x-1/3 -translate-y-1/2 place-items-center rounded-full border border-white/50 bg-[#23193c]/45 text-white shadow-md backdrop-blur transition hover:bg-[#23193c]/65 sm:grid sm:translate-x-1/2"
         >
           <ChevronRight className="h-5 w-5" />
         </button>
+      )}
+
+      {variant === 'compact' && (
+        <MobileRailDots
+          activePage={activePage}
+          pageCount={pageCount}
+          onSelect={(page) => scrollToPage(page, true)}
+          label="เลือกหน้ารายการหนังสือ"
+        />
       )}
     </div>
   )

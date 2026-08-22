@@ -112,6 +112,7 @@ export function HomeHero({ slides, slideSeconds = 6, indicatorTone = 'brand' }: 
       <div
         className={cn(
           'relative min-h-[350px] w-full touch-pan-y overflow-hidden sm:min-h-[320px] lg:aspect-[1280/318] lg:min-h-[260px] xl:min-h-0',
+          'max-sm:mx-auto max-sm:mt-3 max-sm:aspect-[366/162] max-sm:min-h-0 max-sm:w-[calc(100%_-_24px)] max-sm:max-w-[456px] max-sm:rounded-xl',
           isDragging && 'cursor-grabbing select-none',
         )}
         onClickCapture={(event) => {
@@ -185,7 +186,7 @@ export function HomeHero({ slides, slideSeconds = 6, indicatorTone = 'brand' }: 
       {slides.length > 1 && (
         <div
           role="group"
-          className="mt-[14px] flex justify-center gap-[7px]"
+          className={cn('mt-[10px] flex justify-center gap-1.5 sm:mt-[14px] sm:gap-[7px]', styles.heroDots)}
           aria-label="เลือกสไลด์"
         >
           {slides.map((slide, index) => (

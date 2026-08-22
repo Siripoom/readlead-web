@@ -2,6 +2,7 @@ import { AudioLanding } from '@/components/audiobook/landing/AudioLanding'
 import { getAudioCmsCatalog } from '@/lib/audio-cms-catalog'
 import { getAudioLandingCatalog } from '@/lib/audio-landing-catalog'
 import { AUDIO_GENRE_OPTIONS, type AudioGenreKey } from '@/lib/audiobook-landing-data'
+import { prepareAudioCmsCatalog, prepareAudioLandingCatalog } from '@/lib/audio-landing-view'
 
 type Props = {
   searchParams: Promise<{ genre?: string | string[] }>
@@ -16,5 +17,11 @@ export default async function AudiobookPage({ searchParams }: Props) {
     ? requestedGenre as AudioGenreKey
     : null
   const [cms, catalogResult] = await Promise.all([cmsPromise, getAudioLandingCatalog(activeGenre)])
-  return <AudioLanding activeGenre={activeGenre} cms={cms} catalog={catalogResult.catalog} catalogError={catalogResult.error} />
+  return (
+    <AudioLanding
+      activeGenre={activeGenre}
+      cms={prepareAudioCmsCatalog(cms, activeGenre)}
+      catalog={prepareAudioLandingCatalog(catalogResult.catalog, activeGenre)}
+    />
+  )
 }

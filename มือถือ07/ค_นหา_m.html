@@ -1,0 +1,1196 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ReadLead — ค้นหา (มือถือ)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800;900&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#cc4452; --brand-d:#b23a48; --brand-soft:#fae8ea;
+  --ink:#1c1b22; --ink2:#4a4656; --mut:#8a8894; --line:#ececf1; --bg:#ffffff; --soft:#f2f3f6;
+  --mxw:480px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg)}
+body{font-family:'Noto Sans Thai',sans-serif;color:var(--ink)}
+a{text-decoration:none;color:inherit}
+svg{display:block}
+button,input{font-family:inherit}
+
+#stop{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:var(--mxw);background:#fff;border-bottom:1px solid #E9EDF2;z-index:9000;padding:8px 10px}
+#stop .row{display:flex;align-items:center;gap:8px}
+#stop .back{width:36px;height:36px;border:none;background:none;display:flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;flex:none}
+#stop .back svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.searchbox{flex:1;display:flex;align-items:center;gap:8px;background:var(--soft);border-radius:999px;padding:8px 13px}
+.searchbox svg{width:17px;height:17px;stroke:var(--mut);fill:none;stroke-width:2;flex:none}
+.searchbox input{flex:1;border:none;background:none;outline:none;font-family:'Sarabun',sans-serif;font-size:13px;color:var(--ink);min-width:0}
+.searchbox .clr{width:18px;height:18px;border:none;background:#d8d5e0;border-radius:50%;color:#fff;font-size:11px;cursor:pointer;display:none;align-items:center;justify-content:center;flex:none}
+.searchbox .clr.show{display:flex}
+
+#swrap{max-width:var(--mxw);margin:66px auto 0;padding:14px 16px 32px}
+
+.filterrow{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.btnfilter{position:relative;flex:none;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ink2);background:#fff;border:1.4px solid var(--line);border-radius:10px;padding:8px 11px;cursor:pointer;white-space:nowrap}
+.btnfilter svg.fic{width:15px;height:15px;color:var(--mut)}
+.btnfilter svg.fic path{fill:currentColor;stroke:currentColor;stroke-width:120;stroke-linejoin:round}
+.btnfilter .fdot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:var(--brand)}
+.pillrow{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;margin-bottom:0}
+.pillrow::-webkit-scrollbar{display:none}
+.pill{font-size:12px;font-weight:700;color:var(--ink2);background:var(--soft);border:none;border-radius:9px;padding:7px 13px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.pill.on{background:var(--brand);color:#fff}
+.pill .c{font-size:10.5px;font-weight:600;opacity:.8}
+
+.sec-title{font-size:14.5px;font-weight:800;margin-bottom:10px}
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.cat{position:relative;aspect-ratio:2/1;border-radius:12px;background:linear-gradient(160deg,#e9e6f2,#ddd9ec);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}
+.cat-nm{font-size:12px;font-weight:800;color:var(--ink)}
+.cat-ct{font-size:9.5px;color:var(--mut);margin-top:2px}
+
+.results-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
+.results-head h2{font-size:14px;font-weight:800}
+.results-head .kw{color:var(--brand-d)}
+.results-head .cnt{font-size:11px;color:var(--mut);font-weight:600;display:block;margin-top:2px}
+.results-right{display:flex;align-items:center;gap:6px;flex:none}
+.sortsel{position:relative}
+.sortsel .sb{font-size:11px;font-weight:700;color:var(--ink2);background:var(--soft);border:none;border-radius:8px;padding:7px 9px;cursor:pointer;display:flex;align-items:center;gap:3px;white-space:nowrap}
+.sortsel .sb svg{width:12px;height:12px;stroke:var(--mut);fill:none;stroke-width:2}
+.sortmenu{position:absolute;top:calc(100% + 4px);right:0;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:50;overflow:hidden;display:none;min-width:110px}
+.sortmenu.show{display:block}
+.sortmenu div{padding:9px 13px;font-size:12.5px;cursor:pointer}
+.sortmenu div:active{background:var(--soft)}
+.viewtoggle{display:flex;gap:2px;background:var(--soft);border-radius:8px;padding:2px}
+.viewtoggle button{width:28px;height:28px;border:none;background:none;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--mut);cursor:pointer}
+.viewtoggle button.on{background:#fff;color:var(--brand)}
+.viewtoggle svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* grid card */
+.rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 10px}
+.rgrid.hide{display:none}
+.gcard{cursor:pointer;min-width:0}
+.gcard .cov{width:100%;aspect-ratio:2/3;border-radius:10px;position:relative;overflow:hidden;background:#eceef1}
+.gcard .cov img{width:100%;height:100%;object-fit:cover}
+.gcard .cg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px}
+.gcard .badge{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.55);color:#fff;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:6px}
+.gcard .tt{font-size:12.5px;font-weight:700;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gcard .meta{font-size:10px;color:var(--mut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gcard .blurb{font-size:10.5px;color:var(--ink2);margin-top:4px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.gcard .stats{display:flex;gap:8px;margin-top:5px}
+.gcard .cw{font-size:10px;color:var(--mut);display:flex;align-items:center;gap:3px}
+.gcard .cw svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* list row */
+.rlistv{display:none;flex-direction:column}
+.rlistv.show{display:flex}
+.lrow{display:flex;gap:11px;padding:13px 0;border-bottom:1px solid var(--line)}
+.lrow:first-child{padding-top:0}
+.lrow:last-child{border-bottom:none}
+.lrow .cov{width:64px;height:92px;border-radius:9px;flex:0 0 64px;position:relative;overflow:hidden;background:#eceef1}
+.lrow .cov img{width:100%;height:100%;object-fit:cover}
+.lrow .cg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px}
+.lrow .badge{position:absolute;top:5px;left:5px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px}
+.lrow .lmid{flex:1;min-width:0}
+.lrow .ltt{font-size:13px;font-weight:700}
+.lrow .lmeta{font-size:10.5px;color:var(--mut);margin-top:3px}
+.lrow .blurb{font-size:11px;color:var(--ink2);margin-top:5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lrow .lbot{display:flex;align-items:center;gap:9px;margin-top:7px;flex-wrap:wrap}
+.lrow .cw{font-size:10px;color:var(--mut);display:flex;align-items:center;gap:3px}
+.lrow .cw svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2}
+.lrow .lup{font-size:9.5px;color:var(--mut)}
+.lrow .lbtns{display:flex;gap:6px;margin-top:8px}
+.lrow .lb{font-size:10.5px;font-weight:700;padding:6px 11px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.lrow .lb-red{background:var(--brand);color:#fff}
+.lrow .lb-line{background:var(--soft);color:var(--ink2)}
+.lrow .lb-line.on{background:var(--brand-soft);color:var(--brand-d)}
+
+.rempty{grid-column:1/-1;text-align:center;padding:50px 10px;color:var(--mut);font-size:12.5px}
+
+.pagination{display:flex;justify-content:center;gap:5px;margin-top:20px;flex-wrap:wrap}
+.pagination button{min-width:30px;height:30px;border:1px solid var(--line);background:#fff;border-radius:8px;font-size:12px;font-weight:700;color:var(--ink2);cursor:pointer}
+.pagination button.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.pagination button.dots{border:none;background:none;cursor:default}
+
+/* ═══ แผงตัวกรอง (เต็มจอมือถือ) ═══ */
+#fmodal{position:fixed;top:0;left:50%;bottom:0;width:100%;max-width:var(--mxw);transform:translateX(-50%);z-index:9500;pointer-events:none;overflow:hidden}
+body.fd-open #fmodal{pointer-events:auto}
+#fdim{position:absolute;inset:0;background:rgba(20,20,30,.45);opacity:0;visibility:hidden;transition:opacity .2s}
+body.fd-open #fdim{opacity:1;visibility:visible}
+#fdrawer{position:absolute;top:0;left:0;bottom:0;width:88%;max-width:320px;background:#fff;z-index:2;transform:translateX(-100%);transition:transform .26s cubic-bezier(.33,1,.68,1);display:flex;flex-direction:column}
+body.fd-open #fdrawer{transform:translateX(0);box-shadow:6px 0 26px rgba(0,0,0,.1)}
+.fd-head{display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--line);font-size:15px;font-weight:800;flex:none}
+.fd-head button{width:32px;height:32px;border:none;background:var(--soft);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.fd-head button svg{width:16px;height:16px;stroke:var(--ink2);fill:none;stroke-width:2}
+.fd-body{flex:1;overflow-y:auto;padding:4px 16px}
+.fgrp{padding:13px 0;border-bottom:1px dashed var(--line)}
+.fgrp-last{border-bottom:none;padding-bottom:24px}
+.fl{font-size:12px;font-weight:700;color:var(--ink2);display:block;margin-bottom:9px}
+.fops{display:flex;flex-wrap:wrap;gap:7px}
+.fop{font-size:11.5px;font-weight:600;color:var(--ink2);background:var(--soft);border-radius:8px;padding:7px 11px;cursor:pointer}
+.fop.on{background:var(--brand);color:#fff;font-weight:700}
+.fop-hint{font-size:11px;color:var(--mut);font-style:italic}
+.fd-foot{display:flex;gap:9px;padding:13px 16px;border-top:1px solid var(--line);flex:none}
+.fdbtn{flex:1;font-size:14px;font-weight:700;height:40px;padding:0 12px;display:flex;align-items:center;justify-content:center;border-radius:9px;cursor:pointer;border:none}
+.fdbtn.ghost{background:var(--soft);color:var(--ink2)}
+.fdbtn.primary{background:var(--brand);color:#fff}
+
+/* tag widget (พอร์ตจากหน้าลงผลงานใหม่) */
+.nv-tagbox{border:1.4px solid var(--line);border-radius:10px;padding:9px;position:relative}
+.nv-tag-inwrap{position:relative}
+.nv-tag-top{display:flex;align-items:center;gap:6px}
+.nv-taginput{flex:1;border:none;outline:none;font-size:12.5px;background:none;min-width:0}
+.nv-tag-count{font-size:10px;color:var(--mut);white-space:nowrap}
+.nv-tag-dd{position:absolute;left:0;right:0;top:calc(100% + 5px);background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 8px 22px rgba(0,0,0,.12);z-index:70;max-height:200px;overflow:auto}
+.nv-tag-dd .ddrow{display:flex;justify-content:space-between;gap:8px;padding:8px 9px;font-size:11.5px;cursor:pointer}
+.nv-tag-dd .ddrow:active{background:var(--soft)}
+.nv-tag-dd .ddrow .ct{font-size:10px;color:var(--mut);flex:none}
+.nv-sugrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line)}
+.nv-sug-lb{font-size:10.5px;color:var(--ink2);font-weight:700}
+.nv-sug-pills{display:flex;flex-wrap:wrap;gap:5px}
+.nv-sug-pill{display:inline-flex;align-items:center;gap:3px;background:#fff;border:1px solid var(--line);color:var(--ink2);font-size:10.5px;font-weight:600;padding:4px 9px;border-radius:14px;cursor:pointer}
+.nv-sug-empty{font-size:10.5px;color:var(--mut)}
+.nv-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.nv-chip{display:inline-flex;align-items:center;gap:4px;background:var(--brand-soft);color:var(--brand-d);font-size:11px;font-weight:700;padding:5px 5px 5px 10px;border-radius:16px}
+.nv-chip button{border:0;background:none;color:var(--brand-d);cursor:pointer;font-size:13px;line-height:1;padding:0;width:16px;height:16px}
+</style>
+</head>
+<body>
+
+<div id="stop">
+  <div class="row">
+    <button class="back" id="backBtn" aria-label="ย้อนกลับ"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+    <div class="searchbox">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="qInput" placeholder="ค้นหานิยาย เว็บตูน หนังสือเสียง...">
+      <button class="clr" id="qClear" type="button">×</button>
+    </div>
+  </div>
+</div>
+
+<div id="swrap">
+
+  <div class="filterrow">
+    <button class="btnfilter" id="btnFilter"><svg class="fic" viewBox="734 986 3332 2828" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" fill="currentColor" d="M 3191.148438 3614.109375 C 3097.640625 3614.109375 3016.738281 3559.039062 2979.210938 3479.640625 C 2964.890625 3449.351562 2956.871094 3415.519531 2956.871094 3379.851562 C 2956.871094 3344.191406 2964.890625 3310.359375 2979.210938 3280.070312 C 3016.730469 3200.648438 3097.628906 3145.578125 3191.148438 3145.578125 C 3284.660156 3145.578125 3365.550781 3200.648438 3403.078125 3280.070312 C 3417.398438 3310.359375 3425.410156 3344.191406 3425.410156 3379.851562 C 3425.410156 3415.519531 3417.398438 3449.351562 3403.078125 3479.640625 C 3365.539062 3559.039062 3284.660156 3614.109375 3191.148438 3614.109375 Z M 3966.21875 3280.070312 L 3613.449219 3280.070312 C 3607.910156 3256.53125 3600.371094 3233.460938 3590.851562 3210.941406 C 3568.988281 3159.28125 3537.730469 3112.890625 3497.921875 3073.070312 C 3458.101562 3033.269531 3411.71875 3001.988281 3360.039062 2980.140625 C 3306.5 2957.488281 3249.671875 2946.011719 3191.148438 2946.011719 C 3132.628906 2946.011719 3075.800781 2957.488281 3022.238281 2980.140625 C 2970.570312 3001.988281 2924.179688 3033.269531 2884.378906 3073.070312 C 2844.570312 3112.890625 2813.289062 3159.28125 2791.441406 3210.941406 C 2781.921875 3233.460938 2774.378906 3256.53125 2768.839844 3280.070312 L 833.773438 3280.070312 C 778.664062 3280.070312 733.988281 3324.738281 733.988281 3379.851562 C 733.988281 3434.949219 778.664062 3479.640625 833.773438 3479.640625 L 2768.839844 3479.640625 C 2774.378906 3503.171875 2781.921875 3526.25 2791.441406 3548.75 C 2813.289062 3600.410156 2844.570312 3646.800781 2884.378906 3686.621094 C 2924.179688 3726.421875 2970.570312 3757.699219 3022.238281 3779.550781 C 3075.800781 3802.199219 3132.628906 3813.679688 3191.148438 3813.679688 C 3249.671875 3813.679688 3306.5 3802.199219 3360.039062 3779.550781 C 3411.71875 3757.699219 3458.101562 3726.421875 3497.921875 3686.621094 C 3537.730469 3646.800781 3568.988281 3600.410156 3590.851562 3548.75 C 3600.371094 3526.25 3607.910156 3503.171875 3613.449219 3479.640625 L 3966.21875 3479.640625 C 4021.339844 3479.640625 4066.011719 3434.949219 4066.011719 3379.851562 C 4066.011719 3324.738281 4021.339844 3280.070312 3966.21875 3280.070312 Z M 2399.988281 2634.269531 C 2306.488281 2634.269531 2225.601562 2579.199219 2188.058594 2499.78125 C 2173.738281 2469.5 2165.730469 2435.660156 2165.730469 2400 C 2165.730469 2364.328125 2173.738281 2330.5 2188.058594 2300.210938 C 2225.601562 2220.800781 2306.488281 2165.730469 2399.988281 2165.730469 C 2493.5 2165.730469 2574.398438 2220.800781 2611.941406 2300.210938 C 2626.261719 2330.5 2634.269531 2364.328125 2634.269531 2400 C 2634.269531 2435.660156 2626.261719 2469.5 2611.941406 2499.78125 C 2574.398438 2579.199219 2493.511719 2634.269531 2399.988281 2634.269531 Z M 3966.21875 2300.210938 L 2822.300781 2300.210938 C 2816.769531 2276.671875 2809.21875 2253.601562 2799.699219 2231.101562 C 2777.851562 2179.421875 2746.578125 2133.039062 2706.769531 2093.230469 C 2666.960938 2053.410156 2620.570312 2022.148438 2568.898438 2000.300781 C 2515.351562 1977.648438 2458.53125 1966.160156 2399.988281 1966.160156 C 2341.46875 1966.160156 2284.648438 1977.648438 2231.101562 2000.300781 C 2179.429688 2022.148438 2133.039062 2053.410156 2093.230469 2093.230469 C 2053.421875 2133.039062 2022.148438 2179.421875 2000.300781 2231.101562 C 1990.78125 2253.601562 1983.230469 2276.671875 1977.699219 2300.210938 L 833.773438 2300.210938 C 778.664062 2300.210938 733.988281 2344.878906 733.988281 2400 C 733.988281 2455.109375 778.664062 2499.78125 833.773438 2499.78125 L 1977.699219 2499.78125 C 1983.230469 2523.320312 1990.78125 2546.398438 2000.300781 2568.898438 C 2022.148438 2620.570312 2053.421875 2666.960938 2093.230469 2706.761719 C 2133.039062 2746.578125 2179.429688 2777.851562 2231.101562 2799.699219 C 2284.648438 2822.351562 2341.46875 2833.839844 2399.988281 2833.839844 C 2458.53125 2833.839844 2515.351562 2822.351562 2568.898438 2799.699219 C 2620.570312 2777.851562 2666.960938 2746.578125 2706.769531 2706.761719 C 2746.578125 2666.960938 2777.851562 2620.570312 2799.699219 2568.898438 C 2809.21875 2546.398438 2816.769531 2523.320312 2822.300781 2499.78125 L 3966.21875 2499.78125 C 4021.339844 2499.78125 4066.011719 2455.109375 4066.011719 2400 C 4066.011719 2344.878906 4021.339844 2300.210938 3966.21875 2300.210938 Z M 1608.851562 1654.410156 C 1515.339844 1654.410156 1434.460938 1599.351562 1396.921875 1519.929688 C 1382.601562 1489.648438 1374.589844 1455.820312 1374.589844 1420.148438 C 1374.589844 1384.488281 1382.601562 1350.660156 1396.921875 1320.371094 C 1434.460938 1240.960938 1515.339844 1185.890625 1608.851562 1185.890625 C 1702.359375 1185.890625 1783.261719 1240.960938 1820.789062 1320.371094 C 1835.109375 1350.660156 1843.128906 1384.488281 1843.128906 1420.148438 C 1843.128906 1455.820312 1835.109375 1489.648438 1820.789062 1519.929688 C 1783.261719 1599.351562 1702.359375 1654.410156 1608.851562 1654.410156 Z M 3966.21875 1320.371094 L 2031.160156 1320.371094 C 2025.621094 1296.828125 2018.078125 1273.761719 2008.558594 1251.25 C 1986.710938 1199.578125 1955.429688 1153.199219 1915.628906 1113.378906 C 1875.820312 1073.570312 1829.429688 1042.300781 1777.761719 1020.441406 C 1724.199219 997.800781 1667.378906 986.308594 1608.851562 986.308594 C 1550.328125 986.308594 1493.5 997.800781 1439.960938 1020.441406 C 1388.28125 1042.300781 1341.898438 1073.570312 1302.078125 1113.378906 C 1262.269531 1153.199219 1231.011719 1199.578125 1209.148438 1251.25 C 1199.628906 1273.761719 1192.089844 1296.828125 1186.550781 1320.371094 L 833.773438 1320.371094 C 778.664062 1320.371094 733.988281 1365.039062 733.988281 1420.148438 C 733.988281 1475.261719 778.664062 1519.929688 833.773438 1519.929688 L 1186.550781 1519.929688 C 1192.089844 1543.46875 1199.628906 1566.539062 1209.148438 1589.050781 C 1231.011719 1640.71875 1262.269531 1687.109375 1302.078125 1726.921875 C 1341.898438 1766.730469 1388.28125 1798 1439.960938 1819.859375 C 1493.5 1842.511719 1550.328125 1853.980469 1608.851562 1853.980469 C 1667.378906 1853.980469 1724.199219 1842.511719 1777.761719 1819.859375 C 1829.429688 1798 1875.820312 1766.730469 1915.628906 1726.921875 C 1955.429688 1687.109375 1986.710938 1640.71875 2008.558594 1589.050781 C 2018.078125 1566.539062 2025.621094 1543.46875 2031.160156 1519.929688 L 3966.21875 1519.929688 C 4021.339844 1519.929688 4066.011719 1475.261719 4066.011719 1420.148438 C 4066.011719 1365.039062 4021.339844 1320.371094 3966.21875 1320.371094 "/></svg>ตัวกรอง<span class="fdot" id="fDot" style="display:none"></span></button>
+    <div class="pillrow" id="pillRow">
+      <button class="pill on" data-type="">ทั้งหมด <span class="c" id="cAll"></span></button>
+      <button class="pill" data-type="novel">นิยาย <span class="c" id="cNovel"></span></button>
+      <button class="pill" data-type="webtoon">เว็บตูน <span class="c" id="cWebtoon"></span></button>
+      <button class="pill" data-type="audio">หนังสือเสียง <span class="c" id="cAudio"></span></button>
+    </div>
+  </div>
+
+  <div class="sec-title">หมวดหมู่ยอดนิยม</div>
+  <div class="cat-grid" id="catGrid"></div>
+
+  <div class="results-head">
+    <div><h2 id="rhTitle">ผลการค้นหา</h2><span class="cnt" id="rhCnt"></span></div>
+    <div class="results-right">
+      <div class="sortsel" id="sortSel">
+        <button class="sb" type="button" id="sortBtn">ความเกี่ยวข้อง<svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="sortmenu" id="sortMenu">
+          <div data-sort="rel">ความเกี่ยวข้อง</div>
+          <div data-sort="new">ใหม่สุด</div>
+          <div data-sort="old">เก่าสุด</div>
+          <div data-sort="pop">ยอดนิยม</div>
+        </div>
+      </div>
+      <div class="viewtoggle" id="viewToggle">
+        <button class="on" data-view="grid" aria-label="กริด"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+        <button data-view="list" aria-label="รายการ"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="rgrid" id="rgrid"></div>
+  <div class="rlistv" id="rlistv"></div>
+  <div class="pagination" id="pager"></div>
+
+</div>
+
+<div id="fmodal">
+<div id="fdim"></div>
+<aside id="fdrawer">
+  <div class="fd-head"><span>ตัวกรอง</span><button id="fdClose" aria-label="ปิด"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="fd-body">
+
+    <div class="fgrp"><span class="fl">ประเภท</span>
+      <div class="fops fops2" data-k="type">
+        <span class="fop on" data-v="">ทั้งหมด</span><span class="fop" data-v="novel">นิยาย</span>
+        <span class="fop" data-v="webtoon">เว็บตูน</span><span class="fop" data-v="audio">หนังสือเสียง</span>
+      </div>
+    </div>
+
+    <div class="fgrp"><span class="fl">หมวดหลัก</span>
+      <div class="fops" data-k="cat">
+        <span class="fop on" data-v="">ทุกหมวด</span><span class="fop" data-v="แฟนตาซี">แฟนตาซี</span>
+        <span class="fop" data-v="โรแมนซ์">โรแมนซ์</span><span class="fop" data-v="กำลังภายใน">กำลังภายใน</span>
+        <span class="fop" data-v="ตะวันออก">ตะวันออก</span><span class="fop" data-v="สืบสวน">สืบสวน</span>
+        <span class="fop" data-v="ไซไฟ">ไซไฟ</span><span class="fop" data-v="ดราม่า">ดราม่า</span>
+        <span class="fop" data-v="สยองขวัญ">สยองขวัญ</span>
+      </div>
+    </div>
+
+    <div class="fgrp"><span class="fl">แท็ก (เลือกได้สูงสุด 20)</span><div id="ftagWidget"></div></div>
+
+    <div class="fgrp"><span class="fl">สถานะ</span>
+      <div class="fops" data-k="fStatus">
+        <span class="fop on" data-v="">ทั้งหมด</span><span class="fop" data-v="ongoing">กำลังเขียน</span><span class="fop" data-v="done">จบแล้ว</span>
+      </div>
+    </div>
+
+    <div class="fgrp"><span class="fl">ผลงาน</span>
+      <div class="fops fops2" data-k="fOrigin" id="fworkOps"><span class="fop-hint">เลือกประเภทก่อน</span></div>
+    </div>
+
+    <div class="fgrp"><span class="fl">ความยาว</span>
+      <div class="fops" data-k="fLen">
+        <span class="fop on" data-v="">ทั้งหมด</span><span class="fop" data-v="s">ต่ำกว่า 100 บท</span>
+        <span class="fop" data-v="m">100–500 บท</span><span class="fop" data-v="l">500 บทขึ้นไป</span>
+      </div>
+    </div>
+
+    <div class="fgrp fgrp-last"><span class="fl">เรียงตาม</span>
+      <div class="fops" data-k="sort">
+        <span class="fop on" data-v="rel">ความเกี่ยวข้อง</span><span class="fop" data-v="new">ใหม่สุด</span>
+        <span class="fop" data-v="old">เก่าสุด</span><span class="fop" data-v="pop">ยอดนิยม</span>
+      </div>
+    </div>
+
+  </div>
+  <div class="fd-foot">
+    <button class="fdbtn ghost" id="fdClear">ล้างทั้งหมด</button>
+    <button class="fdbtn primary" id="fdApply">ใช้ตัวกรอง</button>
+  </div>
+</aside>
+</div>
+
+<style id="rlAuthCSS">
+/* ── modal ── */
+#rlAuthModal{position:fixed;inset:0;z-index:99990;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(30,25,50,.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+#rlAuthModal.show{display:flex}
+#rlAuthModal,#rlAuthModal *{box-sizing:border-box;font-family:'Noto Sans Thai',system-ui,sans-serif}
+#rlAuthModal{--line:#ece8f4;--ink:#2e2a3d;--ink2:#6b6580;--ink3:#a8a2bd;--red:#cc4452;--red-deep:#9c3340}
+.rlau{width:100%;max-width:430px;zoom:.9}
+.rlau-card{background:#fff;border-radius:22px;padding:34px 30px 30px;position:relative;animation:rlauPop .24s cubic-bezier(.34,1.2,.64,1)}
+@keyframes rlauPop{from{transform:translateY(12px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+.rlau-back{display:none;position:absolute;top:16px;left:16px;align-items:center;gap:2px;border:none;background:none;color:var(--ink2);font-size:14px;font-weight:600;cursor:pointer;padding:6px 6px 6px 2px;line-height:1}
+.rlau-back svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#rlAuthModal[data-mode="register"] .rlau-back,#rlAuthModal[data-mode="forgot"] .rlau-back{display:inline-flex}
+.rlau-brand{display:flex;align-items:center;justify-content:center;gap:10px;font-size:26px;font-weight:800;color:var(--red);margin-bottom:6px}
+.rlau-brand svg{width:29px;height:29px;fill:none;stroke:currentColor;stroke-width:2.5}
+.rlau-title{text-align:center;font-size:22px;font-weight:800;color:var(--ink);margin:14px 0 22px}
+.rlau .soc{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.rlau .soc-btn{display:flex;align-items:center;justify-content:center;gap:11px;width:100%;height:46px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:filter .15s}
+.rlau .soc-btn:hover{filter:brightness(.96)}
+.rlau .soc-btn .ic{width:19px;height:19px;flex:0 0 19px;display:grid;place-items:center}
+.rlau .soc-google{background:#fff;border:1px solid var(--line);color:#3c4043}
+.rlau .soc-facebook{background:#1877F2;color:#fff}
+.rlau .soc-apple{background:#000;color:#fff}
+.rlau .soc-btn svg{width:19px;height:19px;display:block}
+.rlau .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--ink3);font-size:12.5px}
+.rlau .divider::before,.rlau .divider::after{content:"";flex:1;height:1px;background:var(--line)}
+.rlau .field{margin-bottom:15px}
+.rlau .field label{display:block;font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:7px}
+.rlau .inp-wrap{position:relative}
+.rlau .field input{width:100%;height:46px;border:1px solid var(--line);border-radius:12px;padding:0 14px;font-family:inherit;font-size:14px;color:var(--ink);background:#fff;outline:none;transition:border-color .15s}
+.rlau .field input::placeholder{color:var(--ink3)}
+.rlau .eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--ink3);display:grid;place-items:center;padding:4px}
+.rlau .eye svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8}
+.rlau .hint{font-size:12px;color:var(--ink3);margin-top:6px}
+.rlau .field.pw input{padding-right:44px}
+.rlau .pw-check{margin-top:9px;display:none;flex-direction:column;gap:5px}
+.rlau .pw-check.show{display:flex}
+.rlau .pw-item{display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--ink3);line-height:1.45}
+.rlau .pw-item .ci{flex:0 0 16px;width:16px;height:16px;border-radius:50%;border:1.6px solid var(--line);display:grid;place-items:center;margin-top:1px;transition:.15s}
+.rlau .pw-item .ci svg{width:10px;height:10px;stroke:#fff;fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:.15s}
+.rlau .pw-item.ok{color:#17a673}
+.rlau .pw-item.ok .ci{background:#17a673;border-color:#17a673}
+.rlau .pw-item.ok .ci svg{opacity:1}
+.rlau .forgot{text-align:right;margin:-6px 0 16px}
+.rlau .forgot a{font-size:13px;font-weight:600;color:var(--red);text-decoration:none;cursor:pointer}
+.rlau .terms{display:flex;align-items:flex-start;gap:10px;margin:4px 0 20px;cursor:pointer}
+.rlau .terms input{display:none}
+.rlau .terms .box{flex:0 0 20px;width:20px;height:20px;border:1.8px solid var(--line);border-radius:6px;display:grid;place-items:center;margin-top:1px;transition:.15s}
+.rlau .terms .box svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:.15s}
+.rlau .terms input:checked+.box{background:var(--red);border-color:var(--red)}
+.rlau .terms input:checked+.box svg{opacity:1}
+.rlau .terms .txt{font-size:13px;color:var(--ink2);line-height:1.55}
+.rlau .terms .txt a{color:var(--red);font-weight:600;text-decoration:none}
+.rlau .submit{width:100%;height:46px;border-radius:12px;background:var(--red);color:#fff;border:none;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:background .15s}
+.rlau .submit:hover{background:var(--red-deep)}
+.rlau .submit:disabled{background:#e2ddec;color:#fff;cursor:not-allowed}
+.rlau .switch{text-align:center;font-size:13.5px;color:var(--ink2);margin-top:20px}
+.rlau .switch a{color:var(--red);font-weight:700;text-decoration:none;cursor:pointer}
+.rlau .auth-err{display:none;font-size:12.5px;font-weight:600;color:#d8353f;background:#fdecee;border-radius:9px;padding:8px 12px;margin-bottom:14px}
+.rlau .auth-err.show{display:block}
+.rlau .auth-ok{display:none;font-size:12.5px;font-weight:600;color:#17a673;background:#e7f7f0;border-radius:9px;padding:8px 12px;margin-top:12px}
+.rlau .auth-ok.show{display:block}
+.rlau .only-login,.rlau .only-register,.rlau .only-forgot{display:none}
+#rlAuthModal[data-mode="login"] .only-login{display:block}
+#rlAuthModal[data-mode="register"] .only-register{display:block}
+#rlAuthModal[data-mode="forgot"] .only-forgot{display:block}
+#rlAuthModal[data-mode="login"] .switch .to-login,#rlAuthModal[data-mode="register"] .switch .to-register{display:none}
+#rlAuthModal[data-mode="forgot"] .divider,#rlAuthModal[data-mode="forgot"] .soc,#rlAuthModal[data-mode="forgot"] .switch{display:none}
+.rlau .forgot-sub{font-size:13px;color:var(--ink3);margin:-4px 0 18px;line-height:1.55}
+.rlau .forgot-back{text-align:center;font-size:13.5px;color:var(--ink2);margin-top:18px}
+.rlau .forgot-back a{color:var(--red);font-weight:600;cursor:pointer;text-decoration:none}
+
+/* ── avatar + เมนูผู้ใช้บน header ── */
+#rlhdrwrap{position:relative;z-index:900;overflow:visible}
+.rl-header .rl-user{position:relative;display:none}
+.rl-header .rl-user.on{display:block!important}
+.rl-header .rl-login.off{display:none}
+.rl-header .rl-ava{width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;font-family:'Noto Sans Thai',sans-serif;font-size:16px;font-weight:800;display:grid;place-items:center;line-height:1;padding:0;transition:box-shadow .15s}
+.rl-header .rl-ava:hover{box-shadow:0 0 0 3px rgba(204,68,82,.18)}
+.rl-menu{position:absolute;top:46px;right:0;width:284px;background:#fff;border:1px solid #e3e5ea;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.035),0 14px 34px -12px rgba(20,20,40,.18);padding:8px 0;display:none;z-index:9000;font-family:'Noto Sans Thai',sans-serif}
+.rl-menu.show{display:block!important}
+.rl-menu-head{display:flex;align-items:center;gap:12px;padding:12px 16px 12px}
+.rl-menu-head .ava2{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:20px;font-weight:800;flex-shrink:0}
+.rl-menu-head .nm{font-size:15.5px;font-weight:800;color:#2b2d3a;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rl-menu-head .hd{font-size:12.5px;color:#8b91a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rl-menu-sep{height:1px;background:#eef0f5;margin:6px 0}
+.rl-menu-coin{display:flex;align-items:center;gap:9px;padding:10px 16px}
+.rl-menu-coin .cico{width:26px;height:26px;border-radius:50%;background:#f6b01e;color:#fff;display:grid;place-items:center;font-size:10px;font-weight:800;flex-shrink:0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12)}
+.rl-menu-coin .cval{flex:1;font-size:16px;font-weight:800;color:#2b2d3a;font-variant-numeric:tabular-nums}
+.rl-menu-coin .topup{height:32px;padding:0 16px;border:none;border-radius:9px;background:#e0981f;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.rl-menu-coin .topup:hover{background:#c9881b}
+.rl-menu-item{display:flex;align-items:center;gap:13px;width:100%;padding:11px 16px;border:none;background:none;font-family:inherit;font-size:14px;font-weight:600;color:#3d4152;cursor:pointer;text-align:left;transition:.12s}
+.rl-menu-item:hover{background:#f7f8fa}
+.rl-menu-item svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;color:#6b7080;flex-shrink:0}
+.rl-menu-item.out{color:#d8353f}
+.rl-menu-item.out svg{color:#d8353f}
+</style>
+
+<div id="rlAuthModal" data-mode="login">
+  <div class="rlau">
+    <div class="rlau-card">
+      <button class="rlau-back" onclick="RLAuth.mode('login')" aria-label="กลับ"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>กลับ</button>
+      <div class="rlau-brand"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>ReadLead</div>
+      <h1 class="rlau-title"><span class="only-login">เข้าสู่ระบบ</span><span class="only-register">สมัครสมาชิก</span><span class="only-forgot">ลืมรหัสผ่าน</span></h1>
+
+      <!-- LOGIN -->
+      <div class="only-login">
+        <div class="auth-err" id="rlLoginErr"></div>
+        <div class="field"><label>ชื่อผู้ใช้ หรืออีเมล</label><input type="text" id="rlLoginUser" placeholder="ชื่อผู้ใช้ หรืออีเมล"></div>
+        <div class="field pw"><label>รหัสผ่าน</label>
+          <div class="inp-wrap">
+            <input type="password" id="rlLoginPass" placeholder="รหัสผ่าน">
+            <button class="eye" type="button" onclick="RLAuth.eye('rlLoginPass',this)"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
+        <div class="forgot"><a onclick="RLAuth.mode('forgot')">ลืมรหัสผ่าน?</a></div>
+        <button class="submit" type="button" onclick="RLAuth.login()">เข้าสู่ระบบ</button>
+      </div>
+
+      <!-- REGISTER -->
+      <div class="only-register">
+        <div class="auth-err" id="rlRegErr"></div>
+        <div class="field"><label>ชื่อผู้ใช้</label><input type="text" id="rlRegUser" placeholder="ชื่อผู้ใช้" oninput="RLAuth.pwcheck()"><div class="hint">ใช้ได้เฉพาะ a–z, 0–9 และ _ โดยไม่เว้นวรรค</div></div>
+        <div class="field"><label>อีเมล</label><input type="email" id="rlRegEmail" placeholder="อีเมล"></div>
+        <div class="field pw"><label>รหัสผ่าน</label>
+          <div class="inp-wrap">
+            <input type="password" id="rlRegPass" placeholder="รหัสผ่าน" oninput="RLAuth.pwcheck()">
+            <button class="eye" type="button" onclick="RLAuth.eye('rlRegPass',this)"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <div class="pw-check">
+            <div class="pw-item" data-rule="len"><span class="ci"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>มีอักขระอย่างน้อย 8 ตัวขึ้นไป</div>
+            <div class="pw-item" data-rule="case"><span class="ci"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>มีทั้งตัวพิมพ์เล็ก (a-z) และตัวพิมพ์ใหญ่ (A-Z)</div>
+            <div class="pw-item" data-rule="num"><span class="ci"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>มีตัวเลขอย่างน้อยหนึ่ง (0-9) หรือสัญลักษณ์หนึ่งตัว</div>
+            <div class="pw-item" data-rule="sp"><span class="ci"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>มีอักขระพิเศษ ! @ # $ % ^ &amp; * _ + - = ? อย่างน้อยหนึ่งตัว</div>
+          </div>
+        </div>
+        <label class="terms">
+          <input type="checkbox" id="rlAgree" onchange="RLAuth.pwcheck()">
+          <span class="box"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span class="txt">ฉันได้อ่านและยอมรับ <a href="#">ข้อตกลงและเงื่อนไขการใช้บริการ</a> และ <a href="#">นโยบายความเป็นส่วนตัว</a> ของบริษัท รีดลีด จำกัด</span>
+        </label>
+        <button class="submit" type="button" id="rlRegSubmit" disabled onclick="RLAuth.register()">สมัครสมาชิก</button>
+      </div>
+
+      <!-- FORGOT -->
+      <div class="only-forgot">
+        <p class="forgot-sub">กรอกอีเมลที่ใช้สมัคร ระบบจะส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ไปให้คุณ</p>
+        <div class="auth-err" id="rlForgotErr"></div>
+        <div class="field"><label>อีเมล</label><input type="email" id="rlForgotEmail" placeholder="อีเมลของคุณ"></div>
+        <button class="submit" type="button" onclick="RLAuth.forgot()">ยืนยัน</button>
+        <div class="auth-ok" id="rlForgotOk">ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่อีเมลแล้ว (จำลอง)</div>
+        <div class="forgot-back">จำรหัสผ่านได้แล้ว? <a onclick="RLAuth.mode('login')">กลับไปเข้าสู่ระบบ</a></div>
+      </div>
+
+      <div class="divider">หรือ</div>
+      <div class="soc">
+        <button class="soc-btn soc-google" type="button"><span class="ic"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 0 0-9.82 6.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38z"/></svg></span>ดำเนินการต่อด้วย Google</button>
+        <button class="soc-btn soc-facebook" type="button"><span class="ic"><svg viewBox="0 0 24 24" fill="#fff"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.02 4.39 11.01 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.08 24 18.09 24 12.07z"/></svg></span>ดำเนินการต่อด้วย Facebook</button>
+        <button class="soc-btn soc-apple" type="button"><span class="ic"><svg viewBox="0 0 24 24" fill="#fff"><path d="M17.05 12.54c-.02-2.06 1.68-3.05 1.76-3.1-.96-1.4-2.45-1.6-2.98-1.62-1.27-.13-2.48.75-3.12.75-.64 0-1.64-.73-2.7-.71-1.39.02-2.67.81-3.38 2.05-1.44 2.5-.37 6.2 1.03 8.23.69.99 1.5 2.1 2.57 2.06 1.03-.04 1.42-.67 2.67-.67 1.24 0 1.6.67 2.69.65 1.11-.02 1.81-1.01 2.49-2.01.78-1.15 1.11-2.26 1.12-2.32-.02-.01-2.15-.83-2.17-3.28zM15 6.24c.57-.69.95-1.65.85-2.6-.82.03-1.81.54-2.4 1.23-.52.6-.98 1.58-.86 2.51.91.07 1.84-.46 2.41-1.14z"/></svg></span>ดำเนินการต่อด้วย Apple</button>
+      </div>
+
+      <div class="switch">
+        <span class="to-register">ยังไม่มีบัญชีผู้ใช้? <a onclick="RLAuth.mode('register')">สมัครสมาชิก</a></span>
+        <span class="to-login">มีบัญชีผู้ใช้อยู่แล้ว? <a onclick="RLAuth.mode('login')">เข้าสู่ระบบ</a></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script id="rlAuthJS">
+window.RLAuth = (function(){
+  var K_USERS='rl_users', K_SES='rl_session';
+  /* คู่สีพาสเทล [พื้น, ตัวอักษร] — สุ่มครั้งเดียวตอนสมัคร แล้วติดตัวผู้ใช้ตลอด */
+  var PALETTE=[['#fde2e4','#b2455a'],['#e2ecfd','#3a62b2'],['#e4f7e9','#2d7a4f'],['#fdf3d8','#a3771b'],['#f0e4fd','#6b3ab2'],['#e0f5f5','#1f7a7a'],['#fde9d8','#b25e2a'],['#e8ecf4','#4a5568']];
+
+  function users(){ try{return JSON.parse(localStorage.getItem(K_USERS))||[];}catch(e){return [];} }
+  function saveUsers(a){ localStorage.setItem(K_USERS, JSON.stringify(a)); }
+  function session(){ try{return JSON.parse(localStorage.getItem(K_SES))||null;}catch(e){return null;} }
+  function me(){ var s=session(); if(!s)return null;
+    var u=users().find(function(x){return x&&x.id===s.uid&&typeof x.user==='string';})||null;
+    if(u&&u.status==='banned'){ try{localStorage.removeItem(K_SES);}catch(e){} return null; }  /* บัญชีถูกระงับ — เด้งออกทันที */
+    return u; }
+
+  function el(id){return document.getElementById(id);}
+  function err(id,msg){ var e=el(id); if(!e)return; if(msg){e.textContent=msg;e.classList.add('show');} else e.classList.remove('show'); }
+
+  /* ── modal ── */
+  function storageOK(){ try{localStorage.setItem('__rl_probe','1');localStorage.removeItem('__rl_probe');return true;}catch(e){return false;} }
+  var STORAGE_MSG='เบราว์เซอร์ไม่อนุญาตให้เว็บนี้บันทึกข้อมูลในเครื่อง ระบบสมาชิก (จำลอง) จึงทำงานไม่ได้ มักเกิดจากโหมดไม่ระบุตัวตน/InPrivate, การตั้งค่าบล็อกคุกกี้และข้อมูลไซต์ หรือส่วนขยายด้านความเป็นส่วนตัว ลองเปิดในหน้าต่างปกติหรือเบราว์เซอร์อื่นดูครับ';
+  function open(m){ mode(m||'login'); el('rlAuthModal').classList.add('show');
+    if(!storageOK()){ err('rlLoginErr',STORAGE_MSG); err('rlRegErr',STORAGE_MSG); err('rlForgotErr',STORAGE_MSG); } }
+  function close(){ el('rlAuthModal').classList.remove('show'); }
+  function mode(m){
+    el('rlAuthModal').setAttribute('data-mode',m);
+    if(storageOK()){ err('rlLoginErr');err('rlRegErr');err('rlForgotErr'); }
+    else{ err('rlLoginErr',STORAGE_MSG); err('rlRegErr',STORAGE_MSG); err('rlForgotErr',STORAGE_MSG); }
+    var ok=el('rlForgotOk'); if(ok)ok.classList.remove('show');
+  }
+  function eye(id,btn){var i=el(id);var on=i.type==='password';i.type=on?'text':'password';
+    btn.innerHTML=on?'<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18" stroke-width="1.8"/></svg>':'<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';}
+
+  /* ── validate รหัสผ่าน (เกณฑ์เดียวกับหน้า login เดิม) ── */
+  function pwcheck(){
+    var v=(el('rlRegPass')||{}).value||'';
+    var len=v.length>=8, cse=/[a-z]/.test(v)&&/[A-Z]/.test(v);
+    var sp=/[!@#$%^&*_+\-=?]/.test(v), num=/[0-9]/.test(v)||sp;
+    [['len',len],['case',cse],['num',num],['sp',sp]].forEach(function(r){
+      var e=document.querySelector('#rlAuthModal .pw-item[data-rule="'+r[0]+'"]'); if(e)e.classList.toggle('ok',r[1]);
+    });
+    var pc=document.querySelector('#rlAuthModal .pw-check'); if(pc)pc.classList.toggle('show',v.length>0);
+    var agree=(el('rlAgree')||{}).checked;
+    var btn=el('rlRegSubmit'); if(btn)btn.disabled=!(len&&cse&&num&&sp&&agree);
+  }
+
+  /* ── สมัครสมาชิก ── */
+  function register(){ try{ registerInner(); }catch(e){ err('rlRegErr', storageOK()? 'สมัครไม่สำเร็จ ระบบขัดข้อง กรุณาแคปหน้าจอนี้ส่งให้ผู้พัฒนา (รายละเอียด: '+e.message+')' : 'สมัครไม่สำเร็จ '+STORAGE_MSG); } }
+  function registerInner(){
+    var u=(el('rlRegUser').value||'').trim();
+    var em=(el('rlRegEmail').value||'').trim().toLowerCase();
+    var pw=el('rlRegPass').value||'';
+    if(!/^[A-Za-z0-9_]{3,20}$/.test(u)){ err('rlRegErr','ชื่อผู้ใช้ต้องยาว 3–20 ตัว ใช้ได้เฉพาะ a–z, 0–9 และ _'); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ err('rlRegErr','รูปแบบอีเมลไม่ถูกต้อง'); return; }
+    var all=users();
+    if(all.some(function(x){return x&&typeof x.user==='string'&&x.user.toLowerCase()===u.toLowerCase();})){ err('rlRegErr','ชื่อผู้ใช้นี้ถูกใช้แล้ว'); return; }
+    if(all.some(function(x){return x&&typeof x.email==='string'&&x.email.toLowerCase()===em;})){ err('rlRegErr','อีเมลนี้ถูกใช้สมัครแล้ว'); return; }
+    var color=PALETTE[Math.floor(Math.random()*PALETTE.length)];
+    var rec={ id:'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+      user:u, email:em, pass:pw, /* เว็บจริง: hash ฝั่ง server เท่านั้น */
+      color:color, coins:0, exp:0, level:0, createdAt:new Date().toISOString() };
+    all.push(rec); saveUsers(all);
+    localStorage.setItem(K_SES, JSON.stringify({uid:rec.id, at:Date.now()}));
+    close(); render();
+  }
+
+  /* ── เข้าสู่ระบบ ── */
+  function login(){ try{ loginInner(); }catch(e){ err('rlLoginErr', storageOK()? 'เข้าสู่ระบบไม่สำเร็จ ระบบขัดข้อง กรุณาแคปหน้าจอนี้ส่งให้ผู้พัฒนา (รายละเอียด: '+e.message+')' : 'เข้าสู่ระบบไม่สำเร็จ '+STORAGE_MSG); } }
+  function loginInner(){
+    var q=(el('rlLoginUser').value||'').trim().toLowerCase();
+    var pw=el('rlLoginPass').value||'';
+    var u=users().find(function(x){return x&&(String(x.user||'').toLowerCase()===q||String(x.email||'').toLowerCase()===q);});
+    if(!u||u.pass!==pw){ err('rlLoginErr','ชื่อผู้ใช้/อีเมล หรือรหัสผ่านไม่ถูกต้อง'); return; }
+    if(u.status==='banned'){ err('rlLoginErr','บัญชีนี้ถูกระงับการใช้งาน ติดต่อทีมงานผ่านหน้าแจ้งปัญหา'); return; }
+    localStorage.setItem(K_SES, JSON.stringify({uid:u.id, at:Date.now()}));
+    close(); render();
+  }
+
+  /* ── ลืมรหัสผ่าน (จำลอง) ── */
+  function forgot(){
+    var em=(el('rlForgotEmail').value||'').trim().toLowerCase();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ err('rlForgotErr','รูปแบบอีเมลไม่ถูกต้อง'); return; }
+    err('rlForgotErr'); el('rlForgotOk').classList.add('show');
+  }
+
+  function logout(){ localStorage.removeItem(K_SES); toggleMenu(false); render(); }
+
+  /* ── header: สลับ ปุ่มเข้าสู่ระบบ ↔ avatar ── */
+  function render(){
+    try{document.dispatchEvent(new CustomEvent('rlauth:render'));}catch(e){}
+    var u=me();
+    var btn=document.querySelector('.rl-header .rl-login');
+    var box=el('rlUserBox');
+    if(!btn||!box)return;
+    if(u){
+      btn.classList.add('off'); box.classList.add('on');
+      var ch=((u.user||'?')[0]||'?').toUpperCase();
+      var uc=(u.color&&u.color.length>=2)?u.color:['#e2ecfd','#3a62b2'];   /* บัญชีเก่าไม่มีสี → สีสำรอง */
+      var a=el('rlAvaBtn'); if(a){ a.textContent=ch; a.style.background=uc[0]; a.style.color=uc[1]; }
+      var a2=el('rlMenuAva'); if(a2){ a2.textContent=ch; a2.style.background=uc[0]; a2.style.color=uc[1]; }
+      el('rlMenuName').textContent=u.user;
+      el('rlMenuHandle').textContent='@'+u.user.toLowerCase();
+      el('rlMenuCoins').textContent=(u.coins||0).toFixed(2);
+    }else{
+      btn.classList.remove('off'); box.classList.remove('on'); toggleMenu(false);
+    }
+  }
+  function toggleMenu(force){
+    var m=el('rlUserMenu'); if(!m)return;
+    var show=(typeof force==='boolean')?force:!m.classList.contains('show');
+    m.classList.toggle('show',show);
+  }
+
+  document.addEventListener('click',function(ev){
+    var box=el('rlUserBox');
+    if(box&&!box.contains(ev.target)) toggleMenu(false);
+    if(ev.target===el('rlAuthModal')) close();
+  });
+
+  document.addEventListener('DOMContentLoaded',render);
+
+  return {open:open, close:close, mode:mode, eye:eye, pwcheck:pwcheck,
+          register:register, login:login, forgot:forgot, logout:logout,
+          render:render, toggleMenu:toggleMenu, me:me};
+})();
+</script>
+<script id="rlNovelCore">
+/* ═══════════════════════════════════════════════════════════════
+   RLNV ตู้ทะเบียนเรื่องกลาง ReadLead + ตัวนับยอดวิว
+   ตู้ที่ใช้: rl_novels (ทะเบียนเรื่อง) · rl_views (ยอดวิว)
+   หน้าที่: เป็นแหล่งข้อมูลเรื่องแหล่งเดียวให้ กระดานอันดับ / ค้นหา / browse
+   เรื่องทดสอบขึ้นต้น id 'smp-' ลบทิ้งทั้งชุดได้ด้วย clearPlayground()
+   โหลดหลัง rl_ticket_core (ใช้ rl_votes ตอนจัดอันดับ)
+   ═══════════════════════════════════════════════════════════════ */
+window.RLNV = (function(){
+  'use strict';
+  var K_NV='rl_novels', K_VW='rl_views';
+
+  function _get(k,d){ try{ var v=JSON.parse(localStorage.getItem(k)); return v==null?d:v; }catch(e){ return d; } }
+  function _set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  function dayKey(ts){ var d=new Date(ts==null?Date.now():ts);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+  /* ───────── ทะเบียนเรื่อง ───────── */
+  function _autoPublish(list){
+    /* ตอนตั้งเวลา: ถึงกำหนดแล้วเผยแพร่อัตโนมัติ (เช็คทุกครั้งที่อ่านทะเบียน) */
+    var changed=false, now=Date.now();
+    list.forEach(function(n){
+      (Array.isArray(n.chapters)?n.chapters:[]).forEach(function(c){
+        if(c.status==='scheduled' && c.publishAt && c.publishAt<=now){ c.status='published'; changed=true; }
+      });
+    });
+    if(changed) _set(K_NV, list);
+    return list;
+  }
+  function all(){
+    var L=_get(K_NV,[]).filter(function(n){return n&&n.id;});
+    /* ซ่อมข้อมูลเก่า/เพี้ยน: chapters ต้องเป็น array เสมอ (บางเครื่องเคยถูกเซฟเป็น object แล้วทำหน้าอื่นพังทั้งหน้า) */
+    L.forEach(function(n){
+      if(!Array.isArray(n.chapters)){
+        if(n.chapters && typeof n.chapters==='object'){
+          try{ n.chapters=Object.values(n.chapters).filter(function(c){ return c && (c.num!=null||c.title); }); }
+          catch(e){ n.chapters=[]; }
+        } else n.chapters=[];
+      }
+    });
+    return _autoPublish(L);
+  }
+  function byId(id){ return all().find(function(n){return n.id===id;})||null; }
+  function save(list){ _set(K_NV, list); }
+  function upsert(novel){
+    if(!novel||!novel.id) return false;
+    var L=all(); var i=L.findIndex(function(n){return n.id===novel.id;});
+    if(i>-1) L[i]=Object.assign(L[i],novel); else L.push(novel);
+    save(L); return true;
+  }
+
+  /* ───────── ยอดวิว — นับจริง กันนับซ้ำภายในเซสชันเดียว ───────── */
+  function addView(novelId){
+    if(!novelId) return;
+    try{ if(sessionStorage.getItem('rl_viewed_'+novelId)) return;
+         sessionStorage.setItem('rl_viewed_'+novelId,'1'); }catch(e){}
+    var V=_get(K_VW,{}); var v=V[novelId]=V[novelId]||{total:0, byDay:{}};
+    v.total=(v.total||0)+1;
+    var d=dayKey(); v.byDay[d]=(v.byDay[d]||0)+1;
+    _set(K_VW,V);
+  }
+  function viewsOf(novelId){ var V=_get(K_VW,{}); return (V[novelId]&&V[novelId].total)||0; }
+
+  /* ───────── ค้นหา (ชื่อเรื่อง / ผู้เขียน) ───────── */
+  function search(q, opts){
+    opts=opts||{}; q=(q||'').trim().toLowerCase();
+    return all().filter(function(n){
+      if(opts.type && n.type!==opts.type) return false;
+      if(opts.cat && n.cat!==opts.cat) return false;
+      if(!q) return true;
+      return (n.title||'').toLowerCase().indexOf(q)>-1 || (n.author||'').toLowerCase().indexOf(q)>-1;
+    });
+  }
+
+  /* ───────── จัดอันดับ — รวมคะแนนจริงจาก rl_votes + rl_views ─────────
+     sort: 'free' (โหวตแนะนำ/ตั๋วฟรี) | 'month' (โหวตรายเดือน) | 'views' | 'new' */
+  function ranked(opts){
+    opts=opts||{};
+    var votes={}; try{ votes=JSON.parse(localStorage.getItem('rl_votes'))||{}; }catch(e){}
+    var rows=all().filter(function(n){
+      if(opts.type && n.type!==opts.type) return false;
+      if(opts.cat && opts.cat!=='ทุกหมวด' && n.cat!==opts.cat) return false;
+      if(opts.status && n.status!==opts.status) return false;
+      if(!opts.status && (n.status==='pending'||n.status==='rejected')) return false;   /* รอตรวจ/ไม่ผ่าน ไม่ขึ้นหน้าเว็บ */
+      return true;
+    }).map(function(n){
+      var v=votes[n.id]||{};
+      return {novel:n, free:v.free||0, month:v.month||0, views:viewsOf(n.id), launched:n.launched||0};
+    });
+    var key=opts.sort||'free';
+    rows.sort(function(a,b){
+      if(key==='new') return (b.launched||0)-(a.launched||0);
+      if(key==='views') return b.views-a.views || b.free-a.free;
+      if(key==='month') return b.month-a.month || b.free-a.free;
+      return b.free-a.free || b.month-a.month;   /* ค่าเริ่มต้น: โหวตแนะนำ */
+    });
+    return rows;
+  }
+
+  /* ───────── สนามทดสอบ: เรื่องตัวอย่าง 24 เรื่อง + โปรยคะแนน ───────── */
+  var CATS=['แฟนตาซี','โรแมนซ์','กำลังภายใน','ตะวันออก','สืบสวน','ไซไฟ','ดราม่า','สยองขวัญ'];
+  var SAMPLE=[
+    /* [ชื่อ, ผู้เขียน, สื่อ, หมวด, จบ?] */
+    ['ดาบเทพสยบฟ้า','มังกรหมึก','novel','กำลังภายใน',0],
+    ['จอมมารกลับใจมาเลี้ยงแมว','ปลายปากกา','novel','แฟนตาซี',0],
+    ['สัญญารักเจ้าสำนักน้ำแข็ง','ฤดูฝัน','novel','โรแมนซ์',0],
+    ['คดีปริศนาตึกร้างซอยแปด','เงาไต้ฝุ่น','novel','สืบสวน',1],
+    ['ระบบเทพช่วยข้าปั้นร้านหมาล่า','เจ้าชายเกี๊ยว','novel','ตะวันออก',0],
+    ['ปฏิบัติการกู้โลกปี 2199','ดาวهนاว','novel','ไซไฟ',0],
+    ['บ้านเลขที่ 44','คนเฝ้าประตู','novel','สยองขวัญ',1],
+    ['จดหมายถึงคนที่หายไป','ปากกาสีจาง','novel','ดราม่า',1],
+    ['ราชันคืนบัลลังก์','วาดฟ้า','webtoon','แฟนตาซี',0],
+    ['หวานใจนายหมอเวร','สตรอว์เบอร์รี่','webtoon','โรแมนซ์',0],
+    ['หมัดสุดท้ายของนักเรียนโข่ง','กำปั้นเหล็ก','webtoon','กำลังภายใน',0],
+    ['สืบลับฉบับแมวดำ','เหมียวนักสืบ','webtoon','สืบสวน',0],
+    ['ครัวเซียนข้ามภพ','ตะหลิวทอง','webtoon','ตะวันออก',0],
+    ['เมืองจักรกลไร้เงา','สนิมเหล็ก','webtoon','ไซไฟ',1],
+    ['เพื่อนร่วมห้องคนที่เก้า','เที่ยงคืน','webtoon','สยองขวัญ',0],
+    ['วันสุดท้ายของฤดูร้อน','ใบไม้แรกผลิ','webtoon','ดราม่า',1],
+    ['ตำนานดาบพเนจร (ฉบับเสียง)','มังกรหมึก','audio','กำลังภายใน',0],
+    ['เสียงกระซิบจากห้องเช่า','คนเฝ้าประตู','audio','สยองขวัญ',0],
+    ['รักอลวนคุณชายลำดับเจ็ด','ฤดูฝัน','audio','โรแมนซ์',0],
+    ['บันทึกลับนักเล่นแร่','เจ้าชายเกี๊ยว','audio','ตะวันออก',1],
+    ['ยานหลงมิติ','ดาวหนาว','audio','ไซไฟ',0],
+    ['ฆาตกรรมบนรถไฟเที่ยงคืน','เงาไต้ฝุ่น','audio','สืบสวน',1],
+    ['มหาเวทตำราหลุด','ปลายปากกา','audio','แฟนตาซี',0],
+    ['เพลงรักใต้แสงจันทร์','ปากกาสีจาง','audio','ดราม่า',0]
+  ];
+  var PALETTE=[['#fde2e4','#b2455a'],['#e2ecfd','#3a62b2'],['#e6f5ec','#1f9d55'],['#fdf3d8','#a3771b'],
+               ['#f3e8fd','#7c3aed'],['#fde8d8','#c2571b'],['#e0f2f1','#00796b'],['#fce4ec','#ad1457']];
+
+  function seedPlayground(){
+    var L=all(); var now=Date.now();
+    /* เรื่องจริงที่มีคะแนนอยู่แล้ว: ลงทะเบียนให้ด้วยถ้ายังไม่มี */
+    if(!byId('sample-memorize')){
+      L.push({id:'sample-memorize', title:'MEMORIZE', author:'Ro Yu-jin', type:'novel', cat:'แฟนตาซี',
+              status:'ongoing', launched:now-320*864e5, cover:{c:PALETTE[0], g:'ME'}, seeded:false});
+    }
+    SAMPLE.forEach(function(s,i){
+      var id='smp-'+(i+1);
+      if(L.some(function(n){return n.id===id;})) return;
+      L.push({id:id, title:s[0], author:s[1], type:s[2], cat:s[3],
+              status:s[4]?'done':'ongoing',
+              launched: now - (30 + i*47)*864e5,
+              cover:{c:PALETTE[i%PALETTE.length], g:s[0].slice(0,2)}, seeded:true});
+    });
+    save(L);
+    /* โปรยคะแนนโหวต+วิวให้เรื่องทดสอบ (สุ่มแบบคงที่ต่อเรื่อง — รันซ้ำเลขไม่เด้ง) */
+    var V={}; try{ V=JSON.parse(localStorage.getItem('rl_votes'))||{}; }catch(e){}
+    var W=_get(K_VW,{});
+    SAMPLE.forEach(function(s,i){
+      var id='smp-'+(i+1);
+      var seed=(i*2654435761)%1000;                 /* เลขสุ่มคงที่จากลำดับเรื่อง */
+      if(!V[id]) V[id]={free:0, month:0};
+      V[id].free  = 500 + (seed*97)%19000;
+      V[id].month = 40  + (seed*31)%2400;
+      V[id].updated = Date.now();
+      if(!W[id]) W[id]={total:0, byDay:{}};
+      W[id].total = 20000 + (seed*811)%990000;
+    });
+    _set('rl_votes',V); _set(K_VW,W);
+    return {novels:L.length};
+  }
+  function clearPlayground(){
+    save(all().filter(function(n){return !n.seeded;}));
+    var V={}; try{ V=JSON.parse(localStorage.getItem('rl_votes'))||{}; }catch(e){}
+    var W=_get(K_VW,{});
+    Object.keys(V).forEach(function(k){ if(k.indexOf('smp-')===0) delete V[k]; });
+    Object.keys(W).forEach(function(k){ if(k.indexOf('smp-')===0) delete W[k]; });
+    _set('rl_votes',V); _set(K_VW,W);
+  }
+
+  return {all:all, byId:byId, upsert:upsert, addView:addView, viewsOf:viewsOf,
+          search:search, ranked:ranked, CATS:CATS,
+          seedPlayground:seedPlayground, clearPlayground:clearPlayground, dayKey:dayKey};
+})();
+</script>
+
+<script id="rlShelfCore">
+/* ═══════════════════════════════════════════════
+   RLSHELF ตู้ชั้นหนังสือของฉัน
+   ตู้: rl_shelf = { uid: { novelId: เวลาที่เก็บ } }
+   ═══════════════════════════════════════════════ */
+window.RLSHELF = (function(){
+  'use strict';
+  var K='rl_shelf';
+  function _all(){ try{ return JSON.parse(localStorage.getItem(K))||{}; }catch(e){ return {}; } }
+  function _save(v){ try{ localStorage.setItem(K, JSON.stringify(v)); }catch(e){} }
+  function list(uid){
+    var S=_all()[uid]||{};
+    return Object.keys(S).map(function(id){ return {novelId:id, added:S[id]}; })
+      .sort(function(a,b){ return b.added-a.added; });
+  }
+  function has(uid, novelId){ var S=_all(); return !!(S[uid]&&S[uid][novelId]); }
+  function add(uid, novelId){ if(!uid||!novelId) return false;
+    var S=_all(); (S[uid]=S[uid]||{})[novelId]=Date.now(); _save(S); return true; }
+  function remove(uid, novelId){ var S=_all();
+    if(S[uid]&&S[uid][novelId]){ delete S[uid][novelId]; _save(S); return true; } return false; }
+  function toggle(uid, novelId){
+    if(has(uid,novelId)){ remove(uid,novelId); return {on:false}; }
+    add(uid,novelId); return {on:true};
+  }
+  /* เรื่องที่กำลังอ่าน — จากสถิติอ่านจริง เรียงตามอ่านล่าสุด */
+  function reading(uid){
+    var st={}; try{ st=(JSON.parse(localStorage.getItem('rl_read_stats'))||{})[uid]||{}; }catch(e){}
+    return Object.keys(st).map(function(id){
+      var s=st[id]||{};
+      var chs=Object.keys(s.chapters||{}).map(Number).filter(function(n){return !isNaN(n);});
+      return {novelId:id, secs:s.secs||0, lastCh:chs.length?Math.max.apply(null,chs):1, last:s.updated||0};
+    }).filter(function(r){ return r.secs>0; })
+      .sort(function(a,b){ return b.last-a.last; });
+  }
+  return {list:list, has:has, add:add, remove:remove, toggle:toggle, reading:reading};
+})();
+
+</script>
+
+<script>
+/* ═══ หน้าค้นหา — ใช้ RLNV.search() จริง + กรอง/เรียง/แบ่งหน้า/สลับกริด-รายการ จริงทั้งหมด ═══ */
+(function(){
+  var SCENES = {
+    midnight:'radial-gradient(circle at 70% 26%,rgba(255,255,255,.55),transparent 22%),linear-gradient(160deg,#3b5bdb,#1e3a8a 60%,#0f1e4d)',
+    ocean:'linear-gradient(170deg,#5eead4,#0ea5e9 58%,#1e3a8a)',
+    forest:'radial-gradient(circle at 50% 32%,rgba(200,255,210,.4),transparent 38%),linear-gradient(180deg,#34d399,#16a34a 65%,#14532d)',
+    aurora:'radial-gradient(circle at 50% 30%,rgba(150,255,210,.45),transparent 40%),linear-gradient(180deg,#0f3d3e,#134e4a 70%,#042f2e)',
+    twilight:'linear-gradient(170deg,#a78bfa,#6d28d9 58%,#3b0764)',
+    slate:'linear-gradient(170deg,#94a3b8,#475569 58%,#1e293b)',
+    mint:'linear-gradient(170deg,#a7f3d0,#34d399 55%,#0f766e)',
+    lavender:'linear-gradient(170deg,#c4b5fd,#8b5cf6 60%,#5b21b6)',
+    deepsea:'radial-gradient(circle at 50% 60%,rgba(90,200,255,.4),transparent 42%),linear-gradient(180deg,#0c4a6e,#082f49 70%,#04141f)',
+    pine:'linear-gradient(160deg,#5fa07a,#1e3a2e 60%,#0f1f18)'
+  };
+  var KEYS = Object.keys(SCENES);
+  function sceneOf(id){ var h=0; String(id).split('').forEach(function(c){h=(h*31+c.charCodeAt(0))>>>0;}); return SCENES[KEYS[h%KEYS.length]]; }
+  function esc(x){ return String(x==null?'':x).replace(/[&<>"]/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch];}); }
+  function fmt(n){ n=+n||0; if(n>=1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'')+'M'; if(n>=1e4) return (n/1e3).toFixed(1).replace(/\.0$/,'')+'K'; return n.toLocaleString(); }
+
+  var state = { q:'', cat:null, type:'', sort:'rel', page:1, view:'grid', touched:false, fStatus:'', fOrigin:'', fLen:'', fTags:[] };
+  var PER = 10;
+  var TYPENAME = {novel:'นิยาย', webtoon:'เว็บตูน', audio:'หนังสือเสียง'};
+  var EYE = '<svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var LIST = '<svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>';
+
+  function pool(){
+    if(!window.RLNV) return [];
+    return RLNV.search(state.q, {cat: state.cat}).filter(function(n){
+      return n.status!=='pending' && n.status!=='rejected' && n.status!=='blocked';
+    });
+  }
+  function relScore(n, q){
+    var t=(n.title||'').toLowerCase(), a=(n.author||'').toLowerCase();
+    if(!q) return 0;
+    if(t===q) return 4; if(t.indexOf(q)===0) return 3;
+    if(t.indexOf(q)>-1) return 2; if(a.indexOf(q)>-1) return 1;
+    return 0;
+  }
+  function sortRows(rows){
+    var q = state.q.toLowerCase();
+    function dkey(n){ return n.launched || n.submittedAt || 0; }
+    if(state.sort==='new') rows.sort(function(a,b){ return dkey(b)-dkey(a); });
+    else if(state.sort==='old') rows.sort(function(a,b){ return dkey(a)-dkey(b); });
+    else if(state.sort==='pop'){
+      var V={}; try{ V=JSON.parse(localStorage.getItem('rl_votes'))||{}; }catch(e){}
+      function popScore(n){ var v=V[n.id]||{}; return RLNV.viewsOf(n.id) + ((v.free||0)+(v.month||0))*50; }
+      rows.sort(function(a,b){ return popScore(b)-popScore(a); });
+    } else {
+      rows.sort(function(a,b){ return (relScore(b,q)-relScore(a,q)) || (RLNV.viewsOf(b.id)-RLNV.viewsOf(a.id)); });
+    }
+    return rows;
+  }
+
+  function coverHTML(n, cls){
+    if(n.cover && n.cover.img){
+      return '<div class="cov" data-nav="'+esc(n.id)+'"><img src="'+n.cover.img+'">'+(n.status==='done'?'<span class="badge">จบ</span>':'')+'</div>';
+    }
+    return '<div class="cov" data-nav="'+esc(n.id)+'" style="background:'+sceneOf(n.id)+'"><span class="cg">'+esc((n.cover&&n.cover.g)||String(n.title||'').slice(0,2))+'</span>'+(n.status==='done'?'<span class="badge">จบ</span>':'')+'</div>';
+  }
+  function gcardHTML(n){
+    var blurb = n.tagline || String(n.synopsis||'').slice(0,90) || '';
+    var eps = (n.chapters&&n.chapters.length) || 0;
+    return '<div class="gcard">'
+      + coverHTML(n)
+      + '<div class="tt" data-nav="'+esc(n.id)+'">'+esc(n.title)+'</div>'
+      + '<div class="meta">'+esc(n.author||'–')+' · '+esc(n.cat||'–')+'</div>'
+      + (blurb ? '<div class="blurb">'+esc(blurb)+'</div>' : '')
+      + '<div class="stats"><span class="cw">'+EYE+fmt(RLNV.viewsOf(n.id))+'</span><span class="cw">'+LIST+fmt(eps)+'</span></div>'
+      + '</div>';
+  }
+  function lrowHTML(n){
+    var blurb = n.tagline || String(n.synopsis||'').slice(0,120) || '';
+    var eps = (n.chapters&&n.chapters.length) || 0;
+    var u = window.RLAuth && RLAuth.me && RLAuth.me();
+    var onShelf = !!(u && window.RLSHELF && RLSHELF.has(u.id, n.id));
+    var unit = n.type==='webtoon' ? 'ตอนที่ ' : 'บทที่ ';
+    return '<div class="lrow">'
+      + coverHTML(n)
+      + '<div class="lmid"><div class="ltt" data-nav="'+esc(n.id)+'">'+esc(n.title)+'</div>'
+      + '<div class="lmeta">'+esc(n.author||'–')+' · '+esc(n.cat||'–')+' · '+(TYPENAME[n.type]||n.type)+'</div>'
+      + (blurb ? '<div class="blurb">'+esc(blurb)+'</div>' : '')
+      + '<div class="lbot"><span class="cw">'+EYE+fmt(RLNV.viewsOf(n.id))+'</span><span class="lup">อัปเดตล่าสุด '+unit+fmt(eps)+'</span></div>'
+      + '<div class="lbtns"><span class="lb lb-red" data-nav="'+esc(n.id)+'">รายละเอียด</span>'
+      + '<span class="lb lb-line'+(onShelf?' on':'')+'" data-shelf="'+esc(n.id)+'">'+(onShelf?'✓ อยู่ในชั้นแล้ว':'+ เพิ่มเข้าชั้น')+'</span></div>'
+      + '</div></div>';
+  }
+
+  function paintPills(rowsAll){
+    var counts = {all: rowsAll.length, novel:0, webtoon:0, audio:0};
+    rowsAll.forEach(function(n){ if(counts[n.type]!=null) counts[n.type]++; });
+    document.getElementById('cAll').textContent = state.touched ? counts.all.toLocaleString() : '';
+    document.getElementById('cNovel').textContent = state.touched ? counts.novel.toLocaleString() : '';
+    document.getElementById('cWebtoon').textContent = state.touched ? counts.webtoon.toLocaleString() : '';
+    document.getElementById('cAudio').textContent = state.touched ? counts.audio.toLocaleString() : '';
+  }
+
+  function paintCats(){
+    if(!window.RLNV) return;
+    var all = RLNV.all(), byCat = {};
+    all.forEach(function(n){ if(n.cat) byCat[n.cat] = (byCat[n.cat]||0)+1; });
+    var CATS = RLNV.CATS || ['แฟนตาซี','โรแมนซ์','กำลังภายใน','ตะวันออก','สืบสวน','ไซไฟ','ดราม่า','สยองขวัญ'];
+    var list = CATS.concat(['ทั้งหมด']);
+    document.getElementById('catGrid').innerHTML = list.map(function(nm){
+      var n = (nm==='ทั้งหมด') ? all.length : (byCat[nm]||0);
+      return '<div class="cat" data-cat="'+esc(nm)+'"><span class="cat-nm">'+esc(nm)+'</span><span class="cat-ct">'+n.toLocaleString()+' เรื่อง</span></div>';
+    }).join('');
+  }
+
+  function paintPager(total){
+    var pg = document.getElementById('pager');
+    var pages = Math.max(1, Math.ceil(total/PER));
+    if(state.page > pages) state.page = pages;
+    if(pages <= 1){ pg.style.display='none'; return; }
+    pg.style.display = '';
+    var cur = state.page, parts = [];
+    parts.push('<button data-pg="prev"'+(cur<=1?' disabled style="opacity:.4"':'')+'>‹</button>');
+    var nums = []; for(var i=1;i<=pages;i++){ if(i<=2||i>pages-2||Math.abs(i-cur)<=1) nums.push(i); }
+    var last = 0;
+    nums.forEach(function(i){
+      if(i-last>1) parts.push('<button class="dots">...</button>');
+      parts.push('<button data-pg="'+i+'"'+(i===cur?' class="on"':'')+'>'+i+'</button>');
+      last = i;
+    });
+    parts.push('<button data-pg="next"'+(cur>=pages?' disabled style="opacity:.4"':'')+'>›</button>');
+    pg.innerHTML = parts.join('');
+    pg.querySelectorAll('button[data-pg]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var v = b.getAttribute('data-pg');
+        if(v==='prev') state.page = Math.max(1, state.page-1);
+        else if(v==='next') state.page = Math.min(pages, state.page+1);
+        else state.page = +v;
+        render();
+        window.scrollTo({top:0, behavior:'smooth'});
+      });
+    });
+  }
+
+  function render(){
+    if(!window.RLNV) return;
+    var rowsAll = pool();
+    paintPills(rowsAll);
+    var rows = rowsAll.filter(function(n){
+      if(state.type && n.type!==state.type) return false;
+      if(state.fStatus && (n.status||'ongoing')!==state.fStatus) return false;
+      if(state.fOrigin){
+        if(n.type==='audio'){ if((n.voice==='พากย์'?'พากย์':'เอไอ')!==state.fOrigin) return false; }
+        else if(n.type==='webtoon'){ if((n.origin||'ไทย')!==state.fOrigin) return false; }
+        else { var o=(n.workForm==='ผลงานแปล')?'แปล':(n.workForm?'ไทย':(/[\u4e00-\u9fff\uac00-\ud7afa-zA-Z]/.test(n.author||'')?'แปล':'ไทย')); if(o!==state.fOrigin) return false; }
+      }
+      if(state.fTags && state.fTags.length){
+        var tg=n.tags||[];
+        for(var ti=0;ti<state.fTags.length;ti++){ if(tg.indexOf(state.fTags[ti])<0) return false; }
+      }
+      if(state.fLen){
+        var e=(n.chapters&&n.chapters.length)||0;
+        if(state.fLen==='s'&&e>=100) return false;
+        if(state.fLen==='m'&&(e<100||e>500)) return false;
+        if(state.fLen==='l'&&e<=500) return false;
+      }
+      return true;
+    });
+    sortRows(rows);
+    var total = rows.length;
+    var slice = rows.slice((state.page-1)*PER, state.page*PER);
+    var rgrid = document.getElementById('rgrid'), rlistv = document.getElementById('rlistv');
+    var rhTitle = document.getElementById('rhTitle'), rhCnt = document.getElementById('rhCnt');
+
+    if(!state.touched){
+      rhTitle.innerHTML = 'ผลการค้นหา';
+      rhCnt.textContent = '';
+      rgrid.innerHTML = '<div class="rempty">ค้นหาผลงาน</div>';
+      rlistv.innerHTML = '';
+      document.getElementById('pager').style.display = 'none';
+      return;
+    }
+    var label = state.q ? ('"'+state.q+'"') : (state.cat ? ('หมวด'+state.cat) : (state.type ? TYPENAME[state.type] : 'ทั้งหมด'));
+    rhTitle.innerHTML = 'ผลการค้นหา <span class="kw">'+esc(label)+'</span>';
+    rhCnt.textContent = 'พบ '+total.toLocaleString()+' เรื่อง';
+
+    var html = slice.length
+      ? slice.map(state.view==='list' ? lrowHTML : gcardHTML).join('')
+      : '<div class="rempty">ไม่พบเรื่องที่ตรงกับ '+(state.q?('"'+esc(state.q)+'"'):'เงื่อนไขนี้')+'</div>';
+
+    if(state.view === 'list'){
+      rlistv.innerHTML = html; rlistv.classList.add('show');
+      rgrid.classList.add('hide'); rgrid.innerHTML='';
+    } else {
+      rgrid.innerHTML = html; rgrid.classList.remove('hide');
+      rlistv.classList.remove('show'); rlistv.innerHTML='';
+    }
+    paintPager(total);
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    document.getElementById('backBtn').addEventListener('click', function(){
+      history.length > 1 ? history.back() : (location.href = 'home_m.html');
+    });
+
+    var inp = document.getElementById('qInput'), clr = document.getElementById('qClear');
+    function doSearch(){
+      var q = inp.value.trim();
+      if(!q) return;
+      state.touched = true; state.q = q; state.cat = null; state.page = 1;
+      render();
+    }
+    inp.addEventListener('input', function(){ clr.classList.toggle('show', !!inp.value); });
+    inp.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); doSearch(); } });
+    clr.addEventListener('click', function(){ inp.value=''; clr.classList.remove('show'); inp.focus(); });
+
+    document.getElementById('pillRow').addEventListener('click', function(e){
+      var b = e.target.closest('.pill'); if(!b) return;
+      if(!state.q && !state.cat) return; /* ยังไม่ได้ค้น — แท็บยังไม่ทำงาน เหมือนเดสก์ท็อป */
+      document.querySelectorAll('.pill').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on'); state.type = b.getAttribute('data-type'); state.page = 1; render();
+    });
+
+    document.getElementById('catGrid').addEventListener('click', function(e){
+      var t = e.target.closest('.cat'); if(!t) return;
+      var nm = t.getAttribute('data-cat');
+      state.touched = true; state.page = 1;
+      if(nm === 'ทั้งหมด'){ state.cat=null; state.q=''; state.type=''; state.sort='new'; inp.value=''; }
+      else { state.cat = nm; state.q=''; inp.value=''; }
+      document.querySelectorAll('.pill').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-type')===''); });
+      render();
+      window.scrollTo({top: document.getElementById('rhTitle').getBoundingClientRect().top + window.pageYOffset - 70, behavior:'smooth'});
+    });
+
+    var sortBtn = document.getElementById('sortBtn'), sortMenu = document.getElementById('sortMenu');
+    var SLBL = {rel:'ความเกี่ยวข้อง', new:'ใหม่สุด', old:'เก่าสุด', pop:'ยอดนิยม'};
+    sortBtn.addEventListener('click', function(){ sortMenu.classList.toggle('show'); });
+    sortMenu.addEventListener('click', function(e){
+      var d = e.target.closest('[data-sort]'); if(!d) return;
+      state.sort = d.getAttribute('data-sort'); state.page = 1;
+      sortBtn.firstChild.nodeValue = SLBL[state.sort];
+      sortMenu.classList.remove('show'); render();
+    });
+    document.addEventListener('click', function(e){ if(!document.getElementById('sortSel').contains(e.target)) sortMenu.classList.remove('show'); });
+
+    document.getElementById('viewToggle').addEventListener('click', function(e){
+      var b = e.target.closest('button[data-view]'); if(!b) return;
+      document.querySelectorAll('#viewToggle button').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on'); state.view = b.getAttribute('data-view'); render();
+    });
+
+    function delegate(host){
+      host.addEventListener('click', function(e){
+        var sh = e.target.closest('[data-shelf]');
+        if(sh){
+          var u = window.RLAuth && RLAuth.me && RLAuth.me();
+          if(!u){ if(window.RLAuth) RLAuth.open('login'); return; }
+          var r = RLSHELF.toggle(u.id, sh.getAttribute('data-shelf'));
+          sh.classList.toggle('on', r.on);
+          sh.textContent = r.on ? '✓ อยู่ในชั้นแล้ว' : '+ เพิ่มเข้าชั้น';
+          return;
+        }
+        var nav = e.target.closest('[data-nav]');
+        if(nav){ alert('หน้ารายละเอียดเรื่อง — ยังไม่มีเวอร์ชันมือถือ เร็วๆ นี้'); return; }
+      });
+    }
+    delegate(document.getElementById('rgrid'));
+    delegate(document.getElementById('rlistv'));
+
+    /* ═══ แผงตัวกรอง ═══ */
+    function openDrawer(){ document.body.classList.add('fd-open'); }
+    function closeDrawer(){ document.body.classList.remove('fd-open'); }
+    document.getElementById('btnFilter').addEventListener('click', openDrawer);
+    document.getElementById('fdim').addEventListener('click', closeDrawer);
+    document.getElementById('fdClose').addEventListener('click', closeDrawer);
+
+    /* กลุ่มตัวเลือกเดี่ยว (.fops) — เลือกได้ทีละอัน รอกดยืนยัน */
+    document.querySelectorAll('#fdrawer .fops').forEach(function(g){
+      if(g.id === 'fworkOps') return; /* กลุ่มนี้ re-render ทุกครั้งที่เปลี่ยนประเภท จัดการแยก */
+      g.querySelectorAll('.fop').forEach(function(op){
+        op.addEventListener('click', function(){
+          g.querySelectorAll('.fop').forEach(function(x){ x.classList.remove('on'); });
+          op.classList.add('on');
+        });
+      });
+    });
+
+    /* ประเภท → ตัวเลือก "ผลงาน" เปลี่ยนตามพลวัต */
+    var WORK = {
+      novel:  [['ทั้งหมด',''],['ไทย','ไทย'],['แปล','แปล']],
+      webtoon:[['ทั้งหมด',''],['ไทย','ไทย'],['มังฮวา','มังฮวา'],['ม่านฮว่า','ม่านฮว่า'],['มังงะ','มังงะ']],
+      audio:  [['ทั้งหมด',''],['พากย์','พากย์'],['เอไอ','เอไอ']]
+    };
+    var wk = document.getElementById('fworkOps');
+    function renderWork(type){
+      wk.innerHTML = '';
+      if(!type){ wk.innerHTML = '<span class="fop-hint">เลือกประเภทก่อน</span>'; return; }
+      WORK[type].forEach(function(it, i){
+        var c = document.createElement('span');
+        c.className = 'fop' + (i===0 ? ' on' : '');
+        c.setAttribute('data-v', it[1]);
+        c.textContent = it[0];
+        c.addEventListener('click', function(){
+          wk.querySelectorAll('.fop').forEach(function(x){ x.classList.remove('on'); });
+          c.classList.add('on');
+        });
+        wk.appendChild(c);
+      });
+    }
+    document.querySelector('.fops2[data-k="type"]').querySelectorAll('.fop').forEach(function(op){
+      op.addEventListener('click', function(){
+        document.querySelectorAll('.fops2[data-k="type"] .fop').forEach(function(x){ x.classList.remove('on'); });
+        op.classList.add('on');
+        renderWork(op.getAttribute('data-v'));
+      });
+    });
+    renderWork('');
+
+    /* แท็ก (สูงสุด 20 — พอร์ตจากหน้าลงผลงานใหม่) */
+    (function(){
+      var host = document.getElementById('ftagWidget');
+      var TAG_MAX = 20;
+      host.innerHTML = '<div class="nv-tagbox"><div class="nv-tag-inwrap"><div class="nv-tag-top">'
+        + '<input class="nv-taginput" id="sfTagInput" placeholder="ค้นหาแท็ก แล้วกด Enter" autocomplete="off">'
+        + '<span class="nv-tag-count" id="sfTagCount">0/20</span></div>'
+        + '<div class="nv-tag-dd" id="sfTagDD" hidden></div></div>'
+        + '<div class="nv-sugrow"><span class="nv-sug-lb">แนะนำ:</span><span class="nv-sug-pills" id="sfSugPills"></span></div>'
+        + '<div class="nv-tags" id="sfTags"></div></div>';
+      var tagIn = document.getElementById('sfTagInput'), tagDD = document.getElementById('sfTagDD'),
+          tagSug = document.getElementById('sfSugPills'), tagsBox = document.getElementById('sfTags'),
+          tagCount = document.getElementById('sfTagCount');
+      function pool(){ try{ return JSON.parse(localStorage.getItem('rl_tags'))||{}; }catch(e){ return {}; } }
+      function updateCount(){ var n=tagsBox.querySelectorAll('.nv-chip').length; tagCount.textContent=n+'/'+TAG_MAX; }
+      function has(n){ return !![].find.call(tagsBox.querySelectorAll('.nv-chip'), function(c){ return c.getAttribute('data-t')===n; }); }
+      function addTag(n){
+        n = String(n||'').trim(); if(!n || has(n)) return false;
+        if(tagsBox.querySelectorAll('.nv-chip').length >= TAG_MAX) return false;
+        var chip = document.createElement('span'); chip.className='nv-chip'; chip.setAttribute('data-t', n);
+        chip.appendChild(document.createTextNode('#'+n));
+        var x = document.createElement('button'); x.type='button'; x.textContent='×';
+        x.addEventListener('click', function(){ chip.remove(); updateCount(); renderSug(); });
+        chip.appendChild(x); tagsBox.appendChild(chip);
+        updateCount(); renderSug(); return true;
+      }
+      function renderSug(){
+        var P = pool();
+        var list = Object.keys(P).filter(function(n){ return !has(n); }).sort(function(a,b){ return P[b]-P[a]; }).slice(0,6);
+        tagSug.innerHTML = '';
+        if(!list.length){ tagSug.innerHTML = '<span class="nv-sug-empty">ไม่มีแท็กแนะนำ</span>'; return; }
+        list.forEach(function(n){
+          var pill = document.createElement('span'); pill.className='nv-sug-pill';
+          pill.textContent = '#'+n+' +';
+          pill.addEventListener('click', function(){ addTag(n); });
+          tagSug.appendChild(pill);
+        });
+      }
+      function renderDD(){
+        var q = tagIn.value.trim().toLowerCase(), P = pool();
+        var list = Object.keys(P).filter(function(n){ return !has(n) && (!q || n.toLowerCase().indexOf(q)>-1); })
+          .sort(function(a,b){ return P[b]-P[a]; }).slice(0,12);
+        if(!q || !list.length){ tagDD.hidden = true; tagDD.innerHTML=''; return; }
+        tagDD.innerHTML = list.map(function(n){ return '<div class="ddrow" data-t="'+n+'"><span>#'+n+'</span><span class="ct">'+P[n]+' เรื่อง</span></div>'; }).join('');
+        tagDD.hidden = false;
+        tagDD.querySelectorAll('.ddrow').forEach(function(row){
+          row.addEventListener('mousedown', function(e){ e.preventDefault(); addTag(row.getAttribute('data-t')); tagIn.value=''; tagDD.hidden=true; tagIn.focus(); });
+        });
+      }
+      tagIn.addEventListener('input', renderDD);
+      tagIn.addEventListener('keydown', function(e){
+        if(e.key==='Enter'){
+          e.preventDefault();
+          var q = tagIn.value.trim(); if(!q) return;
+          var P = pool();
+          var exact = Object.keys(P).find(function(n){ return n===q; })
+            || Object.keys(P).filter(function(n){ return n.toLowerCase().indexOf(q.toLowerCase())>-1; }).sort(function(a,b){ return P[b]-P[a]; })[0]
+            || q;
+          addTag(exact); tagIn.value=''; tagDD.hidden=true;
+        } else if(e.key==='Backspace' && tagIn.value===''){
+          var cs = tagsBox.querySelectorAll('.nv-chip'); if(cs.length){ cs[cs.length-1].remove(); updateCount(); renderSug(); }
+        }
+      });
+      document.addEventListener('click', function(e){ if(!host.contains(e.target)) tagDD.hidden = true; });
+      renderSug(); updateCount();
+    })();
+
+    /* ยืนยัน / ล้างตัวกรอง */
+    function onOf(sel){ var el = document.querySelector(sel+' .fop.on'); return el ? el.getAttribute('data-v') : ''; }
+    document.getElementById('fdApply').addEventListener('click', function(){
+      var tags = [].map.call(document.querySelectorAll('#sfTags .nv-chip'), function(c){ return c.getAttribute('data-t'); });
+      state.touched = true;
+      state.type = onOf('.fops2[data-k="type"]');
+      state.cat = onOf('.fops[data-k="cat"]') || null;
+      state.fStatus = onOf('.fops[data-k="fStatus"]');
+      state.fOrigin = onOf('#fworkOps');
+      state.fLen = onOf('.fops[data-k="fLen"]');
+      state.sort = onOf('.fops[data-k="sort"]') || 'rel';
+      state.fTags = tags.length ? tags : [];
+      state.page = 1;
+      document.querySelectorAll('.pill').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-type')===state.type); });
+      var hasActive = state.fStatus || state.fOrigin || state.fLen || state.fTags.length || state.cat;
+      document.getElementById('fDot').style.display = hasActive ? '' : 'none';
+      render();
+      closeDrawer();
+    });
+    document.getElementById('fdClear').addEventListener('click', function(){
+      document.querySelectorAll('#fdrawer .fops').forEach(function(g){
+        if(g.id === 'fworkOps'){ renderWork(''); return; }
+        g.querySelectorAll('.fop').forEach(function(x, i){ x.classList.toggle('on', i===0); });
+      });
+      document.querySelectorAll('#sfTags .nv-chip').forEach(function(c){ c.remove(); });
+      var tc = document.getElementById('sfTagCount'); if(tc) tc.textContent = '0/20';
+    });
+
+    setTimeout(function(){
+      paintCats();
+      var q0 = new URLSearchParams(location.search).get('q');
+      if(q0){ state.touched=true; state.q=q0; inp.value=q0; }
+      render();
+    }, 300);
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,193 +1,157 @@
+import Link from 'next/link'
+import { ChevronRight } from 'lucide-react'
 import { ActiveGenreChip } from '@/components/home/ActiveGenreChip'
-import { CmsBannerCarousel } from '@/components/home/landing/CmsBannerCarousel'
-import { HomeBookStrip } from '@/components/home/landing/HomeBookStrip'
-import { LandingSectionHeading } from '@/components/home/landing/LandingSectionHeading'
-import { LimitedTimeCarousel } from '@/components/home/landing/LimitedTimeCarousel'
-import homeStyles from '@/components/home/landing/HomeLanding.module.css'
 import type { AudioCmsCatalog } from '@/lib/audio-cms-catalog'
 import type { AudioLandingCatalog } from '@/lib/audio-landing-catalog'
-import {
-  AUDIO_GENRE_OPTIONS,
-  AUDIO_PRIMARY_GENRES,
-  type AudioBookItem,
-  type AudioGenreKey,
-} from '@/lib/audiobook-landing-data'
+import { AUDIO_GENRE_OPTIONS, AUDIO_PRIMARY_GENRES, type AudioGenreKey } from '@/lib/audiobook-landing-data'
 import type { CmsBanner } from '@/lib/cms-catalog'
+import { AudioBannerCarousel } from './AudioBannerCarousel'
+import { AudioBookCarousel } from './AudioBookCarousel'
 import { AudioGenreSpotlight } from './AudioGenreSpotlight'
 import { AudioLatestUpdates } from './AudioLatestUpdates'
-import styles from './AudioLanding.module.css'
+import { AudioLimitedCarousel } from './AudioLimitedCarousel'
+import { AudioPopularityShowcase } from './AudioPopularityShowcase'
 import { AudioRankingShowcase } from './AudioRankingShowcase'
+import styles from './AudioLanding.module.css'
 
 type Props = {
   activeGenre?: AudioGenreKey | null
   cms: AudioCmsCatalog
   catalog: AudioLandingCatalog
-  catalogError: string | null
 }
 
-function filterBooks<T extends AudioBookItem>(items: T[], genre: AudioGenreKey | null) {
-  return genre ? items.filter((item) => item.filterKeys.includes(genre)) : items
+function SectionHeading({ title, href = '/discover' }: { title: string; href?: string }) {
+  return (
+    <div className={styles.sectionHeading}>
+      <h2>{title}</h2>
+      <Link href={href}>ดูเพิ่มเติม <ChevronRight /></Link>
+    </div>
+  )
 }
 
-function BannerColumns({ columns, aspect, slideSeconds, label }: {
+function BannerColumns({ columns, aspect, slideSeconds, label, className = '' }: {
   columns: CmsBanner[][]
   aspect: string
   slideSeconds: number
   label: string
+  className?: string
 }) {
   const visible = columns.filter((items) => items.length > 0)
   if (!visible.length) return null
-  const gridClass = visible.length === 1 ? 'grid-cols-1'
-    : visible.length === 2 ? 'grid-cols-1 sm:grid-cols-2'
-      : visible.length === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-        : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
   return (
-    <div className={`grid gap-4 ${gridClass}`}>
+    <div className={`${styles.bannerColumns} ${visible.length === 1 ? styles.bannerColumnsSingle : ''} ${className}`}>
       {visible.map((items, index) => (
-        <CmsBannerCarousel key={`${label}-${index}`} items={items} aspect={aspect} slideSeconds={slideSeconds} label={`${label} ${index + 1}`} />
+        <AudioBannerCarousel key={`${label}-${index}-${items[0]?.id}`} items={items} aspect={aspect} slideSeconds={slideSeconds} label={`${label} ${index + 1}`} />
       ))}
     </div>
   )
 }
 
-function CatalogError({ message }: { message: string }) {
-  return <div role="status" className="mt-10 rounded-2xl border border-dashed border-[#e2a9b0] bg-[#fff7f8] px-6 py-10 text-center text-sm text-[#9c3340]">{message}</div>
-}
-
-export function AudioLanding({ activeGenre = null, cms, catalog, catalogError }: Props) {
+export function AudioLanding({ activeGenre = null, cms, catalog }: Props) {
   const activeOption = AUDIO_GENRE_OPTIONS.find((option) => option.key === activeGenre)
-  const cmsWebBooks = filterBooks(cms.webBooks, activeGenre)
-  const recommendationBooks = cms.webBooks.length > 0 ? cmsWebBooks : catalog.recommended
-  const showRecommendations = cms.webSides.some((items) => items.length)
-    || cms.webRecommend.some((items) => items.length)
-    || (cms.webBooksEnabled && (recommendationBooks.length > 0 || !catalogError))
-  const launchHasBanners = cms.launch.some((items) => items.length)
+  const recommendationColumns = cms.webSides.some((column) => column.length > 0) ? cms.webSides : cms.webRecommend
+  const hasLaunch = cms.launch.some((column) => column.length > 0)
 
   return (
-    <div className={`${homeStyles.root} ${styles.root} pb-5 sm:pb-9`}>
+    <div className={styles.root}>
       {cms.hero.length > 0 && (
-        <CmsBannerCarousel items={cms.hero} aspect="1280 / 318" slideSeconds={cms.slideSeconds} label="แบนเนอร์หลักหนังสือเสียง" fullWidth />
+        <AudioBannerCarousel items={cms.hero} aspect="1280 / 318" slideSeconds={cms.slideSeconds} label="แบนเนอร์หลักหนังสือเสียง" hero />
       )}
 
-      <main className="mx-auto max-w-[1200px] px-5 sm:px-6">
-        {cms.activity.some((items) => items.length) && (
-          <section className="mt-7">
+      <main className={styles.container}>
+        {cms.activity.some((column) => column.length > 0) && (
+          <div className={styles.activityRow}>
             <BannerColumns columns={cms.activity} aspect="566 / 169" slideSeconds={cms.slideSeconds} label="กิจกรรมหนังสือเสียง" />
-          </section>
+          </div>
         )}
 
         {activeGenre && activeOption && (
-          <div className="mt-8 rounded-xl border border-[var(--home-line)] bg-[var(--home-soft)] px-4 py-3">
+          <div className={styles.genreNotice}>
             <ActiveGenreChip genre={activeGenre} label={activeOption.label} clearHref="/audiobook" />
           </div>
         )}
 
         {cms.limitedOffers.length > 0 && (
-          <section className="mt-10">
-            <LandingSectionHeading title="จำกัดเวลาพิเศษ" href="/discover" />
-            <LimitedTimeCarousel items={cms.limitedOffers} />
+          <section className={styles.section}>
+            <SectionHeading title="จำกัดเวลาพิเศษ" />
+            <AudioLimitedCarousel items={cms.limitedOffers} />
           </section>
         )}
 
-        {catalogError ? <CatalogError message={catalogError} /> : (
-          <>
-            <section className="mt-10">
-              <LandingSectionHeading title="ความนิยมสูงสุด" href="/ranking" />
-              <HomeBookStrip items={catalog.popular} variant="popular" />
-            </section>
-            <section className="mt-10">
-              <AudioRankingShowcase key={activeGenre ?? 'all'} groups={catalog.rankings} />
-            </section>
-          </>
-        )}
+        <AudioPopularityShowcase items={catalog.popular} />
+
+        <section className={styles.section}>
+          <SectionHeading title="อันดับรวมยอดนิยมสูงสุด" href="/ranking" />
+          <AudioRankingShowcase groups={catalog.rankings} />
+        </section>
 
         {cms.row3.length > 0 && (
-          <section className="mt-10">
-            <CmsBannerCarousel items={cms.row3} aspect="1152 / 138" slideSeconds={cms.slideSeconds} label="แบนเนอร์ใต้อันดับหนังสือเสียง" />
+          <section className={styles.bannerSection}>
+            <AudioBannerCarousel items={cms.row3} aspect="1152 / 138" slideSeconds={cms.slideSeconds} label="แบนเนอร์ใต้อันดับหนังสือเสียง" />
           </section>
         )}
 
-        {cms.launchEnabled && (launchHasBanners || !catalogError) && (
-          <section className="mt-10">
-            <LandingSectionHeading title="เปิดตัวหนังสือเสียงใหม่ยอดฮิต" href="/discover" />
-            {launchHasBanners
-              ? <BannerColumns columns={cms.launch} aspect="1140 / 400" slideSeconds={cms.slideSeconds} label="เปิดตัวหนังสือเสียงใหม่" />
-              : <HomeBookStrip items={catalog.newReleases} variant="recommended" />}
-          </section>
-        )}
+        <section className={styles.section}>
+          <SectionHeading title="เปิดตัวหนังสือเสียงใหม่ยอดฮิต" />
+          {hasLaunch && (
+            <BannerColumns columns={cms.launch} aspect="1140 / 400" slideSeconds={cms.slideSeconds} label="เปิดตัวหนังสือเสียงใหม่" className={styles.launchBanners} />
+          )}
+          <AudioBookCarousel items={catalog.newReleases} label="เปิดตัวหนังสือเสียงใหม่" />
+        </section>
 
         {cms.narrator.length > 0 && (
-          <section className="mt-10">
-            <CmsBannerCarousel items={cms.narrator} aspect="1152 / 138" slideSeconds={cms.slideSeconds} label="เชิญชวนนักพากย์" />
+          <section className={styles.bannerSection}>
+            <AudioBannerCarousel items={cms.narrator} aspect="1152 / 138" slideSeconds={cms.slideSeconds} label="เชิญชวนนักพากย์" />
           </section>
         )}
 
-        {!catalogError && (
-          <>
-            <section className="mt-10">
-              <LandingSectionHeading title="เปิดตัวหนังสือเสียงพากย์" href="/discover" />
-              <HomeBookStrip items={catalog.humanVoice} variant="recommended" />
-            </section>
-            <section className="mt-10">
-              <LandingSectionHeading title="เปิดตัวหนังสือเสียงเอไอ" href="/discover" />
-              <HomeBookStrip items={catalog.aiVoice} variant="recommended" />
-            </section>
-            <section className="mt-10">
-              <LandingSectionHeading title="จบแล้ว" href="/discover" />
-              <HomeBookStrip items={catalog.completed} variant="recommended" />
-            </section>
-          </>
-        )}
+        <section className={styles.section}>
+          <SectionHeading title="เปิดตัวหนังสือเสียงพากย์" />
+          <AudioBookCarousel items={catalog.humanVoice} label="หนังสือเสียงพากย์" />
+        </section>
 
-        {showRecommendations && (
-          <section className="mt-10">
-            <LandingSectionHeading title="แนะนำโดยเว็บ" href="/discover" />
-            {cms.webSides.some((items) => items.length) && (
-              <BannerColumns columns={cms.webSides} aspect="567 / 135" slideSeconds={cms.slideSeconds} label="แนะนำโดยเว็บ" />
-            )}
-            {cms.webRecommend.some((items) => items.length) && (
-              <div className={cms.webSides.some((items) => items.length) ? 'mt-4' : undefined}>
-                <BannerColumns columns={cms.webRecommend} aspect="567 / 169" slideSeconds={cms.slideSeconds} label="แนะนำโดยเว็บ" />
-              </div>
-            )}
-            {cms.webBooksEnabled && (
-              <div className={cms.webSides.some((items) => items.length) || cms.webRecommend.some((items) => items.length) ? 'mt-6' : undefined}>
-                <HomeBookStrip items={recommendationBooks} variant="recommended" />
+        <section className={styles.section}>
+          <SectionHeading title="เปิดตัวหนังสือเสียงเอไอ" />
+          <AudioBookCarousel items={catalog.aiVoice} label="หนังสือเสียงเอไอ" />
+        </section>
+
+        <section className={styles.section}>
+          <SectionHeading title="จบแล้ว" />
+          <AudioBookCarousel items={catalog.completed} label="หนังสือเสียงจบแล้ว" />
+        </section>
+
+        {(recommendationColumns.some((column) => column.length > 0) || cms.webBooks.length > 0) && (
+          <section className={styles.section}>
+            <SectionHeading title="แนะนำโดยเว็บ" />
+            <BannerColumns columns={recommendationColumns} aspect="567 / 135" slideSeconds={cms.slideSeconds} label="แนะนำโดยเว็บ" />
+            {cms.webBooks.length > 0 && (
+              <div className={recommendationColumns.some((column) => column.length > 0) ? styles.recommendBooks : undefined}>
+                <AudioBookCarousel items={cms.webBooks} label="หนังสือเสียงแนะนำโดยเว็บ" />
               </div>
             )}
           </section>
         )}
 
-        {!catalogError && (
-          <>
-            <section className="mt-10">
-              <LandingSectionHeading title="หนังสือเสียงฮิตตามหมวดหมู่" href="/discover" />
-              <AudioGenreSpotlight
-                key={activeGenre ?? 'all'}
-                items={catalog.categoryPopular}
-                primaryOptions={AUDIO_PRIMARY_GENRES}
-                allOptions={AUDIO_GENRE_OPTIONS}
-                activeGenre={activeGenre}
-                banners={cms.categoryBanners}
-                slideSeconds={cms.slideSeconds}
-              />
-            </section>
-            <section className="mt-10" id="latest">
-              <LandingSectionHeading title="หนังสือเสียงอัปเดตล่าสุด" />
-              <AudioLatestUpdates key={activeGenre ?? 'all'} items={catalog.latestUpdates} />
-            </section>
-          </>
-        )}
+        <section className={styles.section}>
+          <SectionHeading title="หนังสือเสียงฮิตตามหมวดหมู่" />
+          <AudioGenreSpotlight
+            key={activeGenre ?? 'all'}
+            items={catalog.categoryPopular}
+            primaryOptions={AUDIO_PRIMARY_GENRES}
+            allOptions={AUDIO_GENRE_OPTIONS}
+            activeGenre={activeGenre}
+            banners={cms.categoryBanners}
+            slideSeconds={cms.slideSeconds}
+          />
+        </section>
 
-        {catalogError && cms.categoryBanners.length > 0 && (
-          <section className="mt-10">
-            <LandingSectionHeading title="หนังสือเสียงฮิตตามหมวดหมู่" href="/discover" />
-            <CmsBannerCarousel items={cms.categoryBanners} aspect="1152 / 228" slideSeconds={cms.slideSeconds} label="เติมเต็มทุกอารมณ์" />
-          </section>
-        )}
+        <section className={styles.section} id="latest">
+          <SectionHeading title="หนังสือเสียงอัปเดตล่าสุด" />
+          <AudioLatestUpdates key={activeGenre ?? 'all'} items={catalog.latestUpdates} />
+        </section>
 
-        {cms.bottomCta.some((items) => items.length) && (
-          <section className="mt-10" aria-label="เมนูลัดหนังสือเสียง">
+        {cms.bottomCta.some((column) => column.length > 0) && (
+          <section className={styles.bottomCta} aria-label="เมนูลัดหนังสือเสียง">
             <BannerColumns columns={cms.bottomCta} aspect="276 / 130" slideSeconds={cms.slideSeconds} label="เมนูลัดหนังสือเสียง" />
           </section>
         )}

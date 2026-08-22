@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 
 const MOCK_NOTIFICATIONS = [
   { id: '1', title: 'ตอนใหม่มาแล้ว — ฝ่าดาวเคราะห์ทะลุมิติ ตอนที่ 121', time: '5 นาทีที่แล้ว' },
@@ -17,12 +18,12 @@ const MOCK_NOTIFICATIONS = [
   { id: '3', title: 'มีผู้ติดตามผลงานของคุณใหม่ 12 คน', time: 'เมื่อวาน' },
 ]
 
-export function NotificationDropdown() {
+export function NotificationDropdown({ triggerClassName }: { triggerClassName?: string } = {}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label="การแจ้งเตือน"
-        className="relative grid h-10 w-10 place-items-center rounded-full text-[#475569] transition-colors hover:bg-[#f5f6f8] hover:text-[#1e293b] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452] xl:h-[22px] xl:w-[22px]"
+        className={cn('relative grid h-10 w-10 place-items-center rounded-full text-[#475569] transition-colors hover:bg-[#f5f6f8] hover:text-[#1e293b] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452] xl:h-[22px] xl:w-[22px]', triggerClassName)}
       >
         <Bell className="h-[22px] w-[22px]" />
         <span className="absolute right-[7px] top-[7px] h-2 w-2 rounded-full border border-white bg-[#cc4452] xl:-right-0.5 xl:-top-0.5 xl:border-[1.5px]" />

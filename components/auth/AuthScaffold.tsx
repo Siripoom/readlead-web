@@ -187,11 +187,25 @@ export function AuthDivider() {
   )
 }
 
-export function SocialAuthButtons({ onUnavailable }: { onUnavailable: (provider: string) => void }) {
+export function SocialAuthButtons({
+  onGoogle,
+  onFacebook,
+  onApple,
+  googleBusy = false,
+  facebookBusy = false,
+  appleBusy = false,
+}: {
+  onGoogle: () => void
+  onFacebook: () => void
+  onApple: () => void
+  googleBusy?: boolean
+  facebookBusy?: boolean
+  appleBusy?: boolean
+}) {
   const providers = [
-    { name: 'Google', icon: <GoogleIcon />, className: 'border border-[#e8e3f0] bg-white text-[#47474c] hover:bg-[#f8f7fa]' },
-    { name: 'Facebook', icon: <FacebookIcon />, className: 'border border-[#1877f2] bg-[#1877f2] text-white hover:bg-[#1269df]' },
-    { name: 'Apple', icon: <AppleIcon />, className: 'border border-black bg-black text-white hover:bg-[#1d1d1d]' },
+    { name: 'Google', icon: <GoogleIcon />, className: 'border border-[#e8e3f0] bg-white text-[#47474c] hover:bg-[#f8f7fa]', onClick: onGoogle, busy: googleBusy },
+    { name: 'Facebook', icon: <FacebookIcon />, className: 'border border-[#1877f2] bg-[#1877f2] text-white hover:bg-[#1269df]', onClick: onFacebook, busy: facebookBusy },
+    { name: 'Apple', icon: <AppleIcon />, className: 'border border-black bg-black text-white hover:bg-[#1d1d1d]', onClick: onApple, busy: appleBusy },
   ]
   return (
     <div className="space-y-2.5">
@@ -199,12 +213,13 @@ export function SocialAuthButtons({ onUnavailable }: { onUnavailable: (provider:
         <button
           key={provider.name}
           type="button"
-          onClick={() => onUnavailable(provider.name)}
-          className={`flex h-[42px] w-full items-center justify-center gap-3 rounded-xl text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d04655] ${provider.className}`}
+          onClick={provider.onClick}
+          disabled={provider.busy || googleBusy || facebookBusy || appleBusy}
+          className={`flex h-[42px] w-full items-center justify-center gap-3 rounded-xl text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d04655] disabled:cursor-wait disabled:opacity-60 ${provider.className}`}
           aria-describedby="auth-feature-status"
         >
           {provider.icon}
-          ดำเนินการต่อด้วย {provider.name}
+          {provider.busy ? `กำลังเชื่อมต่อ ${provider.name}...` : `ดำเนินการต่อด้วย ${provider.name}`}
         </button>
       ))}
     </div>

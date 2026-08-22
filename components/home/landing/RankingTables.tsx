@@ -49,7 +49,7 @@ function RankBadge({ rank, featured = false }: { rank: number; featured?: boolea
 }
 
 function detailHref(item: HomeRankingItem) {
-  return `/detail?bookId=${encodeURIComponent(item.detailId)}`
+  return item.href ?? `/detail?bookId=${encodeURIComponent(item.detailId)}`
 }
 
 function FeaturedRank({ item }: { item: HomeRankingItem }) {

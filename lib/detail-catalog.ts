@@ -27,6 +27,8 @@ export interface DetailCatalogItem extends Work {
   originLabel: string
   narrationType?: 'human' | 'ai'
   availability?: 'coming_soon' | 'published'
+  /** Novel whose author also uploaded an audio narration alongside the text — unlocks the read/listen toggle on the detail page. */
+  hasAudioEdition?: boolean
 }
 
 export type DetailEpisode = Episode
@@ -163,6 +165,7 @@ MOCK_WORKS.forEach((work, index) => add({
   genreLabel: work.genres.join(' · '),
   originLabel: work.type === 'audiobook' ? 'พากย์' : work.origin === 'translated' ? 'แปล' : 'ไทย',
   narrationType: work.type === 'audiobook' ? 'human' : undefined,
+  hasAudioEdition: work.type === 'novel' && work.id === '1',
 }))
 
 ;[

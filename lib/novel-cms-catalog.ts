@@ -2,6 +2,7 @@ import type { HomeBookStripItem, HomeLimitedOffer } from '@/lib/home-landing-dat
 import {
   cmsPlacement,
   enabledCmsSection,
+  findCmsSection,
   isRecord,
   mapCmsBook,
   mapCmsLimitedOffer,
@@ -22,6 +23,7 @@ export type NovelCmsCatalog = {
   slideSeconds: number
   hero: CmsBanner[]
   activity: CmsBanner[][]
+  act3: CmsBanner[]
   limitedOffers: HomeLimitedOffer[]
   writerBanners: CmsBanner[]
   coverflow: NovelCmsCoverflow | null
@@ -29,12 +31,45 @@ export type NovelCmsCatalog = {
   categoryBanners: CmsBanner[]
   webRecommend: CmsBanner[][]
   launch: CmsBanner[][]
+  sectionState: Record<NovelCmsSectionKey, NovelCmsSectionState>
+}
+
+export type NovelCmsSectionKey =
+  | 'hero'
+  | 'activity'
+  | 'sale'
+  | 'act3'
+  | 'writer-banner'
+  | 'web-coverflow'
+  | 'web-books'
+  | 'category'
+  | 'web-recommend'
+  | 'launch'
+
+export type NovelCmsSectionState = 'enabled' | 'disabled' | 'unavailable'
+
+const SECTION_KEYS: NovelCmsSectionKey[] = [
+  'hero', 'activity', 'sale', 'act3', 'writer-banner', 'web-coverflow',
+  'web-books', 'category', 'web-recommend', 'launch',
+]
+
+function unavailableSectionState(): Record<NovelCmsSectionKey, NovelCmsSectionState> {
+  return Object.fromEntries(SECTION_KEYS.map((key) => [key, 'unavailable'])) as Record<NovelCmsSectionKey, NovelCmsSectionState>
+}
+
+function sectionState(payload: unknown): Record<NovelCmsSectionKey, NovelCmsSectionState> {
+  return Object.fromEntries(SECTION_KEYS.map((key) => {
+    const section = findCmsSection(payload, key)
+    if (!section) return [key, 'unavailable']
+    return [key, section.enabled === false ? 'disabled' : 'enabled']
+  })) as Record<NovelCmsSectionKey, NovelCmsSectionState>
 }
 
 const EMPTY_CMS: NovelCmsCatalog = {
   slideSeconds: 5,
   hero: [],
   activity: [[], []],
+  act3: [],
   limitedOffers: [],
   writerBanners: [],
   coverflow: null,
@@ -42,6 +77,7 @@ const EMPTY_CMS: NovelCmsCatalog = {
   categoryBanners: [],
   webRecommend: [[], []],
   launch: [[], []],
+  sectionState: unavailableSectionState(),
 }
 
 function bannersFor(section: CmsSection | null, baseUrl: string) {
@@ -77,6 +113,7 @@ export async function getNovelCmsCatalog(): Promise<NovelCmsCatalog> {
       : 5
     const hero = enabledCmsSection(payload, 'hero')
     const activity = enabledCmsSection(payload, 'activity')
+    const act3 = enabledCmsSection(payload, 'act3')
     const sale = enabledCmsSection(payload, 'sale')
     const writer = enabledCmsSection(payload, 'writer-banner')
     const coverflowSection = enabledCmsSection(payload, 'web-coverflow')
@@ -112,6 +149,7 @@ export async function getNovelCmsCatalog(): Promise<NovelCmsCatalog> {
       slideSeconds,
       hero: bannersFor(hero, baseUrl),
       activity: bannerColumns(activity, 2, baseUrl),
+      act3: bannersFor(act3, baseUrl),
       limitedOffers,
       writerBanners: bannersFor(writer, baseUrl),
       coverflow: main && covers.length ? { main, covers } : null,
@@ -119,6 +157,7 @@ export async function getNovelCmsCatalog(): Promise<NovelCmsCatalog> {
       categoryBanners: bannersFor(category, baseUrl),
       webRecommend: bannerColumns(webRecommend, 2, baseUrl),
       launch: bannerColumns(launch, 2, baseUrl),
+      sectionState: sectionState(payload),
     }
   } catch (error) {
     console.error('Novel CMS catalog load failed', error instanceof Error ? error.message : 'UnknownError')

@@ -7,6 +7,30 @@ body:has([data-auth-page]) [data-site-footer] {
   display: none;
 }
 
+@media (max-width: 639px) {
+  body:has([data-home-landing]) {
+    background: #fbfbfc;
+  }
+
+  body:has([data-home-landing]) [data-site-footer] {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 480px;
+    border-color: #ececf1;
+    background: #fbfbfc;
+  }
+
+  body:has([data-home-landing]) [data-site-footer] [data-footer-main],
+  body:has([data-home-landing]) [data-site-footer] [data-footer-divider],
+  body:has([data-home-landing]) [data-site-footer] [data-footer-bottom] {
+    display: none;
+  }
+
+  body:has([data-home-landing]) [data-site-footer] [data-home-mobile-footer] {
+    display: block;
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

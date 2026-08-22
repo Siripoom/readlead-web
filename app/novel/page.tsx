@@ -2,6 +2,8 @@ import { NovelLanding } from '@/components/novel/landing/NovelLanding'
 import { getNovelCmsCatalog } from '@/lib/novel-cms-catalog'
 import { getNovelLandingCatalog } from '@/lib/novel-landing-catalog'
 import { NOVEL_GENRE_OPTIONS } from '@/lib/novel-landing-data'
+import { prepareNovelCmsCatalog, prepareNovelLandingCatalog } from '@/lib/novel-landing-view'
+import type { Genre } from '@/lib/types'
 
 type Props = {
   searchParams: Promise<{ genre?: string | string[] }>
@@ -18,12 +20,12 @@ export default async function NovelPage({ searchParams }: Props) {
     cmsPromise,
     getNovelLandingCatalog(activeGenre),
   ])
+  const genreKey = activeGenre as Genre | null
   return (
     <NovelLanding
       activeGenre={activeGenre}
-      catalog={catalogResult.catalog}
-      catalogError={catalogResult.error}
-      cms={cms}
+      catalog={prepareNovelLandingCatalog(catalogResult.catalog, genreKey)}
+      cms={prepareNovelCmsCatalog(cms, genreKey)}
     />
   )
 }

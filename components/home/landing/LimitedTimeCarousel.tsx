@@ -90,7 +90,7 @@ export function LimitedTimeCarousel({ items }: { items: HomeLimitedOffer[] }) {
         {items.map((item) => (
           <Link
             key={item.id}
-            href={`/detail?bookId=${encodeURIComponent(item.detailId)}`}
+            href={item.href ?? `/detail?bookId=${encodeURIComponent(item.detailId)}`}
             className="group w-[144px] shrink-0 snap-start sm:w-40"
           >
             <OfferCover item={item} elapsedSeconds={elapsedSeconds} />

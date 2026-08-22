@@ -168,7 +168,14 @@ function mapRanking(id: AudioRankingId, items: RawAudioCard[]): AudioRankingGrou
 }
 
 function mapLatest(raw: RawAudioUpdate, index: number): AudioLatestUpdate {
-  return { ...mapCard(raw, index), id: raw.latestEpisode.id, updatedLabel: `ตอนที่ ${raw.latestEpisode.episodeNumber}` }
+  return {
+    ...mapCard(raw, index),
+    id: raw.latestEpisode.id,
+    updatedLabel: `ตอนที่ ${raw.latestEpisode.episodeNumber}`,
+    description: raw.synopsis.trim() || raw.tagline.trim(),
+    episodeTitle: raw.latestEpisode.title,
+    updatedAt: new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium' }).format(new Date(raw.latestEpisode.publishedAt)),
+  }
 }
 
 export async function getAudioLandingCatalog(genre?: AudioGenreKey | null): Promise<AudioLandingCatalogResult> {

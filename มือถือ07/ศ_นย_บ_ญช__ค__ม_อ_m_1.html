@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ReadLead — คู่มือผู้ใช้ (มือถือ)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800;900&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#cc4452; --brand-d:#b23a48; --brand-soft:#fae8ea;
+  --ink:#1c1b22; --ink2:#4a4656; --mut:#8a8894; --mut3:#a8a2bd; --line:#ececf1; --bg:#ffffff; --soft:#f2f3f6;
+  --mxw:480px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg)}
+body{font-family:'Noto Sans Thai',sans-serif;color:var(--ink)}
+a{text-decoration:none;color:inherit}
+svg{display:block}
+button,input,select,textarea{font-family:inherit}
+
+#stop{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:var(--mxw);height:52px;background:#fff;border-bottom:1px solid #E9EDF2;display:flex;align-items:center;gap:4px;padding:0 6px;z-index:9000}
+#stop .back{width:38px;height:38px;border:none;background:none;display:flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;flex:none}
+#stop .back svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#stop h1{font-size:16.5px;font-weight:800;flex:1}
+
+#swrap{max-width:var(--mxw);margin:52px auto 0;padding:16px 16px 32px}
+
+/* hero */
+.hhero{position:relative;overflow:hidden;border-radius:18px;padding:26px 18px;background:radial-gradient(120% 160% at 85% 10%,rgba(255,255,255,.18),transparent 50%),linear-gradient(120deg,#cc4452,#b23a48);color:#fff;text-align:center;margin-bottom:22px}
+.hhero .deco{position:absolute;left:-30px;bottom:-40px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08)}
+.hhero h1{font-size:19px;font-weight:800;margin:0;position:relative}
+.hhero p{margin:6px 0 16px;font-size:12.5px;opacity:.9;position:relative}
+.hsearch{position:relative;display:flex;align-items:center;gap:8px;background:#fff;border-radius:12px;padding:4px 4px 4px 14px}
+.hsearch svg{width:17px;height:17px;stroke:var(--mut);fill:none;stroke-width:2;flex:0 0 17px}
+.hsearch input{flex:1;border:none;outline:none;font-family:'Sarabun',sans-serif;font-size:13px;color:var(--ink);padding:9px 0;background:none;min-width:0}
+.hsearch button{background:var(--brand-d);color:#fff;border:none;font-weight:700;font-size:12.5px;padding:9px 14px;border-radius:9px;cursor:pointer}
+
+/* category list (แนวตั้งบนมือถือ) */
+.stitle{font-size:15.5px;font-weight:800;margin:0 0 12px}
+.catgrid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:26px}
+.cat{display:flex;align-items:flex-start;gap:12px;padding:14px;cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:14px}
+.cat.active{border-color:var(--brand)}
+.cat .ci{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex:0 0 38px;background:var(--brand-soft)}
+.cat .ci svg{width:19px;height:19px;stroke:var(--brand-d);fill:none;stroke-width:1.7}
+.cat b{font-size:13.5px;font-weight:700;display:block}
+.cat p{margin:2px 0 0;font-size:11.5px;color:var(--mut);line-height:1.5}
+.cat .n{font-size:11px;color:var(--brand-d);font-weight:700;margin-top:6px;display:inline-block}
+
+.cat-panel{display:none;background:#fff;border:1px solid var(--line);border-radius:14px;padding:6px 14px;margin:-4px 0 10px}
+.cat-panel.open{display:block}
+.cat-panel h3{font-size:14px;font-weight:800;padding:14px 0 4px;display:flex;align-items:baseline;gap:8px}
+.cat-panel .pcount{font-size:11px;font-weight:600;color:var(--mut)}
+
+/* faq accordion (ใช้ร่วมกันทั้งใน catPanel และ faqwrap) */
+.faqlist{}
+.faq{border-top:1px solid var(--line)}
+.faq .q{display:flex;align-items:center;gap:11px;padding:14px 2px;cursor:pointer;font-weight:700;font-size:13.5px}
+.faq .q .qi{width:24px;height:24px;border-radius:8px;background:var(--brand-soft);color:var(--brand-d);display:flex;align-items:center;justify-content:center;flex:0 0 24px;font-weight:800;font-size:11px}
+.faq .q .ch{margin-left:auto;color:var(--mut);transition:.2s;flex:0 0 auto}
+.faq .q .ch svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.faq.open .q .ch{transform:rotate(180deg);color:var(--brand-d)}
+.faq .a{max-height:0;overflow:hidden;transition:max-height .25s ease}
+.faq.open .a{max-height:1200px}
+.faq .a>div{padding:0 2px 16px;font-size:12.5px;color:var(--ink2);line-height:1.7}
+.faq .a h4{font-size:13px;font-weight:800;margin:12px 0 4px;color:var(--ink)}
+.faq .a .step{display:flex;align-items:flex-start;gap:9px;margin:8px 0}
+.faq .a .step .num{width:20px;height:20px;border-radius:50%;background:var(--brand);color:#fff;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 20px}
+.faq .a .step p{margin:0;font-size:12.5px}
+.faq .a .note{font-size:11px;color:var(--mut);margin-top:8px;font-style:italic}
+.faq .a .mock{font-size:11px;color:var(--mut);margin-top:8px;font-style:italic}
+.htbl{width:100%;border-collapse:collapse;margin:10px 0;font-size:11.5px}
+.htbl th,.htbl td{border:1px solid var(--line);padding:7px 8px;text-align:left}
+.htbl th{background:var(--soft);font-weight:700}
+.nomatch{padding:20px 2px;color:var(--mut);font-size:12.5px;text-align:center}
+
+.faqwrap{background:#fff;border:1px solid var(--line);border-radius:16px;padding:6px 16px 8px;margin-bottom:20px}
+.faqhead{padding:14px 0 4px}
+.faqhead h2{font-size:15.5px;font-weight:800;margin:0}
+
+/* CTA */
+.cta{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 18px}
+.cta .cic{width:44px;height:44px;border-radius:50%;background:var(--brand-soft);display:flex;align-items:center;justify-content:center}
+.cta .cic svg{width:22px;height:22px;stroke:var(--brand-d);fill:none;stroke-width:1.8}
+.cta b{font-size:14.5px;font-weight:800}
+.cta p{margin:2px 0 0;font-size:12px;color:var(--mut)}
+.cbtn.primary{display:inline-block;margin-top:4px;background:var(--brand);color:#fff;font-weight:700;font-size:13px;padding:11px 22px;border-radius:11px}
+</style>
+</head>
+<body>
+
+<div id="stop">
+  <a href="#" class="rl-brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>ReadLead</a>
+  <button class="tbtn" aria-label="ค้นหา"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
+  <button class="tbtn" aria-label="แจ้งเตือน"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></button>
+  <button id="mLogin">เข้าสู่ระบบ</button>
+  <button class="tbtn" id="mAva" style="display:none" aria-label="โปรไฟล์"><span class="ava-c" id="mAvaC"></span></button>
+</div>
+
+<!-- ═══ หน้าโปรไฟล์ (กดรูปโปรไฟล์บน topbar) ═══ -->
+<div id="mprof">
+  <div class="ph">
+    <div class="pava" id="mProfAva"></div>
+    <div class="pwho"><b id="mProfName"></b><span id="mProfHandle"></span></div>
+  </div>
+  <div class="pcoin">
+    <span class="ci"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8.5 10.5h5a1.75 1.75 0 010 3.5h-3a1.75 1.75 0 000 3.5h5"/></svg></span>
+    <b id="mProfCoins">0.00</b>
+    <a class="topup" href="#">เติมเหรียญ</a>
+  </div>
+  <nav>
+    <a href="ศูนย์บัญชี_สมัครนักเขียน_m.html" id="mProfApply"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>สมัครนักเขียน</a>
+    <a href="ศูนย์บัญชี_ศูนย์นักเขียน_m.html" id="mProfDash" style="display:none"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>ศูนย์นักเขียน</a>
+    <a href="ศูนย์บัญชี_กระเป๋าเงิน_m.html"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><path d="M16 14h2"/></svg>กระเป๋าเงิน</a>
+    <a href="ศูนย์บัญชี_แจ้งปัญหา_m.html"><svg viewBox="0 0 24 24"><path d="M4 13a8 8 0 0 1 16 0"/><rect x="2.5" y="13" width="4" height="7" rx="2"/><rect x="17.5" y="13" width="4" height="7" rx="2"/><path d="M20 19a3 3 0 0 1-3 3h-3"/></svg>แจ้งปัญหา</a>
+    <a href="ศูนย์บัญชี_คอมเม้นและรีวิว_m.html"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.8-.8L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/><path d="M8.5 11h7M8.5 14h4"/></svg>คอมเมนต์ & รีวิวของฉัน</a>
+    <a href="ศูนย์บัญชี_คู่มือ_m.html"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2V5z"/><path d="M19 3v18"/><path d="M8 8h7M8 12h7"/></svg>คู่มือผู้ใช้</a>
+    <a href="ศูนย์บัญชี_ตั้งค่า_m.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33h0a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h0a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>การตั้งค่า</a>
+  </nav>
+  <div class="psep"></div>
+  <nav>
+    <a href="#"><svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 11-12.72 0"/><path d="M12 2v10"/></svg>ออกจากระบบ</a>
+  </nav>
+</div>
+
+<div id="swrap">
+
+  <section class="hhero">
+    <div class="deco"></div>
+    <h1>เราช่วยอะไรคุณได้บ้าง?</h1>
+    <p>ค้นหาคำตอบ คู่มือการใช้งาน และเคล็ดลับต่าง ๆ ของ ReadLead</p>
+    <div class="hsearch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="hsearch" type="text" placeholder="พิมพ์คำถามหรือคำค้น..."><button>ค้นหา</button></div>
+  </section>
+
+  <h2 class="stitle">หมวดหมู่ความช่วยเหลือ</h2>
+  <div class="catgrid">
+    <div class="cat"><span class="ci"><svg viewBox="0 0 24 24"><path d="M5 13l-2 9 9-2 9-9-7-7-9 9z"/><path d="M14 6l4 4"/><circle cx="9" cy="15" r="1"/></svg></span><div><b>เริ่มต้นใช้งาน</b><p>รู้จัก ReadLead และเริ่มอ่านนิยายเรื่องแรก</p><span class="n">8 บทความ</span></div></div>
+    <div class="cat"><span class="ci"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2V5z"/><path d="M19 3v18"/></svg></span><div><b>การอ่าน & ชั้นหนังสือ</b><p>วิธีอ่าน บันทึกเรื่องโปรด และตั้งค่าการอ่าน</p><span class="n">12 บทความ</span></div></div>
+    <div class="cat"><span class="ci"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h4.5a1.5 1.5 0 0 1 0 3H9"/></svg></span><div><b>เหรียญ & การเติมเงิน</b><p>เติมเหรียญ ช่องทางชำระเงิน และใบเสร็จ</p><span class="n">9 บทความ</span></div></div>
+    <div class="cat"><span class="ci"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 11h18"/></svg></span><div><b>เลเวล โหวต & ตั๋ว</b><p>ระดับผู้ใช้ EXP ตั๋วแนะนำ/รายเดือน และการโหวต</p><span class="n">10 บทความ</span></div></div>
+    <div class="cat"><span class="ci"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span><div><b>สำหรับนักเขียน</b><p>สมัครนักเขียน ลงผลงาน และรับรายได้</p><span class="n">15 บทความ</span></div></div>
+    <div class="cat"><span class="ci"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span><div><b>บัญชี & ความปลอดภัย</b><p>ตั้งค่าบัญชี รหัสผ่าน และการยืนยันตัวตน</p><span class="n">10 บทความ</span></div></div>
+  </div>
+  <div id="catPanel" class="cat-panel"></div>
+
+  <section class="faqwrap">
+    <div class="faqhead"><h2>คำถามที่พบบ่อย</h2></div>
+    <div id="faqlist"></div>
+  </section>
+
+  <section class="cta">
+    <span class="cic"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.8-.8L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg></span>
+    <div><b>ยังหาคำตอบไม่เจอ?</b><p>ทีมงานพร้อมช่วยเหลือคุณ ติดต่อเราได้ตลอด 24 ชม.</p></div>
+    <a class="cbtn primary" id="ctaContact" href="ศูนย์บัญชี_แจ้งปัญหา_m.html">ติดต่อทีมงาน</a>
+  </section>
+
+</div>
+
+<script>
+(function(){var R=document;function gById(id){return R.querySelector('#'+id);}
+
+
+
+const faqs=[
+ ['เริ่มอ่านนิยายฟรีได้อย่างไร?','นิยายหลายเรื่องบน ReadLead อ่านได้ฟรีทันที เพียงกดเข้าเรื่องที่สนใจแล้วกด "เริ่มอ่าน" ทั้งนี้บางตอนพิเศษอาจต้องใช้เหรียญหรือตั๋วในการปลดล็อก'],
+ ['ตั๋วโหวตได้มาจากไหน และโหวตยังไง?','คุณจะได้รับตั๋วรายวันและรายเดือนอัตโนมัติเมื่อเข้าใช้งาน นำตั๋วไปโหวตให้เรื่องที่ชอบได้ที่หน้านิยาย เพื่อช่วยดันอันดับเรื่องนั้นให้สูงขึ้น'],
+ ['เติมเหรียญผ่านช่องทางไหนได้บ้าง?','รองรับพร้อมเพย์ บัตรเครดิต/เดบิต ทรูมันนี่ วอลเล็ท และเคาน์เตอร์เซอร์วิส เลือกช่องทางได้ที่หน้ากระเป๋าเงิน'],
+ ['สมัครเป็นนักเขียนต้องใช้เอกสารอะไรบ้าง?','ต้องใช้รูปบัตรประชาชนและรูปหน้าสมุดบัญชีธนาคาร (เซ็นรับรองสำเนา) พร้อมกรอกข้อมูลส่วนตัวให้ตรงกับบัตรประชาชนที่หน้าสมัครนักเขียน'],
+ ['เปลี่ยนชื่อผู้ใช้ได้กี่ครั้ง?','สามารถเปลี่ยนชื่อผู้ใช้ได้สูงสุด 3 ครั้งต่อบัญชี กรุณาตรวจสอบให้แน่ใจก่อนยืนยันทุกครั้ง'],
+ ['ลืมรหัสผ่านต้องทำอย่างไร?','กด "ลืมรหัสผ่าน" ที่หน้าเข้าสู่ระบบ ระบบจะส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ไปยังอีเมลที่ลงทะเบียนไว้'],
+ ['เลเวลและ EXP คำนวณจากอะไร?','คุณจะได้รับ EXP จากการอ่าน การโหวต และการทำกิจกรรมต่าง ๆ เมื่อสะสมครบตามเกณฑ์จะเลื่อนเลเวลและปลดล็อกฉายาใหม่'],
+ ['ทำไมเลเวลของฉันลดลง?','ตั้งแต่ Lv5 ขึ้นไป ระดับมีอายุ 365 วัน หากภายในรอบปีสะสม EXP ไม่ถึงเกณฑ์รักษาระดับ ระดับจะลดลง 1 ขั้น โดยทั่วไปจะเกิดเฉพาะกับผู้ที่ห่างหายจากการใช้งานนานเกือบทั้งปี'],
+ ['จ่ายเงินช่วยให้ขึ้นเลเวลเร็วขึ้นไหม?','การใช้จ่าย (สมัครอ่านตอน/สนับสนุนผลงาน) จะถูกแปลงเป็น EXP จึงช่วยให้เลื่อนระดับเร็วขึ้น แต่มีเพดานต่อสัปดาห์ ไม่สามารถจ่ายรวดเดียวเพื่อกระโดดข้ามระดับได้ ผู้ใช้ฟรีที่อ่านสม่ำเสมอก็ยังไต่ถึงระดับสูงได้เช่นกัน'],
+ ['ตั๋วแนะนำกับตั๋วเดือนต่างกันยังไง?','ตั๋วแนะนำได้ฟรีรายวันตามระดับผู้ใช้ ส่วนตั๋วเดือนได้จากการใช้จ่ายถึงเกณฑ์ และแจกฟรีต้นเดือนตามระดับ (ตั้งแต่ Lv2) ทั้งสองชนิดใช้โหวตดันอันดับเรื่องที่ชอบได้เหมือนกัน']];
+
+const list=gById('faqlist');
+function render(items){
+  list.innerHTML=items.length?items.map((f,i)=>`<div class="faq"><div class="q"><span class="qi">Q</span>${f[0]}<span class="ch"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></span></div><div class="a"><div>${f[1]}</div></div></div>`).join(''):'<div class="nomatch">ไม่พบคำถามที่ตรงกับการค้นหา ลองพิมพ์คำอื่น หรือติดต่อทีมงานด้านล่าง</div>';
+  list.querySelectorAll('.faq .q').forEach(q=>q.addEventListener('click',()=>q.parentNode.classList.toggle('open')));
+}
+render(faqs);
+gById('hsearch').addEventListener('input',e=>{const v=e.target.value.trim().toLowerCase();render(faqs.filter(f=>(f[0]+f[1]).toLowerCase().includes(v)));});
+
+
+
+})();
+
+</script>
+<script>
+(function(){
+  var DATA=[
+    {t:'เริ่มต้นใช้งาน',n:8,a:['สมัครสมาชิกและเข้าสู่ระบบ','เริ่มอ่านนิยายเรื่องแรก','ปรับแต่งโปรไฟล์ของคุณ','ค้นหาเรื่องที่ชอบ']},
+    {t:'การอ่าน & ชั้นหนังสือ',n:12,a:['บันทึกเรื่องโปรดลงชั้นหนังสือ','ปรับขนาดตัวอักษรและพื้นหลัง','อ่านต่อจากที่ค้างไว้','จัดการชั้นหนังสือของคุณ']},
+    {t:'เหรียญ & การเติมเงิน',n:9,a:['วิธีเติมเหรียญเข้าบัญชี','ช่องทางชำระเงินที่รองรับ','ดูประวัติการเติมเงิน','ขอใบเสร็จ/ใบกำกับภาษี']},
+    {t:'เลเวล โหวต & ตั๋ว',n:10,a:['ระดับผู้ใช้ทั้ง 9 เลเวล','EXP ได้มาจากไหนบ้าง','ตั๋วแนะนำ vs ตั๋วเดือน ต่างกันยังไง','วิธีได้ตั๋วโหวตแนะนำ','วิธีได้ตั๋วโหวตรายเดือน','การจ่ายเงินช่วยขึ้นเลเวลเร็วขึ้น','การรักษาระดับและการตกชั้น','วิธีโหวตให้เรื่องโปรด','กติกาการได้รับ EXP จากรีวิวและคอมเมนต์','สนับสนุนผลงานและแต้มแฟนคลับ']},
+    {t:'สำหรับนักเขียน',n:15,a:['สมัครเป็นนักเขียน','ลงผลงานเรื่องแรก','ระบบรายได้นักเขียน','ตั้งราคาตอนและโปรโมชั่น','ข้อกำหนดและเงื่อนไขการเป็นนักเขียน']},
+    {t:'บัญชี & ความปลอดภัย',n:10,a:['เปลี่ยนรหัสผ่าน','จัดการบัญชีที่เชื่อมต่อ','ตั้งค่าการแจ้งเตือน','ลบบัญชีถาวร','ข้อตกลงและเงื่อนไขการใช้บริการ','นโยบายคุ้มครองข้อมูลส่วนบุคคล']}
+  ];
+  var panel,cats,grid;
+  var CH='<span class="ch"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></span>';
+  function esc(x){return x.replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+  // เนื้อหาจริงของบทความหมวด "เลเวล โหวต & ตั๋ว" (ค่าตัวเลขเป็นค่าปัจจุบัน อาจปรับเปลี่ยนได้)
+  var BODY={
+    'ระดับผู้ใช้ทั้ง 9 เลเวล':
+      '<p>ReadLead มีระบบระดับผู้ใช้ 9 ขั้น (Lv0–Lv8) ยิ่งสะสม EXP มากก็ยิ่งเลื่อนระดับและปลดล็อกฉายาใหม่ พร้อมสิทธิ์โหวตที่มากขึ้น ตาราง EXP ที่ต้องสะสมรวมเพื่อไปถึงแต่ละระดับเป็นดังนี้</p>'
+      +'<table class="htbl"><tr><th>ระดับ</th><th>ฉายา</th><th>EXP สะสมที่ต้องถึง</th></tr>'
+      +'<tr><td>Lv0</td><td>นักอ่านขาจร</td><td>0</td></tr>'
+      +'<tr><td>Lv1</td><td>นักอ่านฝึกหัด</td><td>200</td></tr>'
+      +'<tr><td>Lv2</td><td>นักอ่านทั่วไป</td><td>1,000</td></tr>'
+      +'<tr><td>Lv3</td><td>นักอ่านตัวจริง</td><td>6,000</td></tr>'
+      +'<tr><td>Lv4</td><td>ขาประจำ</td><td>30,000</td></tr>'
+      +'<tr><td>Lv5</td><td>ติ่งนิยาย</td><td>54,000</td></tr>'
+      +'<tr><td>Lv6</td><td>นกฮูก</td><td>78,000</td></tr>'
+      +'<tr><td>Lv7</td><td>หนอนหนังสือ</td><td>118,000</td></tr>'
+      +'<tr><td>Lv8</td><td>ผู้หยั่งรู้</td><td>158,000</td></tr></table>'
+      +'<p class="note">ตัวเลขเกณฑ์ EXP เป็นค่าปัจจุบัน อาจมีการปรับเปลี่ยนได้ในอนาคต</p>',
+    'EXP ได้มาจากไหนบ้าง':
+      '<p>EXP สะสมได้ทั้งจากกิจกรรมฟรีและจากการใช้จ่าย โดยแต่ละช่องทางมีเพดานต่อสัปดาห์ (รีเซ็ตทุกวันจันทร์) เพื่อความสมดุล</p>'
+      +'<h4>สายฟรี (ไม่ต้องเติมเงิน)</h4>'
+      +'<table class="htbl"><tr><th>กิจกรรม</th><th>EXP</th><th>เพดาน/สัปดาห์</th></tr>'
+      +'<tr><td>อ่าน/ฟังบทฟรี</td><td>2 ต่อ 5 นาที</td><td>240 (10 ชม.)</td></tr>'
+      +'<tr><td>คอมเมนต์ (≥10 ตัวอักษร นับบทละครั้งเดียว)</td><td>1</td><td>70</td></tr>'
+      +'<tr><td>รีวิว (ตามความลึกที่อ่าน)</td><td>25 ถึง 250 ต่อเรื่อง</td><td>3 เรื่องใหม่/สัปดาห์</td></tr>'
+      +'<tr><td>โบนัสรีวิวหลังอ่านจบ</td><td>40 ถึง 750 ตามความยาวเรื่อง</td><td>ไม่จำกัด</td></tr>'
+      +'<tr><td>เข้าสู่ระบบรายวัน</td><td>2 (ติดกันครบ 7 วัน โบนัส +10)</td><td>21</td></tr>'
+      +'<tr><td>ใช้ตั๋วโหวตฟรี</td><td>1 ต่อใบ</td><td>42</td></tr></table>'
+      +'<p class="note">เวลาอ่านนับเฉพาะช่วงที่กำลังไล่อ่านจริง หากหยุดนิ่งเกิน 15 วินาที เข็มจะหยุดเดินและเศษเวลาไม่หาย</p>'
+      +'<h4>สายจ่ายเงิน (ช่วยเร่ง EXP)</h4>'
+      +'<table class="htbl"><tr><th>กิจกรรม</th><th>EXP</th><th>เพดาน/สัปดาห์</th></tr>'
+      +'<tr><td>อ่าน/ฟังบทที่ซื้อแล้ว</td><td>2 ต่อ 5 นาที</td><td>1,500 (62.5 ชม.)</td></tr>'
+      +'<tr><td>สมัครอ่านตอน</td><td>1.5 ต่อบท (บทละ 3 เหรียญ)</td><td>3,000</td></tr>'
+      +'<tr><td>สนับสนุนผลงาน</td><td>1 ต่อ 2 เหรียญ</td><td>15,000</td></tr></table>'
+      +'<p class="note">เวลาอ่านบทฟรีและบทที่ซื้อแยกเพดานกัน อ่านบทฟรีครบเพดานแล้วยังอ่านบทที่ซื้อได้เต็มจำนวน</p>'
+      +'<p class="note">ค่าตัวเลขและเพดานเป็นค่าปัจจุบัน อาจมีการปรับเปลี่ยนได้</p>',
+    'ตั๋วแนะนำ vs ตั๋วเดือน ต่างกันยังไง':
+      '<p>ReadLead มีตั๋วโหวต 2 ชนิดที่มาจากคนละทาง ใช้โหวตดันอันดับเรื่องที่ชอบได้เหมือนกัน แต่ที่มาต่างกัน</p>'
+      +'<table class="htbl"><tr><th>หัวข้อ</th><th>ตั๋วแนะนำ</th><th>ตั๋วเดือน</th></tr>'
+      +'<tr><td>มาจาก</td><td>ระดับผู้ใช้ (ฟรี)</td><td>การใช้จ่าย + แจกต้นเดือนตามระดับ</td></tr>'
+      +'<tr><td>ได้เมื่อ</td><td>แจกอัตโนมัติรายวันตามเลเวล</td><td>สมัครอ่าน/สนับสนุนถึงเกณฑ์ และแจกฟรีต้นเดือน (ตั้งแต่ Lv2)</td></tr>'
+      +'<tr><td>รีเซ็ต</td><td>ทุกวัน</td><td>ทุกเดือน</td></tr>'
+      +'<tr><td>สื่อถึง</td><td>ความขยันอ่าน</td><td>การสนับสนุนด้วยเงิน</td></tr></table>'
+      +'<p>ตั๋วแนะนำรายวันจะได้มากขึ้นตามระดับ เริ่มที่ 3 ใบ/วัน และเพิ่มเป็น 6 ใบ/วันเมื่อถึง Lv4 ส่วนเพดานตั๋วเดือนก็เพิ่มตามระดับเช่นกัน</p>'
+      +'<p class="note">ตั๋วทุกชนิดมีกำหนดหมดอายุตามรอบ (รายวัน/รายเดือน) หากไม่ใช้ภายในรอบจะถูกรีเซ็ต</p>',
+    'วิธีได้ตั๋วโหวตแนะนำ':
+      '<p>ตั๋วโหวตแนะนำเป็นตั๋วที่ได้รับ<b>ฟรีทุกวัน</b>โดยอัตโนมัติ ตามระดับผู้ใช้ของคุณ ใช้โหวตเพื่อช่วยดันเรื่องที่ชอบขึ้นหน้าแนะนำ ให้มีคนเห็นมากขึ้น</p>'
+      +'<table class="htbl"><tr><th>ระดับผู้ใช้</th><th>ตั๋วแนะนำ/วัน</th></tr>'
+      +'<tr><td>Lv0 – Lv1</td><td>3 ใบ</td></tr>'
+      +'<tr><td>Lv2</td><td>4 ใบ</td></tr>'
+      +'<tr><td>Lv3</td><td>5 ใบ</td></tr>'
+      +'<tr><td>Lv4 – Lv8</td><td>6 ใบ</td></tr></table>'
+      +'<p>ยิ่งเลเวลสูง ยิ่งได้ตั๋วแนะนำต่อวันมากขึ้น ดังนั้นการอ่านสม่ำเสมอเพื่อสะสม EXP จะช่วยให้คุณมีตั๋วโหวตมากขึ้นด้วย</p>'
+      +'<p class="note">ตั๋วแนะนำรีเซ็ตทุกวันเวลาเที่ยงคืน ตั๋วที่ไม่ใช้จะไม่สะสมข้ามวัน ทั้งนี้ตัวเลขทั้งหมดเป็นค่าปัจจุบัน อาจปรับเปลี่ยนได้</p>',
+    'วิธีได้ตั๋วโหวตรายเดือน':
+      '<p>ตั๋วโหวตรายเดือนใช้โหวตดันอันดับเรื่องที่ชอบในแต่ละเดือน มีที่มา 3 ทาง</p>'
+      +'<table class="htbl"><tr><th>ที่มา</th><th>เงื่อนไข</th></tr>'
+      +'<tr><td>สมัครอ่านตอน</td><td>ทุก 15 เหรียญ = 1 ใบ (เพดานต่อเดือนตามระดับ เศษสะสมไม่หาย)</td></tr>'
+      +'<tr><td>สนับสนุนผลงาน</td><td>ทุก 300 เหรียญ = 1 ใบ ไม่จำกัดจำนวน (เฉพาะนิยายและหนังสือเสียง ส่วนเว็บตูนไม่มีระบบโหวตรายเดือนจึงไม่แจกตั๋ว)</td></tr>'
+      +'<tr><td>แจกฟรีต้นเดือน</td><td>รับอัตโนมัติทุกต้นเดือนตามระดับผู้ใช้ เริ่มตั้งแต่ Lv2</td></tr></table>'
+      +'<p>เพดานตั๋วจากการสมัครอ่านตอนต่อเดือน จะเพิ่มขึ้นตามระดับผู้ใช้</p>'
+      +'<table class="htbl"><tr><th>ระดับผู้ใช้</th><th>เพดาน/เดือน</th></tr>'
+      +'<tr><td>Lv1</td><td>1 ใบ</td></tr>'
+      +'<tr><td>Lv2</td><td>5 ใบ</td></tr>'
+      +'<tr><td>Lv3</td><td>20 ใบ</td></tr>'
+      +'<tr><td>Lv4</td><td>50 ใบ</td></tr>'
+      +'<tr><td>Lv5</td><td>100 ใบ</td></tr>'
+      +'<tr><td>Lv6</td><td>150 ใบ</td></tr>'
+      +'<tr><td>Lv7 – Lv8</td><td>200 ใบ</td></tr></table>'
+      +'<p>ตั๋วแจกฟรีต้นเดือนตามระดับผู้ใช้ (ไม่นับรวมในเพดานข้างต้น)</p>'
+      +'<table class="htbl"><tr><th>ระดับผู้ใช้</th><th>ตั๋วฟรี/เดือน</th></tr>'
+      +'<tr><td>Lv0 – Lv1</td><td>–</td></tr>'
+      +'<tr><td>Lv2 – Lv3</td><td>1 ใบ</td></tr>'
+      +'<tr><td>Lv4</td><td>2 ใบ</td></tr>'
+      +'<tr><td>Lv5</td><td>3 ใบ</td></tr>'
+      +'<tr><td>Lv6</td><td>4 ใบ</td></tr>'
+      +'<tr><td>Lv7 – Lv8</td><td>5 ใบ</td></tr></table>'
+      +'<p>เมื่อจ่ายเกินเพดาน จะไม่ได้ตั๋วจากสมัครอ่านเพิ่ม แต่เงินยังได้รับ EXP และสนับสนุนนักเขียนตามปกติ หากต้องการโหวตเกินเพดาน สามารถใช้ตั๋วจากการสนับสนุนผลงานซึ่งไม่จำกัดจำนวน</p>'
+      +'<p class="note">ตั๋วรายเดือนรีเซ็ตทุกเดือน ตั๋วที่ไม่ใช้จะไม่สะสมข้ามเดือน ทั้งนี้ตัวเลขทั้งหมดเป็นค่าปัจจุบัน อาจปรับเปลี่ยนได้</p>',
+    'กติกาการได้รับ EXP จากรีวิวและคอมเมนต์':
+      '<p>การเขียนรีวิวและคอมเมนต์ช่วยให้คุณได้รับ EXP แต่มีกติกาการตรวจสอบที่ต่างกัน เพื่อรักษาคุณภาพของเนื้อหาและความเป็นธรรมต่อทุกคน</p>'
+      +'<h4>รีวิวต้องผ่านการอนุมัติก่อน</h4>'
+      +'<p>รีวิวจะถูกส่งให้เจ้าหน้าที่ตรวจสอบก่อน เมื่ออนุมัติแล้วจึงได้รับ EXP โดยมี 3 สถานะ</p>'
+      +'<table class="htbl"><tr><th>สถานะ</th><th>ความหมาย</th></tr>'
+      +'<tr><td>รอตรวจสอบ</td><td>ส่งแล้ว อยู่ระหว่างรอเจ้าหน้าที่ ยังไม่ได้รับ EXP</td></tr>'
+      +'<tr><td>อนุมัติแล้ว</td><td>ผ่านการตรวจสอบ ได้รับ EXP เรียบร้อย</td></tr>'
+      +'<tr><td>ไม่อนุมัติ</td><td>ไม่ผ่านเกณฑ์ ไม่ได้รับ EXP โดยจะแจ้งเหตุผลให้ทราบ</td></tr></table>'
+      +'<h4>EXP รีวิวคิดจากความลึกที่อ่าน</h4>'
+      +'<p>ยิ่งอ่านมากก่อนเขียนรีวิว ยิ่งได้ EXP มาก โดยจ่ายเฉพาะส่วนต่างเมื่ออัปเดตรีวิวขึ้นขั้นใหม่ ไม่ว่าจะเขียนรวดเดียวตอนอ่านลึกแล้ว หรือทยอยอัปเดตทีละขั้น ยอดรวมเท่ากันเสมอ</p>'
+      +'<table class="htbl"><tr><th>อ่านครบ</th><th>EXP สะสม</th></tr>'
+      +'<tr><td>30 บท</td><td>25</td></tr>'
+      +'<tr><td>60 บท</td><td>50</td></tr>'
+      +'<tr><td>120 บท</td><td>90</td></tr>'
+      +'<tr><td>250 บท</td><td>160</td></tr>'
+      +'<tr><td>500 บท (สูงสุด)</td><td>250</td></tr></table>'
+      +'<p>เขียนรีวิวได้ตั้งแต่อ่านครบ 10 บท แต่เริ่มได้รับ EXP เมื่ออ่านครบ 30 บทขึ้นไป และต้องเขียนอย่างน้อย 150 ตัวอักษร (300 ตัวอักษรเมื่ออ่านเกิน 120 บท) สูงสุด 2,000 ตัวอักษร</p>'
+      +'<h4>โบนัสอ่านจบ</h4>'
+      +'<p>เมื่อเรื่องปิดสถานะจบและคุณอ่านครบทุกบท เขียนรีวิวใหม่อีกครั้งเพื่อรับโบนัสตามความยาวเรื่อง ตั้งแต่ 40 ถึง 750 EXP รับได้ครั้งเดียวต่อเรื่อง</p>'
+      +'<p>เขียนรีวิวเรื่องใหม่ได้ 3 เรื่องต่อสัปดาห์ ส่วนการอัปเดตรีวิวเรื่องที่เคยเขียนไว้แล้วไม่นับในโควตานี้</p>'
+      +'<h4>คอมเมนต์ได้รับ EXP ทันที</h4>'
+      +'<p>คอมเมนต์ที่มีความยาวอย่างน้อย 10 ตัวอักษรจะได้รับ 1 EXP ทันที โดยไม่ต้องรออนุมัติ แต่เจ้าหน้าที่สามารถตรวจสอบย้อนหลังได้</p>'
+      +'<p>แต่ละบทได้รับ EXP จากคอมเมนต์ได้เพียงครั้งเดียว คอมเมนต์ซ้ำบทเดิมทำได้ตามปกติแต่ไม่ได้รับ EXP เพิ่ม โดยมีเพดานรวม 70 EXP ต่อสัปดาห์</p>'
+      +'<h4>บทลงโทษ</h4>'
+      +'<p>หากตรวจพบว่าคอมเมนต์หรือรีวิวเป็นสแปม คัดลอกข้อความ ใช้คำไม่เหมาะสม หรือไม่มีเนื้อหาที่เป็นประโยชน์ จะมีผลดังนี้</p>'
+      +'<table class="htbl"><tr><th>กรณี</th><th>ผลที่เกิดขึ้น</th></tr>'
+      +'<tr><td>คอมเมนต์ผิดกติกา</td><td>EXP ที่ได้รับจะถูกริบคืน</td></tr>'
+      +'<tr><td>ทำผิดซ้ำหลายครั้ง</td><td>อาจถูกจำกัดสิทธิ์การเขียนคอมเมนต์หรือรีวิวชั่วคราว</td></tr>'
+      +'<tr><td>ละเมิดร้ายแรง</td><td>อาจถูกระงับบัญชีตามดุลพินิจของทีมงาน</td></tr></table>'
+      +'<p class="note">การเขียนรีวิวและคอมเมนต์อย่างตั้งใจและสุภาพ ช่วยให้ชุมชน ReadLead น่าอยู่สำหรับทุกคน ทั้งนี้กติกาทั้งหมดเป็นค่าปัจจุบัน อาจปรับเปลี่ยนได้</p>',
+    'การจ่ายเงินช่วยขึ้นเลเวลเร็วขึ้น':
+      '<p>การเติมเงินไม่ได้แลกเป็นเลเวลโดยตรง แต่เงินที่ใช้จ่ายจะถูกแปลงเป็น EXP ซึ่งช่วยให้เลื่อนระดับเร็วขึ้น ลำดับเป็นดังนี้</p>'
+      +'<div class="step"><span class="num">1</span><p>เติมเงินเข้าบัญชี เปลี่ยนเป็นเหรียญ (แต้ม)</p></div>'
+      +'<div class="step"><span class="num">2</span><p>ใช้แต้มสมัครอ่านตอน หรือสนับสนุนผลงาน</p></div>'
+      +'<div class="step"><span class="num">3</span><p>การใช้จ่ายนั้นได้ทั้ง EXP (ดันเลเวล) และตั๋วเดือน (ไว้โหวต) พร้อมกัน</p></div>'
+      +'<p>ด้วยเพดาน EXP รายสัปดาห์ ผู้ที่ใช้จ่ายสม่ำเสมอจะถึงระดับสูงได้เร็วกว่าผู้ใช้ฟรีมาก แต่ก็ยังต้องใช้เวลาหลายสัปดาห์ ไม่สามารถจ่ายรวดเดียวเพื่อกระโดดข้ามระดับได้</p>'
+      +'<p class="note">ผู้ใช้ฟรีที่อ่านสม่ำเสมอก็ยังสามารถไต่ถึงระดับสูงได้ เพียงใช้เวลานานกว่า</p>',
+    'การรักษาระดับและการตกชั้น':
+      '<p>ตั้งแต่ Lv5 ขึ้นไป ระดับมีอายุ 365 วัน หากภายในรอบปีสะสม EXP ไม่ถึงเกณฑ์รักษาระดับ ระดับจะลดลง 1 ขั้น (Lv0–Lv4 ไม่มีการตกชั้น)</p>'
+      +'<table class="htbl"><tr><th>ระดับ</th><th>EXP รักษา/ปี</th></tr>'
+      +'<tr><td>Lv5 ติ่งนิยาย</td><td>6,000</td></tr>'
+      +'<tr><td>Lv6 นกฮูก</td><td>10,000</td></tr>'
+      +'<tr><td>Lv7 หนอนหนังสือ</td><td>12,000</td></tr>'
+      +'<tr><td>Lv8 ผู้หยั่งรู้</td><td>13,500</td></tr></table>'
+      +'<p>เกณฑ์รักษาระดับตั้งไว้ไม่สูง ผู้ที่ใช้งานสม่ำเสมอจะผ่านเกณฑ์ได้ง่าย โดยทั่วไปจะตกชั้นเฉพาะผู้ที่หายไปนานเกือบทั้งปี</p>'
+      +'<p class="note">ค่าเกณฑ์รักษาระดับเป็นค่าปัจจุบัน อาจมีการปรับเปลี่ยนได้</p>',
+    'วิธีโหวตให้เรื่องโปรด':
+      '<p>นำตั๋วแนะนำหรือตั๋วเดือนไปโหวตให้เรื่องที่ชอบ เพื่อช่วยดันอันดับเรื่องนั้นให้สูงขึ้นบนกระดานอันดับ</p>'
+      +'<div class="step"><span class="num">1</span><p>เปิดหน้านิยายเรื่องที่ต้องการสนับสนุน</p></div>'
+      +'<div class="step"><span class="num">2</span><p>กดปุ่มโหวต แล้วเลือกชนิดและจำนวนตั๋วที่จะใช้</p></div>'
+      +'<div class="step"><span class="num">3</span><p>ยืนยันการโหวต ระบบจะนับคะแนนให้เรื่องนั้นทันที</p></div>'
+      +'<p>โหวตได้อิสระ ไม่มีเงื่อนไขปลดล็อก มีตั๋วกี่ใบก็เทให้เรื่องเดียวได้ทั้งหมด</p>'
+      +'<table class="htbl"><tr><th>ชนิดตั๋ว</th><th>คะแนนกระดาน</th><th>แต้มแฟนคลับ</th></tr>'
+      +'<tr><td>ตั๋วแนะนำ</td><td>1 คะแนน/ใบ</td><td>1 แต้ม/ใบ</td></tr>'
+      +'<tr><td>ตั๋วเดือน</td><td>100 คะแนน/ใบ</td><td>15 แต้ม/ใบ</td></tr></table>',
+    'สนับสนุนผลงานและแต้มแฟนคลับ':
+      '<p>การสนับสนุนผลงานคือการส่งเหรียญให้เรื่องที่คุณชื่นชอบโดยตรง กดปุ่ม \u201cสนับสนุน\u201d ในหน้าเรื่อง เลือกจำนวนเหรียญ และฝากข้อความถึงเจ้าของผลงานได้</p>'
+      +'<h4>สิ่งที่ได้รับจากการสนับสนุน</h4>'
+      +'<table class="htbl"><tr><th>สิ่งที่ได้</th><th>อัตรา</th></tr>'
+      +'<tr><td>EXP</td><td>1 ต่อ 2 เหรียญ (เพดาน 15,000/สัปดาห์)</td></tr>'
+      +'<tr><td>ตั๋วโหวตรายเดือน</td><td>ทุก 300 เหรียญ = 1 ใบ (เฉพาะนิยายและหนังสือเสียง)</td></tr>'
+      +'<tr><td>แต้มแฟนคลับของเรื่องนั้น</td><td>1 เหรียญ = 1 แต้ม</td></tr></table>'
+      +'<p class="note">เว็บตูนไม่มีระบบโหวตรายเดือน การสนับสนุนเว็บตูนจึงไม่แจกตั๋ว แต่ยังได้ EXP และแต้มแฟนคลับตามปกติ</p>'
+      +'<h4>แต้มแฟนคลับคืออะไร</h4>'
+      +'<p>แต้มแฟนคลับเป็นคะแนนสะสมประจำเรื่อง วัดว่าใครสนับสนุนเรื่องนั้นมากที่สุด สะสมได้จากทุกช่องทางดังนี้</p>'
+      +'<table class="htbl"><tr><th>ที่มา</th><th>แต้มที่ได้</th></tr>'
+      +'<tr><td>สนับสนุนผลงาน / สมัครอ่านตอนของเรื่องนั้น</td><td>1 เหรียญ = 1 แต้ม</td></tr>'
+      +'<tr><td>โหวตตั๋วแนะนำให้เรื่องนั้น</td><td>1 แต้ม/ใบ</td></tr>'
+      +'<tr><td>โหวตตั๋วรายเดือนให้เรื่องนั้น</td><td>15 แต้ม/ใบ</td></tr></table>'
+      +'<p>อันดับแฟนคลับแสดงอยู่ข้างหน้าเรื่อง แบ่งเป็น 3 ช่วงเวลา คือ วันนี้ / รายเดือน / ตลอดกาล กดดูเพิ่มเติมเพื่อเปิดกระดาน 100 อันดับ</p>'
+      +'<p class="note">ตัวเลขอัตราทั้งหมดเป็นค่าปัจจุบัน อาจมีการปรับเปลี่ยนได้</p>'
+  };
+  function bodyHTML(title){
+    if(title==='ข้อกำหนดและเงื่อนไขการเป็นนักเขียน' && window.RL_LEGAL) return window.RL_LEGAL.writer;
+    if(title==='ข้อตกลงและเงื่อนไขการใช้บริการ' && window.RL_LEGAL) return window.RL_LEGAL.tos;
+    if(title==='นโยบายคุ้มครองข้อมูลส่วนบุคคล' && window.RL_LEGAL) return window.RL_LEGAL.privacy;
+    if(BODY[title]) return BODY[title];
+    return '<p>บทความนี้จะอธิบายขั้นตอนเกี่ยวกับ \u201c'+esc(title)+'\u201d อย่างละเอียด เพื่อให้คุณใช้งาน ReadLead ได้สะดวกยิ่งขึ้น</p>'
+      +'<div class="step"><span class="num">1</span><p>เปิดเมนูที่เกี่ยวข้องจากแถบด้านข้าง แล้วเลือกหัวข้อที่ต้องการ</p></div>'
+      +'<div class="step"><span class="num">2</span><p>ทำตามขั้นตอนบนหน้าจอ และกรอกข้อมูลให้ครบถ้วน</p></div>'
+      +'<div class="step"><span class="num">3</span><p>กดยืนยันเพื่อบันทึก ระบบจะแจ้งผลให้ทราบทันที</p></div>'
+      +'<p class="mock">* นี่เป็นเนื้อหาตัวอย่าง (mockup) เนื้อหาจริงจะดึงจากระบบบทความเมื่อเชื่อมต่อ backend</p>';
+  }
+  function showList(idx){
+    var d=DATA[idx];
+    var items=d.a.map(function(x,ai){
+      return '<div class="faq abox"><div class="q"><span class="qi">'+(ai+1)+'</span><span>'+esc(x)+'</span>'+CH+'</div><div class="a"><div class="abody">'+bodyHTML(x)+'</div></div></div>';
+    }).join('');
+    panel.innerHTML='<h3>'+esc(d.t)+' <span class="pcount">'+d.n+' บทความ</span></h3><div class="faqlist">'+items+'</div>';
+    panel.querySelectorAll('.faqlist .q').forEach(function(q){
+      q.addEventListener('click',function(){q.parentNode.classList.toggle('open');});
+    });
+  }
+  function colCount(){
+    var t=getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length;
+    return t||3;
+  }
+  function init(){
+    grid=document.querySelector('.catgrid');
+    panel=document.getElementById('catPanel');
+    if(!grid||!panel) return;
+    cats=grid.querySelectorAll('.cat');
+    cats.forEach(function(c,idx){
+      c.addEventListener('click',function(){
+        var isOpen=c.classList.contains('active');
+        cats.forEach(function(x){x.classList.remove('active');});
+        if(isOpen){panel.classList.remove('open');panel.innerHTML='';return;}
+        c.classList.add('active');
+        var cols=colCount();
+        var lastIdx=Math.min(Math.floor(idx/cols)*cols+cols-1, cats.length-1);
+        cats[lastIdx].insertAdjacentElement('afterend', panel);
+        showList(idx);
+        panel.classList.add('open');
+      });
+    });
+  }
+  if(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);
+  // deep-link: ?page=help&cat=N&art=M opens that category/article on load
+  function applyDeepLink(){
+    var q=new URLSearchParams(location.search);
+    if(q.get('page')!=='help')return;
+    var cat=parseInt(q.get('cat'),10), art=q.get('art')!=null?parseInt(q.get('art'),10):null;
+    if(isNaN(cat))return;
+    if(window.__go)window.__go('help');
+    setTimeout(function(){if(window.__openHelpCat)window.__openHelpCat(cat,art);},120);
+  }
+  if(document.readyState!=='loading')applyDeepLink();else document.addEventListener('DOMContentLoaded',applyDeepLink);
+  window.__openHelpCat=function(idx,artIdx){
+    if(!cats||!cats[idx])return;
+    if(!cats[idx].classList.contains('active'))cats[idx].click();
+    var p=document.getElementById('catPanel');
+    if(p){
+      if(typeof artIdx==='number'){
+        var boxes=p.querySelectorAll('.faqlist .faq');
+        if(boxes[artIdx]){
+          boxes.forEach(function(b){b.classList.remove('open');});
+          boxes[artIdx].classList.add('open');
+          setTimeout(function(){boxes[artIdx].scrollIntoView({behavior:'smooth',block:'center'});},60);
+          return;
+        }
+      }
+      p.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+  };
+})();
+
+</script>
+
+<script>
+/* ═══ ปุ่มย้อนกลับ + CTA ติดต่อทีมงาน (ยังไม่มีหน้ามือถือ) ═══ */
+(function(){
+})();
+</script>
+
+<style id="rlSTopRightCSS">
+/* ═══ โลโก้ซ้าย + ปุ่มขวาบน (แบบหน้าแจ้งปัญหา) + หน้าโปรไฟล์ ═══ */
+#stop .rl-brand{display:flex;align-items:center;gap:7px;font-size:19px;font-weight:800;color:#cc4452;flex:1;text-decoration:none}
+#stop .rl-brand svg{width:21px;height:21px}
+#stop .tbtn{width:38px;height:38px;border:none;background:none;display:flex;align-items:center;justify-content:center;color:#4a4656;cursor:pointer;flex:none}
+#stop .tbtn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#mLogin{background:#cc4452;color:#fff;font-family:'Noto Sans Thai',sans-serif;font-size:13px;font-weight:800;padding:8px 14px;border-radius:8px;border:none;cursor:pointer;flex:none}
+#stop .ava-c{width:32px;height:32px;border-radius:50%;background:#f1eef6;display:flex;align-items:center;justify-content:center;color:#a8a2bd;overflow:hidden;font-size:14.5px;font-weight:800}
+#mprof{--mxw2:480px}
+/* ── หน้าโปรไฟล์เต็มจอ (สไตล์ Fictionlog) ── */
+#mprof{position:fixed;top:52px;bottom:0;left:50%;transform:translateX(calc(-50% + 100vw));width:100%;max-width:var(--mxw2,480px);background:#fff;z-index:9500;transition:transform .28s cubic-bezier(.33,1,.68,1);overflow-y:auto;font-family:'Noto Sans Thai',sans-serif;visibility:hidden}
+#mprof.show{transform:translateX(-50%);visibility:visible}
+#mprof .ph{padding:22px 20px;border-bottom:1px solid #ececf1;display:flex;align-items:center;gap:14px}
+#mprof .pava{width:56px;height:56px;border-radius:50%;background:#f1eef6;display:flex;align-items:center;justify-content:center;color:#a8a2bd;flex:none;font-size:24px;font-weight:800}
+#mprof .pwho b{display:block;font-size:17px;font-weight:800;color:#cc4452}
+#mprof .pwho span{font-size:13px;color:#8a8894;font-weight:600}
+#mprof .pcoin{padding:16px 20px;border-bottom:1px solid #ececf1;display:flex;align-items:center;gap:10px}
+#mprof .pcoin .ci{width:26px;height:26px;border-radius:50%;background:#fdf3e0;display:flex;align-items:center;justify-content:center;color:#dfa321;flex:none}
+#mprof .pcoin .ci svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#mprof .pcoin b{font-size:16.5px;font-weight:800;color:var(--ink);flex:1}
+#mprof .pcoin .topup{background:#cc4452;color:#fff;font-size:14px;font-weight:800;padding:9px 20px;border-radius:9px}
+#mprof nav{padding:8px 0}
+#mprof nav a{display:flex;align-items:center;gap:15px;padding:14px 20px;font-size:15.5px;font-weight:700;color:#3a3644}
+#mprof nav a svg{width:21px;height:21px;stroke:#6b6580;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#mprof nav a:active{background:#faf8fc}
+#mprof .psep{height:1px;background:#ececf1;margin:4px 0}
+</style>
+
+<style id="rlAuthCSS">
+/* ── modal ── */
+#rlAuthModal{position:fixed;inset:0;z-index:99990;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(30,25,50,.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+#rlAuthModal.show{display:flex}
+#rlAuthModal,#rlAuthModal *{box-sizing:border-box;font-family:'Noto Sans Thai',system-ui,sans-serif}
+#rlAuthModal{--line:#ece8f4;--ink:#2e2a3d;--ink2:#6b6580;--ink3:#a8a2bd;--red:#cc4452;--red-deep:#9c3340}
+.rlau{width:100%;max-width:430px;zoom:.9}
+.rlau-card{background:#fff;border-radius:22px;padding:34px 30px 30px;position:relative;animation:rlauPop .24s cubic-bezier(.34,1.2,.64,1)}
+@keyframes rlauPop{from{transform:translateY(12px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+.rlau-back{display:none;position:absolute;top:16px;left:16px;align-items:center;gap:2px;border:none;background:none;color:var(--ink2);font-size:14px;font-weight:600;cursor:pointer;padding:6px 6px 6px 2px;line-height:1}
+.rlau-back svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#rlAuthModal[data-mode="register"] .rlau-back,#rlAuthModal[data-mode="forgot"] .rlau-back{display:inline-flex}
+.rlau-brand{display:flex;align-items:center;justify-content:center;gap:10px;font-size:26px;font-weight:800;color:var(--red);margin-bottom:6px}
+.rlau-brand svg{width:29px;height:29px;fill:none;stroke:currentColor;stroke-width:2.5}
+.rlau-title{text-align:center;font-size:22px;font-weight:800;color:var(--ink);margin:14px 0 22px}
+.rlau .soc{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.rlau .soc-btn{display:flex;align-items:center;justify-content:center;gap:11px;width:100%;height:46px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:filter .15s}
+.rlau .soc-btn:hover{filter:brightness(.96)}
+.rlau .soc-btn .ic{width:19px;height:19px;flex:0 0 19px;display:grid;place-items:center}
+.rlau .soc-google{background:#fff;border:1px solid var(--line);color:#3c4043}
+.rlau .soc-facebook{background:#1877F2;color:#fff}
+.rlau .soc-apple{background:#000;color:#fff}
+.rlau .soc-btn svg{width:19px;height:19px;display:block}
+.rlau .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--ink3);font-size:12.5px}
+.rlau .divider::before,.rlau .divider::after{content:"";flex:1;height:1px;background:var(--line)}
+.rlau .field{margin-bottom:15px}
+.rlau .field label{display:block;font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:7px}
+.rlau .inp-wrap{position:relative}
+.rlau .field input{width:100%;height:46px;border:1px solid var(--line);border-radius:12px;padding:0 14px;font-family:inherit;font-size:14px;color:var(--ink);background:#fff;outline:none;transition:border-color .15s}
+.rlau .field input::placeholder{color:var(--ink3)}
+.rlau .eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--ink3);display:grid;place-items:center;padding:4px}
+.rlau .eye svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8}
+.rlau .hint{font-size:12px;color:var(--ink3);margin-top:6px}
+.rlau .field.pw input{padding-right:44px}
+.rlau .pw-check{margin-top:9px;display:none;flex-direction:column;gap:5px}
+.rlau .pw-check.show{display:flex}
+.rlau .pw-item{display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--ink3);line-height:1.45}
+.rlau .pw-item .ci{flex:0 0 16px;width:16px;height:16px;border-radius:50%;border:1.6px solid var(--line);display:grid;place-items:center;margin-top:1px;transition:.15s}
+.rlau .pw-item .ci svg{width:10px;height:10px;stroke:#fff;fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:.15s}
+.rlau .pw-item.ok{color:#17a673}
+.rlau .pw-item.ok .ci{background:#17a673;border-color:#17a673}
+.rlau .pw-item.ok .ci svg{opacity:1}
+.rlau .forgot{text-align:right;margin:-6px 0 16px}
+.rlau .forgot a{font-size:13px;font-weight:600;color:var(--red);text-decoration:none;cursor:pointer}
+.rlau .terms{display:flex;align-items:flex-start;gap:10px;margin:4px 0 20px;cursor:pointer}
+.rlau .terms input{display:none}
+.rlau .terms .box{flex:0 0 20px;width:20px;height:20px;border:1.8px solid var(--line);border-radius:6px;display:grid;place-items:center;margin-top:1px;transition:.15s}
+.rlau .terms .box svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:.15s}
+.rlau .terms input:checked+.box{background:var(--red);border-color:var(--red)}
+.rlau .terms input:checked+.box svg{opacity:1}
+.rlau .terms .txt{font-size:13px;color:var(--ink2);line-height:1.55}
+.rlau .terms .txt a{color:var(--red);font-weight:600;text-decoration:none}
+.rlau .submit{width:100%;height:46px;border-radius:12px;background:var(--red);color:#fff;border:none;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:background .15s}
+.rlau .submit:hover{background:var(--red-deep)}
+.rlau .submit:disabled{background:#e2ddec;color:#fff;cursor:not-allowed}
+.rlau .switch{text-align:center;font-size:13.5px;color:var(--ink2);margin-top:20px}
+.rlau .switch a{color:var(--red);font-weight:700;text-decoration:none;cursor:pointer}
+.rlau .auth-err{display:none;font-size:12.5px;font-weight:600;color:#d8353f;background:#fdecee;border-radius:9px;padding:8px 12px;margin-bottom:14px}
+.rlau .auth-err.show{display:block}
+.rlau .auth-ok{display:none;font-size:12.5px;font-weight:600;color:#17a673;background:#e7f7f0;border-radius:9px;padding:8px 12px;margin-top:12px}
+.rlau .auth-ok.show{display:block}
+.rlau .only-login,.rlau .only-register,.rlau .only-forgot{display:none}
+#rlAuthModal[data-mode="login"] .only-login{display:block}
+#rlAuthModal[data-mode="register"] .only-register{display:block}
+#rlAuthModal[data-mode="forgot"] .only-forgot{display:block}
+#rlAuthModal[data-mode="login"] .switch .to-login,#rlAuthModal[data-mode="register"] .switch .to-register{display:none}
+#rlAuthModal[data-mode="forgot"] .divider,#rlAuthModal[data-mode="forgot"] .soc,#rlAuthModal[data-mode="forgot"] .switch{display:none}
+.rlau .forgot-sub{font-size:13px;color:var(--ink3);margin:-4px 0 18px;line-height:1.55}
+.rlau .forgot-back{text-align:center;font-size:13.5px;color:var(--ink2);margin-top:18px}
+.rlau .forgot-back a{color:var(--red);font-weight:600;cursor:pointer;text-decoration:none}
+
+/* ── avatar + เมนูผู้ใช้บน header ── */
+#rlhdrwrap{position:relative;z-index:900;overflow:visible}
+.rl-header .rl-user{position:relative;display:none}
+.rl-header .rl-user.on{display:block!important}
+.rl-header .rl-login.off{display:none}
+.rl-header .rl-ava{width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;font-family:'Noto Sans Thai',sans-serif;font-size:16px;font-weight:800;display:grid;place-items:center;line-height:1;padding:0;transition:box-shadow .15s}
+.rl-header .rl-ava:hover{box-shadow:0 0 0 3px rgba(204,68,82,.18)}
+.rl-menu{position:absolute;top:46px;right:0;width:284px;background:#fff;border:1px solid #e3e5ea;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.035),0 14px 34px -12px rgba(20,20,40,.18);padding:8px 0;display:none;z-index:9000;font-family:'Noto Sans Thai',sans-serif}
+.rl-menu.show{display:block!important}
+.rl-menu-head{display:flex;align-items:center;gap:12px;padding:12px 16px 12px}
+.rl-menu-head .ava2{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:20px;font-weight:800;flex-shrink:0}
+.rl-menu-head .nm{font-size:15.5px;font-weight:800;color:#2b2d3a;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rl-menu-head .hd{font-size:12.5px;color:#8b91a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rl-menu-sep{height:1px;background:#eef0f5;margin:6px 0}
+.rl-menu-coin{display:flex;align-items:center;gap:9px;padding:10px 16px}
+.rl-menu-coin .cico{width:26px;height:26px;border-radius:50%;background:#f6b01e;color:#fff;display:grid;place-items:center;font-size:10px;font-weight:800;flex-shrink:0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12)}
+.rl-menu-coin .cval{flex:1;font-size:16px;font-weight:800;color:#2b2d3a;font-variant-numeric:tabular-nums}
+.rl-menu-coin .topup{height:32px;padding:0 16px;border:none;border-radius:9px;background:#e0981f;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.rl-menu-coin .topup:hover{background:#c9881b}
+.rl-menu-item{display:flex;align-items:center;gap:13px;width:100%;padding:11px 16px;border:none;background:none;font-family:inherit;font-size:14px;font-weight:600;color:#3d4152;cursor:pointer;text-align:left;transition:.12s}
+.rl-menu-item:hover{background:#f7f8fa}
+.rl-menu-item svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;color:#6b7080;flex-shrink:0}
+.rl-menu-item.out{color:#d8353f}
+.rl-menu-item.out svg{color:#d8353f}
+</style>
+
+<div id="rlAuthModal" data-mode="login">
+  <div class="rlau">
+    <div class="rlau-card">
+      <button class="rlau-back" onclick="RLAuth.mode('login')" aria-label="กลับ"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>กลับ</button>
+      <div class="rlau-brand"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>ReadLead</div>
+      <h1 class="rlau-title"><span class="only-login">เข้าสู่ระบบ</span><span class="only-register">สมัครสมาชิก</span><span class="only-forgot">ลืมรหัสผ่าน</span></h1>
+
+      <!-- LOGIN -->
+      <div class="only-login">
+        <div class="auth-err" id="rlLoginErr"></div>
+        <div class="field"><label>ชื่อผู้ใช้ หรืออีเมล</label><input type="text" id="rlLoginUser" placeholder="ชื่อผู้ใช้ หรืออีเมล"></div>
+        <div class="field pw"><label>รหัสผ่าน</label>
+          <div class="inp-wrap">
+            <input type="password" id="rlLoginPass" placeholder="รหัสผ่าน">
+            <button class="eye" type="button" onclick="RLAuth.eye('rlLoginPass',this)"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
+        <div class="forgot"><a onclick="RLAuth.mode('forgot')">ลืมรหัสผ่าน?</a></div>
+        <button class="submit" type="button" onclick="RLAuth.login()">เข้าสู่ระบบ</button>
+      </div>
+
+      <!-- REGISTER -->
+      <div class="only-register">
+        <div class="auth-err" id="rlRegErr"></div>
+        <div class="field"><label>ชื่อผู้ใช้</label><input type="text" id="rlRegUser" placeholder="ชื่อผู้ใช้" oninput="RLAuth.pwcheck()"><div class="hint">ใช้ได้เฉพาะ a–z, 0–9 และ _ โดยไม่เว้นวรรค</div></div>
+        <div class="field"><label>อีเมล</label><input type="email" id="rlRegEmail" placeholder="อีเมล"></div>
+        <div class="field pw"><label>รหัสผ่าน</label>
+          <div class="inp-wrap">
+            <input type="password" id="rlRegPass" placeholder="รหัสผ่าน" oninput="RLAuth.pwcheck()">
+            <button class="eye" type="button" onclick="RLAuth.eye('rlRegPass',this)"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <div class="pw-check">
+            <div class="pw-item" data-rule="len"><span class="ci"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>มีอักขระอย่างน้อย 8 ตัวขึ้นไป</div>
+            <div class="pw-item" data-rule="case"><span class="ci"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>มีทั้งตัวพิมพ์เล็ก (a-z) และตัวพิมพ์ใหญ่ (A-Z)</div>
+            <div class="pw-item" data-rule="num"><span class="ci"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>มีตัวเลขอย่างน้อยหนึ่ง (0-9) หรือสัญลักษณ์หนึ่งตัว</div>
+            <div class="pw-item" data-rule="sp"><span class="ci"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>มีอักขระพิเศษ ! @ # $ % ^ &amp; * _ + - = ? อย่างน้อยหนึ่งตัว</div>
+          </div>
+        </div>
+        <label class="terms">
+          <input type="checkbox" id="rlAgree" onchange="RLAuth.pwcheck()">
+          <span class="box"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span class="txt">ฉันได้อ่านและยอมรับ <a href="#">ข้อตกลงและเงื่อนไขการใช้บริการ</a> และ <a href="#">นโยบายความเป็นส่วนตัว</a> ของบริษัท รีดลีด จำกัด</span>
+        </label>
+        <button class="submit" type="button" id="rlRegSubmit" disabled onclick="RLAuth.register()">สมัครสมาชิก</button>
+      </div>
+
+      <!-- FORGOT -->
+      <div class="only-forgot">
+        <p class="forgot-sub">กรอกอีเมลที่ใช้สมัคร ระบบจะส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ไปให้คุณ</p>
+        <div class="auth-err" id="rlForgotErr"></div>
+        <div class="field"><label>อีเมล</label><input type="email" id="rlForgotEmail" placeholder="อีเมลของคุณ"></div>
+        <button class="submit" type="button" onclick="RLAuth.forgot()">ยืนยัน</button>
+        <div class="auth-ok" id="rlForgotOk">ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่อีเมลแล้ว (จำลอง)</div>
+        <div class="forgot-back">จำรหัสผ่านได้แล้ว? <a onclick="RLAuth.mode('login')">กลับไปเข้าสู่ระบบ</a></div>
+      </div>
+
+      <div class="divider">หรือ</div>
+      <div class="soc">
+        <button class="soc-btn soc-google" type="button"><span class="ic"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 0 0-9.82 6.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38z"/></svg></span>ดำเนินการต่อด้วย Google</button>
+        <button class="soc-btn soc-facebook" type="button"><span class="ic"><svg viewBox="0 0 24 24" fill="#fff"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.02 4.39 11.01 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.08 24 18.09 24 12.07z"/></svg></span>ดำเนินการต่อด้วย Facebook</button>
+        <button class="soc-btn soc-apple" type="button"><span class="ic"><svg viewBox="0 0 24 24" fill="#fff"><path d="M17.05 12.54c-.02-2.06 1.68-3.05 1.76-3.1-.96-1.4-2.45-1.6-2.98-1.62-1.27-.13-2.48.75-3.12.75-.64 0-1.64-.73-2.7-.71-1.39.02-2.67.81-3.38 2.05-1.44 2.5-.37 6.2 1.03 8.23.69.99 1.5 2.1 2.57 2.06 1.03-.04 1.42-.67 2.67-.67 1.24 0 1.6.67 2.69.65 1.11-.02 1.81-1.01 2.49-2.01.78-1.15 1.11-2.26 1.12-2.32-.02-.01-2.15-.83-2.17-3.28zM15 6.24c.57-.69.95-1.65.85-2.6-.82.03-1.81.54-2.4 1.23-.52.6-.98 1.58-.86 2.51.91.07 1.84-.46 2.41-1.14z"/></svg></span>ดำเนินการต่อด้วย Apple</button>
+      </div>
+
+      <div class="switch">
+        <span class="to-register">ยังไม่มีบัญชีผู้ใช้? <a onclick="RLAuth.mode('register')">สมัครสมาชิก</a></span>
+        <span class="to-login">มีบัญชีผู้ใช้อยู่แล้ว? <a onclick="RLAuth.mode('login')">เข้าสู่ระบบ</a></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script id="rlAuthJS">
+window.RLAuth = (function(){
+  var K_USERS='rl_users', K_SES='rl_session';
+  /* คู่สีพาสเทล [พื้น, ตัวอักษร] — สุ่มครั้งเดียวตอนสมัคร แล้วติดตัวผู้ใช้ตลอด */
+  var PALETTE=[['#fde2e4','#b2455a'],['#e2ecfd','#3a62b2'],['#e4f7e9','#2d7a4f'],['#fdf3d8','#a3771b'],['#f0e4fd','#6b3ab2'],['#e0f5f5','#1f7a7a'],['#fde9d8','#b25e2a'],['#e8ecf4','#4a5568']];
+
+  function users(){ try{return JSON.parse(localStorage.getItem(K_USERS))||[];}catch(e){return [];} }
+  function saveUsers(a){ localStorage.setItem(K_USERS, JSON.stringify(a)); }
+  function session(){ try{return JSON.parse(localStorage.getItem(K_SES))||null;}catch(e){return null;} }
+  function me(){ var s=session(); if(!s)return null;
+    var u=users().find(function(x){return x&&x.id===s.uid&&typeof x.user==='string';})||null;
+    if(u&&u.status==='banned'){ try{localStorage.removeItem(K_SES);}catch(e){} return null; }  /* บัญชีถูกระงับ — เด้งออกทันที */
+    return u; }
+
+  function el(id){return document.getElementById(id);}
+  function err(id,msg){ var e=el(id); if(!e)return; if(msg){e.textContent=msg;e.classList.add('show');} else e.classList.remove('show'); }
+
+  /* ── modal ── */
+  function storageOK(){ try{localStorage.setItem('__rl_probe','1');localStorage.removeItem('__rl_probe');return true;}catch(e){return false;} }
+  var STORAGE_MSG='เบราว์เซอร์ไม่อนุญาตให้เว็บนี้บันทึกข้อมูลในเครื่อง ระบบสมาชิก (จำลอง) จึงทำงานไม่ได้ — มักเกิดจากโหมดไม่ระบุตัวตน/InPrivate, การตั้งค่าบล็อกคุกกี้และข้อมูลไซต์ หรือส่วนขยายด้านความเป็นส่วนตัว ลองเปิดในหน้าต่างปกติหรือเบราว์เซอร์อื่นดูครับ';
+  function open(m){ mode(m||'login'); el('rlAuthModal').classList.add('show');
+    if(!storageOK()){ err('rlLoginErr',STORAGE_MSG); err('rlRegErr',STORAGE_MSG); err('rlForgotErr',STORAGE_MSG); } }
+  function close(){ el('rlAuthModal').classList.remove('show'); }
+  function mode(m){
+    el('rlAuthModal').setAttribute('data-mode',m);
+    if(storageOK()){ err('rlLoginErr');err('rlRegErr');err('rlForgotErr'); }
+    else{ err('rlLoginErr',STORAGE_MSG); err('rlRegErr',STORAGE_MSG); err('rlForgotErr',STORAGE_MSG); }
+    var ok=el('rlForgotOk'); if(ok)ok.classList.remove('show');
+  }
+  function eye(id,btn){var i=el(id);var on=i.type==='password';i.type=on?'text':'password';
+    btn.innerHTML=on?'<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18" stroke-width="1.8"/></svg>':'<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';}
+
+  /* ── validate รหัสผ่าน (เกณฑ์เดียวกับหน้า login เดิม) ── */
+  function pwcheck(){
+    var v=(el('rlRegPass')||{}).value||'';
+    var len=v.length>=8, cse=/[a-z]/.test(v)&&/[A-Z]/.test(v);
+    var sp=/[!@#$%^&*_+\-=?]/.test(v), num=/[0-9]/.test(v)||sp;
+    [['len',len],['case',cse],['num',num],['sp',sp]].forEach(function(r){
+      var e=document.querySelector('#rlAuthModal .pw-item[data-rule="'+r[0]+'"]'); if(e)e.classList.toggle('ok',r[1]);
+    });
+    var pc=document.querySelector('#rlAuthModal .pw-check'); if(pc)pc.classList.toggle('show',v.length>0);
+    var agree=(el('rlAgree')||{}).checked;
+    var btn=el('rlRegSubmit'); if(btn)btn.disabled=!(len&&cse&&num&&sp&&agree);
+  }
+
+  /* ── สมัครสมาชิก ── */
+  function register(){ try{ registerInner(); }catch(e){ err('rlRegErr', storageOK()? 'สมัครไม่สำเร็จ — ระบบขัดข้อง กรุณาแคปหน้าจอนี้ส่งให้ผู้พัฒนา (รายละเอียด: '+e.message+')' : 'สมัครไม่สำเร็จ — '+STORAGE_MSG); } }
+  function registerInner(){
+    var u=(el('rlRegUser').value||'').trim();
+    var em=(el('rlRegEmail').value||'').trim().toLowerCase();
+    var pw=el('rlRegPass').value||'';
+    if(!/^[A-Za-z0-9_]{3,20}$/.test(u)){ err('rlRegErr','ชื่อผู้ใช้ต้องยาว 3–20 ตัว ใช้ได้เฉพาะ a–z, 0–9 และ _'); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ err('rlRegErr','รูปแบบอีเมลไม่ถูกต้อง'); return; }
+    var all=users();
+    if(all.some(function(x){return x&&typeof x.user==='string'&&x.user.toLowerCase()===u.toLowerCase();})){ err('rlRegErr','ชื่อผู้ใช้นี้ถูกใช้แล้ว'); return; }
+    if(all.some(function(x){return x&&typeof x.email==='string'&&x.email.toLowerCase()===em;})){ err('rlRegErr','อีเมลนี้ถูกใช้สมัครแล้ว'); return; }
+    var color=PALETTE[Math.floor(Math.random()*PALETTE.length)];
+    var rec={ id:'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+      user:u, email:em, pass:pw, /* เว็บจริง: hash ฝั่ง server เท่านั้น */
+      color:color, coins:0, exp:0, level:0, createdAt:new Date().toISOString() };
+    all.push(rec); saveUsers(all);
+    localStorage.setItem(K_SES, JSON.stringify({uid:rec.id, at:Date.now()}));
+    close(); render();
+  }
+
+  /* ── เข้าสู่ระบบ ── */
+  function login(){ try{ loginInner(); }catch(e){ err('rlLoginErr', storageOK()? 'เข้าสู่ระบบไม่สำเร็จ — ระบบขัดข้อง กรุณาแคปหน้าจอนี้ส่งให้ผู้พัฒนา (รายละเอียด: '+e.message+')' : 'เข้าสู่ระบบไม่สำเร็จ — '+STORAGE_MSG); } }
+  function loginInner(){
+    var q=(el('rlLoginUser').value||'').trim().toLowerCase();
+    var pw=el('rlLoginPass').value||'';
+    var u=users().find(function(x){return x&&(String(x.user||'').toLowerCase()===q||String(x.email||'').toLowerCase()===q);});
+    if(!u||u.pass!==pw){ err('rlLoginErr','ชื่อผู้ใช้/อีเมล หรือรหัสผ่านไม่ถูกต้อง'); return; }
+    if(u.status==='banned'){ err('rlLoginErr','บัญชีนี้ถูกระงับการใช้งาน — ติดต่อทีมงานผ่านหน้าแจ้งปัญหา'); return; }
+    localStorage.setItem(K_SES, JSON.stringify({uid:u.id, at:Date.now()}));
+    close(); render();
+  }
+
+  /* ── ลืมรหัสผ่าน (จำลอง) ── */
+  function forgot(){
+    var em=(el('rlForgotEmail').value||'').trim().toLowerCase();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ err('rlForgotErr','รูปแบบอีเมลไม่ถูกต้อง'); return; }
+    err('rlForgotErr'); el('rlForgotOk').classList.add('show');
+  }
+
+  function logout(){ localStorage.removeItem(K_SES); toggleMenu(false); render(); }
+
+  /* ── header: สลับ ปุ่มเข้าสู่ระบบ ↔ avatar ── */
+  function render(){
+    try{document.dispatchEvent(new CustomEvent('rlauth:render'));}catch(e){}
+    var u=me();
+    var btn=document.querySelector('.rl-header .rl-login');
+    var box=el('rlUserBox');
+    if(!btn||!box)return;
+    if(u){
+      btn.classList.add('off'); box.classList.add('on');
+      var ch=((u.user||'?')[0]||'?').toUpperCase();
+      var uc=(u.color&&u.color.length>=2)?u.color:['#e2ecfd','#3a62b2'];   /* บัญชีเก่าไม่มีสี → สีสำรอง */
+      var a=el('rlAvaBtn'); if(a){ a.textContent=ch; a.style.background=uc[0]; a.style.color=uc[1]; }
+      var a2=el('rlMenuAva'); if(a2){ a2.textContent=ch; a2.style.background=uc[0]; a2.style.color=uc[1]; }
+      el('rlMenuName').textContent=u.user;
+      el('rlMenuHandle').textContent='@'+u.user.toLowerCase();
+      el('rlMenuCoins').textContent=(u.coins||0).toFixed(2);
+    }else{
+      btn.classList.remove('off'); box.classList.remove('on'); toggleMenu(false);
+    }
+  }
+  function toggleMenu(force){
+    var m=el('rlUserMenu'); if(!m)return;
+    var show=(typeof force==='boolean')?force:!m.classList.contains('show');
+    m.classList.toggle('show',show);
+  }
+
+  document.addEventListener('click',function(ev){
+    var box=el('rlUserBox');
+    if(box&&!box.contains(ev.target)) toggleMenu(false);
+    if(ev.target===el('rlAuthModal')) close();
+  });
+
+  document.addEventListener('DOMContentLoaded',render);
+
+  return {open:open, close:close, mode:mode, eye:eye, pwcheck:pwcheck,
+          register:register, login:login, forgot:forgot, logout:logout,
+          render:render, toggleMenu:toggleMenu, me:me};
+})();
+</script>
+<script id="rlSTopSyncJS">
+/* ═══ ปุ่มโปรไฟล์เชื่อม RLAuth ของหน้านี้ (โครงเดียวกับหน้าหลัก) ═══ */
+(function(){
+  var login=document.getElementById('mLogin'),ava=document.getElementById('mAva'),p=document.getElementById('mprof');
+  var avaC=document.getElementById('mAvaC'),pAva=document.getElementById('mProfAva');
+  var pName=document.getElementById('mProfName'),pHandle=document.getElementById('mProfHandle'),pCoins=document.getElementById('mProfCoins');
+  function sync(){
+    var u=window.RLAuth&&RLAuth.me();
+    login.style.display=u?'none':'';
+    ava.style.display=u?'':'none';
+    if(u){
+      var ch=((u.user||'?')[0]||'?').toUpperCase();
+      var uc=(u.color&&u.color.length>=2)?u.color:['#e2ecfd','#3a62b2'];
+      avaC.textContent=ch; avaC.style.background=uc[0]; avaC.style.color=uc[1];
+      pAva.textContent=ch; pAva.style.background=uc[0]; pAva.style.color=uc[1];
+      pName.textContent=u.user;
+      pHandle.textContent='@'+(u.user||'').toLowerCase();
+      pCoins.textContent=(u.coins||0).toFixed(2);
+    }else{
+      p.classList.remove('show'); document.body.style.overflow='';
+    }
+  }
+  login.addEventListener('click',function(){ if(window.RLAuth) RLAuth.open('login'); });
+  ava.addEventListener('click',function(){
+    var on=p.classList.toggle('show');
+    document.body.style.overflow=on?'hidden':'';
+  });
+  p.querySelector('nav:last-of-type a').addEventListener('click',function(e){ e.preventDefault(); RLAuth.logout(); });
+  document.addEventListener('rlauth:render',sync);
+  document.addEventListener('DOMContentLoaded',sync);
+  sync();
+})();
+</script>
+
+<script id="rlWriterToggleJS">
+/* ═══ สมัครนักเขียนเสร็จแล้วถึงขึ้นศูนย์นักเขียน (ตรรกะเดียวกับหน้าศูนย์บัญชีหลัก) ═══ */
+(function(){
+  function isWriter(u){
+    if(!u) return false;
+    if(u.isWriter) return true;
+    try{
+      var L=JSON.parse(localStorage.getItem('rl_novels'))||[];
+      if(Array.isArray(L)) return L.some(function(n){return n&&n.ownerUid===u.id;});
+    }catch(e){}
+    return false;
+  }
+  function refresh(){
+    var u=window.RLAuth&&RLAuth.me&&RLAuth.me();
+    var w=isWriter(u);
+    var aApply=document.getElementById('mProfApply'), aDash=document.getElementById('mProfDash');
+    if(aApply) aApply.style.display = w?'none':'';
+    if(aDash)  aDash.style.display  = w?'':'none';
+  }
+  document.addEventListener('rlauth:render', refresh);
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(refresh, 300); });
+  refresh();
+  setInterval(refresh, 3000);
+})();
+</script>
+</body>
+</html>

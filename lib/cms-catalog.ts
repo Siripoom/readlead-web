@@ -25,6 +25,7 @@ export type CmsBannerElement = {
 export type CmsBanner = {
   id: string
   title: string
+  isMock?: boolean
   imageUrl?: string
   mobileImageUrl?: string
   linkUrl?: string
@@ -190,10 +191,12 @@ export function parseCoverflowCover(value: unknown, baseUrl: string): CmsCoverfl
 }
 
 export function cmsPlacement(value: unknown) {
-  if (!isRecord(value)) return { variant: 'default', column: 0 }
+  if (!isRecord(value)) return { variant: 'default', column: 0, group: null, slot: null }
   return {
     variant: typeof value.variant === 'string' ? value.variant : 'default',
     column: Number.isInteger(value.column) ? Number(value.column) : 0,
+    group: typeof value.group === 'string' ? value.group : null,
+    slot: Number.isInteger(value.slot) ? Number(value.slot) : null,
   }
 }
 

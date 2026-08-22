@@ -4,6 +4,7 @@ import { use, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check } from 'lucide-react'
 import { useRole } from '@/contexts/RoleContext'
+import { legalDocHref } from '@/lib/legal-content'
 import {
   AuthBackLink,
   AuthBrand,
@@ -43,7 +44,10 @@ export function RegisterView({ searchParams, presentation }: Props) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
   const [featureStatus, setFeatureStatus] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { register } = useRole()
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false)
+  const [isFacebookSubmitting, setIsFacebookSubmitting] = useState(false)
+  const [isAppleSubmitting, setIsAppleSubmitting] = useState(false)
+  const { register, continueWithGoogle, continueWithFacebook, continueWithApple } = useRole()
   const router = useRouter()
 
   const usernameValid = USERNAME_PATTERN.test(name)
@@ -56,9 +60,20 @@ export function RegisterView({ searchParams, presentation }: Props) {
   ]
   const passwordValid = passwordChecks.every((check) => check.valid)
 
+  const finishAuthentication = () => {
+    if (presentation === 'modal' && !requestedNext) {
+      router.refresh()
+      router.back()
+      return
+    }
+    if (presentation === 'modal') router.replace(nextPath)
+    else router.push(nextPath)
+    router.refresh()
+  }
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    if (isSubmitting) return
+    if (isSubmitting || isGoogleSubmitting || isFacebookSubmitting || isAppleSubmitting) return
     if (!name || !email.trim() || !password || !acceptedTerms) {
       setError('')
       setFieldErrors({})
@@ -78,19 +93,55 @@ export function RegisterView({ searchParams, presentation }: Props) {
       return
     }
 
-    if (presentation === 'modal' && !requestedNext) {
-      router.refresh()
-      router.back()
-      return
-    }
-
-    if (presentation === 'modal') router.replace(nextPath)
-    else router.push(nextPath)
-    router.refresh()
+    finishAuthentication()
   }
 
-  function unavailable(label: string) {
-    setFeatureStatus(`${label} ยังไม่พร้อมใช้งานในขณะนี้`)
+  const handleGoogle = async () => {
+    if (isSubmitting || isGoogleSubmitting || isFacebookSubmitting || isAppleSubmitting) return
+    setError('')
+    setFieldErrors({})
+    setFeatureStatus('')
+    setIsGoogleSubmitting(true)
+    const result = await continueWithGoogle()
+    setIsGoogleSubmitting(false)
+    if (result.cancelled) return
+    if (!result.ok) {
+      setError(result.error ?? 'สมัครสมาชิกด้วย Google ไม่สำเร็จ กรุณาลองใหม่')
+      return
+    }
+    finishAuthentication()
+  }
+
+  const handleFacebook = async () => {
+    if (isSubmitting || isGoogleSubmitting || isFacebookSubmitting || isAppleSubmitting) return
+    setError('')
+    setFieldErrors({})
+    setFeatureStatus('')
+    setIsFacebookSubmitting(true)
+    const result = await continueWithFacebook()
+    setIsFacebookSubmitting(false)
+    if (result.cancelled) return
+    if (!result.ok) {
+      setError(result.error ?? 'สมัครสมาชิกด้วย Facebook ไม่สำเร็จ กรุณาลองใหม่')
+      return
+    }
+    finishAuthentication()
+  }
+
+  const handleApple = async () => {
+    if (isSubmitting || isGoogleSubmitting || isFacebookSubmitting || isAppleSubmitting) return
+    setError('')
+    setFieldErrors({})
+    setFeatureStatus('')
+    setIsAppleSubmitting(true)
+    const result = await continueWithApple()
+    setIsAppleSubmitting(false)
+    if (result.cancelled) return
+    if (!result.ok) {
+      setError(result.error ?? 'สมัครสมาชิกด้วย Apple ไม่สำเร็จ กรุณาลองใหม่')
+      return
+    }
+    finishAuthentication()
   }
 
   const content = (
@@ -180,9 +231,9 @@ export function RegisterView({ searchParams, presentation }: Props) {
           />
           <p className="text-xs leading-5 text-[#77728a]">
             <label htmlFor="register-terms" className="cursor-pointer">ฉันได้อ่านและยอมรับ </label>
-            <button type="button" onClick={() => unavailable('ข้อตกลงและเงื่อนไขการใช้บริการ')} className="rounded font-bold text-[#d04655] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d04655]">ข้อตกลงและเงื่อนไขการใช้บริการ</button>
+            <a href={legalDocHref('tos')} target="_blank" rel="noopener noreferrer" className="rounded font-bold text-[#d04655] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d04655]">ข้อตกลงและเงื่อนไขการใช้บริการ</a>
             {' '}และ{' '}
-            <button type="button" onClick={() => unavailable('นโยบายความเป็นส่วนตัว')} className="rounded font-bold text-[#d04655] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d04655]">นโยบายความเป็นส่วนตัว</button>
+            <a href={legalDocHref('privacy')} target="_blank" rel="noopener noreferrer" className="rounded font-bold text-[#d04655] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d04655]">นโยบายความเป็นส่วนตัว</a>
           </p>
         </div>
 
@@ -190,7 +241,7 @@ export function RegisterView({ searchParams, presentation }: Props) {
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isGoogleSubmitting || isFacebookSubmitting || isAppleSubmitting}
           className="mt-5 h-[42px] w-full rounded-xl bg-[#d04655] text-sm font-bold text-white transition-colors hover:bg-[#bd3948] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d04655] disabled:cursor-not-allowed disabled:bg-[#dfdbea] disabled:text-white"
         >
           {isSubmitting ? 'กำลังสมัครสมาชิก...' : 'สมัครสมาชิก'}
@@ -199,7 +250,14 @@ export function RegisterView({ searchParams, presentation }: Props) {
 
       <AuthDivider />
       <AuthFeatureStatus message={featureStatus} />
-      <SocialAuthButtons onUnavailable={unavailable} />
+      <SocialAuthButtons
+        onGoogle={handleGoogle}
+        onFacebook={handleFacebook}
+        onApple={handleApple}
+        googleBusy={isGoogleSubmitting}
+        facebookBusy={isFacebookSubmitting}
+        appleBusy={isAppleSubmitting}
+      />
 
       <p className="mt-6 text-center text-sm text-[#77728a]">
         มีบัญชีผู้ใช้อยู่แล้ว?{' '}

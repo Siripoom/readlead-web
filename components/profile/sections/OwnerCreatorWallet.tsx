@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import Image from 'next/image'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import Image from "next/image";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -14,206 +14,452 @@ import {
   Plus,
   RefreshCw,
   Upload,
+  Wallet,
   X,
-} from 'lucide-react'
-import CreatorDashboard from '@/components/creator/CreatorDashboard'
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
-import { useWallet, type WalletTopUpMethod } from '@/contexts/WalletContext'
-import type { Role, WalletTransaction } from '@/lib/types'
-import styles from '../profile.module.css'
+} from "lucide-react";
+import CreatorDashboard from "@/components/creator/CreatorDashboard";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useWallet, type WalletTopUpMethod } from "@/contexts/WalletContext";
+import type {
+  PaymentChannel,
+  PaymentMethod,
+  Role,
+  WalletTransaction,
+} from "@/lib/types";
+import { GatewayChargeDialog } from "./wallet/GatewayChargeDialog";
+import styles from "../profile.module.css";
 
 export function OwnerCreator({ role }: { role: Role; userId: string }) {
-  if (role !== 'creator' && role !== 'admin') {
+  if (role !== "creator" && role !== "admin") {
     return (
       <section className={`${styles.card} ${styles.creatorLocked}`}>
         <LockKeyhole />
         <h1 className={styles.sectionTitle}>แดชบอร์ดสำหรับนักเขียน</h1>
-        <p className={styles.sectionDesc}>บัญชีนี้ยังไม่มีสิทธิ์นักเขียน กรุณาส่งแบบฟอร์มในเมนู “สมัครนักเขียน” ก่อน</p>
+        <p className={styles.sectionDesc}>
+          บัญชีนี้ยังไม่มีสิทธิ์นักเขียน กรุณาส่งแบบฟอร์มในเมนู “สมัครนักเขียน”
+          ก่อน
+        </p>
       </section>
-    )
+    );
   }
 
-  return <CreatorDashboard />
+  return <CreatorDashboard />;
 }
 
-const PAYMENT_METHODS: Array<{
-  id: WalletTopUpMethod
-  label: string
-  description: string
-  disabled?: boolean
-  logos: Array<{
-    src: string
-    width: number
-    height: number
-  }>
-}> = [
+// Historical/display registry — covers every id a transaction has ever used
+// (including channels no longer selectable, like counter-service) so the
+// history table can always render a label/logo. The *selectable* grid is
+// driven separately by `channels` from useWallet(), not this registry.
+const PAYMENT_METHOD_DISPLAY: Record<
+  PaymentMethod,
   {
-    id: 'proof-upload',
-    label: 'อัปโหลดหลักฐาน',
-    description: 'แนบสลิปเพื่อรออนุมัติ',
+    label: string;
+    description: string;
+    logos: Array<{ src: string; width: number; height: number }>;
+  }
+> = {
+  "proof-upload": {
+    label: "อัปโหลดหลักฐาน",
+    description: "แนบสลิปเพื่อรออนุมัติ",
     logos: [],
   },
-  {
-    id: 'promptpay',
-    label: 'พร้อมเพย์',
-    description: 'สแกน QR จ่ายทันที',
-    disabled: true,
-    logos: [{ src: '/profile/payment-methods/promptpay.png', width: 711, height: 400 }],
-  },
-  {
-    id: 'credit-card',
-    label: 'บัตรเครดิต/เดบิต',
-    description: 'Visa, Mastercard',
-    disabled: true,
+  promptpay: {
+    label: "พร้อมเพย์",
+    description: "สแกน QR จ่ายทันที",
     logos: [
-      { src: '/profile/payment-methods/visa.svg', width: 24, height: 24 },
-      { src: '/profile/payment-methods/mastercard.svg', width: 1000, height: 618 },
+      {
+        src: "/profile/payment-methods/promptpay.png",
+        width: 711,
+        height: 400,
+      },
     ],
   },
-  {
-    id: 'truemoney',
-    label: 'ทรูมันนี่ วอลเล็ท',
-    description: 'TrueMoney Wallet',
-    disabled: true,
-    logos: [{ src: '/profile/payment-methods/truemoney-wallet.jpg', width: 300, height: 300 }],
+  "credit-card": {
+    label: "บัตรเครดิต/เดบิต",
+    description: "Visa, Mastercard",
+    logos: [
+      { src: "/profile/payment-methods/visa.svg", width: 24, height: 24 },
+      {
+        src: "/profile/payment-methods/mastercard.svg",
+        width: 1000,
+        height: 618,
+      },
+    ],
   },
-  {
-    id: 'counter-service',
-    label: 'เคาน์เตอร์เซอร์วิส',
-    description: 'ชำระที่ 7-Eleven',
-    disabled: true,
-    logos: [{ src: '/profile/payment-methods/counter-service.png', width: 156, height: 122 }],
+  truemoney: {
+    label: "ทรูมันนี่ วอลเล็ท",
+    description: "TrueMoney Wallet",
+    logos: [
+      {
+        src: "/profile/payment-methods/truemoney-wallet.jpg",
+        width: 300,
+        height: 300,
+      },
+    ],
   },
-]
+  "counter-service": {
+    label: "เคาน์เตอร์เซอร์วิส",
+    description: "ชำระที่ 7-Eleven",
+    logos: [
+      {
+        src: "/profile/payment-methods/counter-service.png",
+        width: 156,
+        height: 122,
+      },
+    ],
+  },
+  shopeepay: {
+    label: "ShopeePay",
+    description: "จ่ายผ่าน ShopeePay",
+    logos: [
+      {
+        src: "/profile/payment-methods/shopeepay.png",
+        width: 600,
+        height: 600,
+      },
+    ],
+  },
+  "apple-pay": {
+    label: "Apple Pay",
+    description: "จ่ายด้วย Apple Pay",
+    logos: [
+      {
+        src: "/profile/payment-methods/apple-pay.svg",
+        width: 512,
+        height: 210,
+      },
+    ],
+  },
+  "google-pay": {
+    label: "Google Pay",
+    description: "จ่ายด้วย Google Pay",
+    logos: [
+      {
+        src: "/profile/payment-methods/google-pay.svg",
+        width: 64,
+        height: 24,
+      },
+    ],
+  },
+  "google-play": {
+    label: "Google Play",
+    description: "ซื้อผ่าน Google Play",
+    logos: [],
+  },
+  "app-store": {
+    label: "App Store",
+    description: "ซื้อผ่าน App Store",
+    logos: [],
+  },
+  paypal: { label: "PayPal", description: "PayPal", logos: [] },
+  "bank-transfer": {
+    label: "โอนเงินผ่านธนาคาร",
+    description: "โอนเงินผ่านธนาคาร",
+    logos: [],
+  },
+};
 
-type HistoryFilter = 'all' | 'approved' | 'rejected' | 'pending'
-type TopUpResult = 'submitted' | 'error' | null
+// Boundary default for when the backoffice hasn't shipped `channels` on
+// GET /api/member/wallet yet (deployed independently of this repo) — mirrors
+// the shape backoffice's WALLET_CHANNELS is expected to return, so the wallet
+// page degrades to today's slip-only behavior instead of showing an empty
+// grid. Delete once the backoffice snapshot always includes `channels`.
+const FALLBACK_WEB_CHANNELS: PaymentChannel[] = [
+  {
+    id: "proof-upload",
+    label: "อัปโหลดหลักฐาน",
+    description: "แนบสลิปเพื่อรออนุมัติ",
+    kind: "slip",
+    enabled: true,
+    platforms: ["web"],
+  },
+  {
+    id: "promptpay",
+    label: "พร้อมเพย์",
+    description: "สแกน QR จ่ายทันที",
+    kind: "gateway",
+    provider: "omise",
+    instrument: "promptpay",
+    enabled: true,
+    platforms: ["web"],
+  },
+  {
+    id: "credit-card",
+    label: "บัตรเครดิต/เดบิต",
+    description: "Visa, Mastercard",
+    kind: "gateway",
+    provider: "omise",
+    instrument: "card",
+    enabled: true,
+    platforms: ["web"],
+  },
+  {
+    id: "truemoney",
+    label: "ทรูมันนี่ วอลเล็ท",
+    description: "TrueMoney Wallet",
+    kind: "gateway",
+    provider: "omise",
+    instrument: "truemoney",
+    enabled: true,
+    platforms: ["web"],
+  },
+  {
+    id: "shopeepay",
+    label: "ShopeePay",
+    description: "จ่ายผ่าน ShopeePay",
+    kind: "gateway",
+    provider: "omise",
+    instrument: "shopeepay",
+    enabled: true,
+    platforms: ["web"],
+  },
+  {
+    id: "apple-pay",
+    label: "Apple Pay",
+    description: "จ่ายด้วย Apple Pay",
+    kind: "gateway",
+    provider: "omise",
+    instrument: "apple-pay",
+    // Mirrors the temporary UI-review flag in the backoffice's
+    // WALLET_CHANNELS — see the warning there before deploying.
+    enabled: true,
+    platforms: ["web", "ios"],
+  },
+  {
+    id: "google-pay",
+    label: "Google Pay",
+    description: "จ่ายด้วย Google Pay",
+    kind: "gateway",
+    provider: "omise",
+    instrument: "google-pay",
+    enabled: true,
+    platforms: ["web", "android"],
+  },
+];
+
+type HistoryFilter = "all" | "approved" | "rejected" | "pending";
+type TopUpResult = "submitted" | "error" | null;
 
 const HISTORY_FILTERS: Array<{ id: HistoryFilter; label: string }> = [
-  { id: 'all', label: 'ทั้งหมด' },
-  { id: 'approved', label: 'อนุมัติแล้ว' },
-  { id: 'rejected', label: 'ปฏิเสธ' },
-  { id: 'pending', label: 'รอดำเนินการ' },
-]
+  { id: "all", label: "ทั้งหมด" },
+  { id: "approved", label: "อนุมัติแล้ว" },
+  { id: "rejected", label: "ปฏิเสธ" },
+  { id: "pending", label: "รอดำเนินการ" },
+];
 
-function paymentMethod(method: WalletTransaction['paymentMethod']) {
-  return PAYMENT_METHODS.find((item) => item.id === method)
+function paymentMethod(method: WalletTransaction["paymentMethod"]) {
+  return method ? { id: method, ...PAYMENT_METHOD_DISPLAY[method] } : undefined;
 }
 
 function PaymentMethodLogo({
-  method,
+  id,
+  logos,
   compact = false,
 }: {
-  method: (typeof PAYMENT_METHODS)[number]
-  compact?: boolean
+  id: PaymentMethod;
+  logos: Array<{ src: string; width: number; height: number }>;
+  compact?: boolean;
 }) {
   return (
     <span
-      className={`${styles.paymentLogo} ${method.logos.length > 1 ? styles.paymentLogoMultiple : ''} ${compact ? styles.paymentLogoCompact : ''}`}
+      className={`${styles.paymentLogo} ${logos.length > 1 ? styles.paymentLogoMultiple : ""} ${compact ? styles.paymentLogoCompact : ""}`}
       aria-hidden="true"
     >
-      {method.id === 'proof-upload' ? <Upload /> : method.logos.map((logo) => (
-        <Image
-          key={logo.src}
-          src={logo.src}
-          width={logo.width}
-          height={logo.height}
-          alt=""
-        />
-      ))}
+      {id === "proof-upload" ? (
+        <Upload />
+      ) : logos.length === 0 ? (
+        <Wallet />
+      ) : (
+        logos.map((logo) => (
+          <Image
+            key={logo.src}
+            src={logo.src}
+            width={logo.width}
+            height={logo.height}
+            alt=""
+          />
+        ))
+      )}
     </span>
-  )
+  );
 }
 
 function SlipPreview({ file }: { file: File }) {
-  const [url] = useState(() => URL.createObjectURL(file))
-  useEffect(() => () => URL.revokeObjectURL(url), [url])
-  return <Image src={url} alt="ตัวอย่างสลิป" width={96} height={96} unoptimized />
+  const [url] = useState(() => URL.createObjectURL(file));
+  useEffect(() => () => URL.revokeObjectURL(url), [url]);
+  return (
+    <Image src={url} alt="ตัวอย่างสลิป" width={96} height={96} unoptimized />
+  );
 }
 
-const HISTORY_STATUS = {
-  pending: { label: 'รอตรวจสอบ', className: styles.historyStatusPending },
-  approved: { label: 'อนุมัติแล้ว', className: styles.historyStatusSuccess },
-  rejected: { label: 'ปฏิเสธ', className: styles.historyStatusRejected },
-} as const
+const HISTORY_STATUS: Record<
+  WalletTransaction["status"],
+  { label: string; className: string }
+> = {
+  pending: { label: "รอตรวจสอบ", className: styles.historyStatusPending },
+  authorizing: {
+    label: "กำลังยืนยันการชำระเงิน",
+    className: styles.historyStatusPending,
+  },
+  approved: { label: "อนุมัติแล้ว", className: styles.historyStatusSuccess },
+  rejected: { label: "ปฏิเสธ", className: styles.historyStatusRejected },
+  failed: {
+    label: "ชำระเงินไม่สำเร็จ",
+    className: styles.historyStatusRejected,
+  },
+  expired: {
+    label: "หมดเวลาชำระเงิน",
+    className: styles.historyStatusRejected,
+  },
+};
+
+const HISTORY_STATUS_FALLBACK = {
+  label: "ไม่ทราบสถานะ",
+  className: styles.historyStatusPending,
+};
+
+function historyStatus(status: WalletTransaction["status"]) {
+  return HISTORY_STATUS[status] ?? HISTORY_STATUS_FALLBACK;
+}
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat('th-TH', {
-    day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit',
-  }).format(new Date(value))
+  return new Intl.DateTimeFormat("th-TH", {
+    day: "2-digit",
+    month: "short",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
-export function OwnerWallet() {
-  const { balance, topUpEnabled, packages, transactions, loading, error, submitTopUp, refresh } = useWallet()
-  const topUpSection = useRef<HTMLElement>(null)
-  const [selectedPackageId, setSelectedPackageId] = useState('300')
-  const [selectedMethod, setSelectedMethod] = useState<WalletTopUpMethod>('proof-upload')
-  const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all')
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [result, setResult] = useState<TopUpResult>(null)
-  const [slip, setSlip] = useState<File | null>(null)
-  const [slipError, setSlipError] = useState('')
-  const [reference, setReference] = useState('')
+// Filters fold gateway-only statuses into the closest existing tab so every
+// row stays reachable without adding new tabs: authorizing reads like
+// pending, failed/expired read like rejected.
+const HISTORY_FILTER_STATUSES: Record<
+  HistoryFilter,
+  Array<WalletTransaction["status"]>
+> = {
+  all: [],
+  pending: ["pending", "authorizing"],
+  approved: ["approved"],
+  rejected: ["rejected", "failed", "expired"],
+};
 
-  const selectedPackage = packages.find((item) => item.id === selectedPackageId) ?? packages[0]
-  const selectedPayment = PAYMENT_METHODS.find((item) => item.id === selectedMethod) ?? PAYMENT_METHODS[0]
-  const visibleTransactions = useMemo(
-    () => historyFilter === 'all' ? transactions : transactions.filter((item) => item.status === historyFilter),
-    [historyFilter, transactions],
-  )
+export function OwnerWallet() {
+  const {
+    balance,
+    topUpEnabled,
+    packages,
+    channels,
+    transactions,
+    loading,
+    error,
+    submitTopUp,
+    refresh,
+  } = useWallet();
+  const topUpSection = useRef<HTMLElement>(null);
+  const [selectedPackageId, setSelectedPackageId] = useState("300");
+  const [selectedMethod, setSelectedMethod] =
+    useState<WalletTopUpMethod>("proof-upload");
+  const [historyFilter, setHistoryFilter] = useState<HistoryFilter>("all");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [gatewayDialogOpen, setGatewayDialogOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<TopUpResult>(null);
+  const [slip, setSlip] = useState<File | null>(null);
+  const [slipError, setSlipError] = useState("");
+  const [reference, setReference] = useState("");
+
+  const webChannels = useMemo(() => {
+    const fromServer = channels.filter((channel) =>
+      channel.platforms.includes("web"),
+    );
+    return fromServer.length > 0 ? fromServer : FALLBACK_WEB_CHANNELS;
+  }, [channels]);
+  const selectedPackage =
+    packages.find((item) => item.id === selectedPackageId) ?? packages[0];
+  // Falls back to the first enabled channel at render time (rather than via
+  // an effect writing back into selectedMethod) whenever the raw selection
+  // doesn't resolve to an enabled channel — e.g. before the user has picked
+  // one, or if the server-driven list changes underneath them.
+  const rawSelectedChannel = webChannels.find(
+    (channel) => channel.id === selectedMethod,
+  );
+  const selectedChannel = rawSelectedChannel?.enabled
+    ? rawSelectedChannel
+    : webChannels.find((channel) => channel.enabled);
+  const selectedPaymentDisplay = {
+    id: selectedChannel?.id ?? selectedMethod,
+    ...PAYMENT_METHOD_DISPLAY[selectedChannel?.id ?? selectedMethod],
+  };
+  const visibleTransactions = useMemo(() => {
+    if (historyFilter === "all") return transactions;
+    const statuses = HISTORY_FILTER_STATUSES[historyFilter];
+    return transactions.filter((item) => statuses.includes(item.status));
+  }, [historyFilter, transactions]);
 
   function openConfirmation() {
-    setResult(null)
-    setReference('')
-    setSlipError('')
-    setConfirmOpen(true)
+    if (selectedChannel?.kind === "gateway") {
+      setGatewayDialogOpen(true);
+      return;
+    }
+    setResult(null);
+    setReference("");
+    setSlipError("");
+    setConfirmOpen(true);
   }
 
   function handleDialogChange(open: boolean) {
-    if (busy) return
-    setConfirmOpen(open)
+    if (busy) return;
+    setConfirmOpen(open);
     if (!open) {
-      setResult(null)
-      setSlip(null)
-      setSlipError('')
-      setReference('')
+      setResult(null);
+      setSlip(null);
+      setSlipError("");
+      setReference("");
     }
   }
 
   async function confirmTopUp() {
-    if (!selectedPackage || !slip || busy || !topUpEnabled) return
-    setBusy(true)
-    setResult(null)
-    const response = await submitTopUp(selectedPackage.id, slip)
-    setBusy(false)
+    if (!selectedPackage || !slip || busy || !topUpEnabled) return;
+    setBusy(true);
+    setResult(null);
+    const response = await submitTopUp(selectedPackage.id, slip);
+    setBusy(false);
     if (response.ok) {
-      setReference(response.reference)
-      setResult('submitted')
+      setReference(response.reference);
+      setResult("submitted");
     } else {
-      setSlipError(response.error)
-      setResult('error')
+      setSlipError(response.error);
+      setResult("error");
     }
   }
 
   function selectSlip(file?: File) {
-    if (!file) return
-    if (file.type !== 'image/jpeg' && file.type !== 'image/png') {
-      setSlip(null)
-      setSlipError('รองรับเฉพาะไฟล์ JPG และ PNG')
-      return
+    if (!file) return;
+    if (file.type !== "image/jpeg" && file.type !== "image/png") {
+      setSlip(null);
+      setSlipError("รองรับเฉพาะไฟล์ JPG และ PNG");
+      return;
     }
     if (!file.size || file.size > 5 * 1024 * 1024) {
-      setSlip(null)
-      setSlipError('ไฟล์สลิปต้องมีขนาดไม่เกิน 5MB')
-      return
+      setSlip(null);
+      setSlipError("ไฟล์สลิปต้องมีขนาดไม่เกิน 5MB");
+      return;
     }
-    setSlip(file)
-    setSlipError('')
-    setResult(null)
+    setSlip(file);
+    setSlipError("");
+    setResult(null);
   }
 
-  const totalCoins = selectedPackage ? selectedPackage.coins + selectedPackage.bonus : 0
+  const totalCoins = selectedPackage
+    ? selectedPackage.coins + selectedPackage.bonus
+    : 0;
 
   return (
     <div className={styles.walletPage}>
@@ -224,12 +470,31 @@ export function OwnerWallet() {
 
       <section className={styles.walletHero}>
         <span className={styles.walletHeroDeco} aria-hidden="true" />
-        <Image className={styles.walletHeroCoin} src="/profile/readify-coin.png" width={66} height={66} alt="เหรียญ ReadLead" priority />
+        <Image
+          className={styles.walletHeroCoin}
+          src="/profile/readify-coin.png"
+          width={66}
+          height={66}
+          alt="เหรียญ ReadLead"
+          priority
+        />
         <div className={styles.walletBalance}>
           <p>ยอดเหรียญในบัญชี</p>
-          <div>{loading ? '—' : balance.toLocaleString('th-TH')} <small>เหรียญ</small></div>
+          <div>
+            {loading ? "—" : balance.toLocaleString("th-TH")}{" "}
+            <small>เหรียญ</small>
+          </div>
         </div>
-        <button type="button" className={styles.walletHeroButton} onClick={() => topUpSection.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+        <button
+          type="button"
+          className={styles.walletHeroButton}
+          onClick={() =>
+            topUpSection.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            })
+          }
+        >
           <Plus /> เติมเหรียญ
         </button>
       </section>
@@ -237,57 +502,101 @@ export function OwnerWallet() {
       {error && (
         <div className={styles.walletLoadError} role="alert">
           <AlertCircle /> ไม่สามารถโหลดข้อมูลกระเป๋าเงินได้
-          <button type="button" onClick={() => void refresh()}><RefreshCw /> ลองอีกครั้ง</button>
+          <button type="button" onClick={() => void refresh()}>
+            <RefreshCw /> ลองอีกครั้ง
+          </button>
         </div>
       )}
 
       <div className={styles.walletGrid}>
         <div className={styles.walletColumn}>
-          <section ref={topUpSection} className={`${styles.card} ${styles.walletSection}`}>
-            <h2 className={styles.walletSectionTitle}><CreditCard /> ช่องทางการเติมเหรียญ</h2>
-            <p className={styles.walletSectionDescription}>แนบหลักฐานการชำระเงินเพื่อส่งให้เจ้าหน้าที่ตรวจสอบ</p>
+          <section
+            ref={topUpSection}
+            className={`${styles.card} ${styles.walletSection}`}
+          >
+            <h2 className={styles.walletSectionTitle}>
+              <CreditCard /> ช่องทางการเติมเหรียญ
+            </h2>
+            <p className={styles.walletSectionDescription}>
+              แนบหลักฐานการชำระเงินเพื่อส่งให้เจ้าหน้าที่ตรวจสอบ
+            </p>
             <div className={styles.paymentGrid}>
-              {PAYMENT_METHODS.map((method) => {
-                const active = selectedMethod === method.id
+              {webChannels.map((channel) => {
+                const active = selectedChannel?.id === channel.id;
+                const logos = PAYMENT_METHOD_DISPLAY[channel.id]?.logos ?? [];
                 return (
                   <button
                     type="button"
-                    key={method.id}
-                    className={`${styles.paymentMethod} ${active ? styles.paymentMethodActive : ''} ${method.disabled ? styles.paymentMethodDisabled : ''}`}
-                    onClick={() => !method.disabled && setSelectedMethod(method.id)}
+                    key={channel.id}
+                    className={`${styles.paymentMethod} ${active ? styles.paymentMethodActive : ""} ${!channel.enabled ? styles.paymentMethodDisabled : ""}`}
+                    onClick={() =>
+                      channel.enabled &&
+                      setSelectedMethod(channel.id as WalletTopUpMethod)
+                    }
                     aria-pressed={active}
-                    disabled={method.disabled}
+                    disabled={!channel.enabled}
                   >
-                    <PaymentMethodLogo method={method} />
-                    <span className={styles.paymentText}><b>{method.label}</b><small>{method.disabled ? 'ยังไม่เปิดใช้งาน' : method.description}</small></span>
+                    <PaymentMethodLogo id={channel.id} logos={logos} />
+                    <span className={styles.paymentText}>
+                      <b>{channel.label}</b>
+                      <small>
+                        {channel.enabled
+                          ? channel.description
+                          : "ยังไม่เปิดใช้งาน"}
+                      </small>
+                    </span>
                     <span className={styles.paymentRadio} aria-hidden="true" />
                   </button>
-                )
+                );
               })}
             </div>
           </section>
 
           <section className={`${styles.card} ${styles.walletSection}`}>
-            <h2 className={styles.walletSectionTitle}><CircleDollarSign /> เลือกแพ็กเกจเหรียญ</h2>
-            <p className={styles.walletSectionDescription}>ยิ่งเติมเยอะ ยิ่งได้โบนัสเยอะ</p>
+            <h2 className={styles.walletSectionTitle}>
+              <CircleDollarSign /> เลือกแพ็กเกจเหรียญ
+            </h2>
+            <p className={styles.walletSectionDescription}>
+              ยิ่งเติมเยอะ ยิ่งได้โบนัสเยอะ
+            </p>
             <div className={styles.packageGrid}>
-              {loading && packages.length === 0 && Array.from({ length: 6 }, (_, index) => <span key={index} className={styles.walletPackageSkeleton} />)}
+              {loading &&
+                packages.length === 0 &&
+                Array.from({ length: 6 }, (_, index) => (
+                  <span key={index} className={styles.walletPackageSkeleton} />
+                ))}
               {packages.map((walletPackage) => {
-                const active = selectedPackage?.id === walletPackage.id
+                const active = selectedPackage?.id === walletPackage.id;
                 return (
                   <button
                     type="button"
                     key={walletPackage.id}
-                    className={`${styles.walletPackage} ${active ? styles.walletPackageActive : ''}`}
+                    className={`${styles.walletPackage} ${active ? styles.walletPackageActive : ""}`}
                     onClick={() => setSelectedPackageId(walletPackage.id)}
                     aria-pressed={active}
                   >
-                    {walletPackage.popular && <span className={styles.packagePopular}>ยอดนิยม</span>}
-                    <span className={styles.packageCoins}><Image src="/profile/readify-coin.png" width={16} height={16} alt="" />{walletPackage.coins.toLocaleString('th-TH')}</span>
-                    <span className={styles.packageBonus}>{walletPackage.bonus ? `+${walletPackage.bonus.toLocaleString('th-TH')} โบนัส` : '\u00a0'}</span>
-                    <span className={styles.packagePrice}>฿{walletPackage.price.toLocaleString('th-TH')}</span>
+                    {walletPackage.popular && (
+                      <span className={styles.packagePopular}>ยอดนิยม</span>
+                    )}
+                    <span className={styles.packageCoins}>
+                      <Image
+                        src="/profile/readify-coin.png"
+                        width={16}
+                        height={16}
+                        alt=""
+                      />
+                      {walletPackage.coins.toLocaleString("th-TH")}
+                    </span>
+                    <span className={styles.packageBonus}>
+                      {walletPackage.bonus
+                        ? `+${walletPackage.bonus.toLocaleString("th-TH")} โบนัส`
+                        : "\u00a0"}
+                    </span>
+                    <span className={styles.packagePrice}>
+                      ฿{walletPackage.price.toLocaleString("th-TH")}
+                    </span>
                   </button>
-                )
+                );
               })}
             </div>
             <button
@@ -296,76 +605,172 @@ export function OwnerWallet() {
               onClick={openConfirmation}
               disabled={!selectedPackage || loading || !topUpEnabled}
             >
-              <Plus /> เติม {totalCoins.toLocaleString('th-TH')} เหรียญ · ฿{selectedPackage?.price.toLocaleString('th-TH') ?? '—'}
+              <Plus /> เติม {totalCoins.toLocaleString("th-TH")} เหรียญ · ฿
+              {selectedPackage?.price.toLocaleString("th-TH") ?? "—"}
             </button>
-            {!loading && !topUpEnabled && <p className={styles.walletDisabledNote}>ระบบส่งหลักฐานยังไม่พร้อมใช้งาน</p>}
+            {!loading && !topUpEnabled && (
+              <p className={styles.walletDisabledNote}>
+                ระบบส่งหลักฐานยังไม่พร้อมใช้งาน
+              </p>
+            )}
           </section>
         </div>
 
         <div className={styles.walletColumn}>
           <section className={`${styles.card} ${styles.walletSection}`}>
-            <h2 className={styles.walletSectionTitle}><CreditCard /> บัตรเครดิตที่เชื่อมต่อ</h2>
-            <p className={styles.walletSectionDescription}>บัตรที่บันทึกไว้สำหรับการเติมเหรียญ</p>
+            <h2 className={styles.walletSectionTitle}>
+              <CreditCard /> บัตรเครดิตที่เชื่อมต่อ
+            </h2>
+            <p className={styles.walletSectionDescription}>
+              บัตรที่บันทึกไว้สำหรับการเติมเหรียญ
+            </p>
             <div className={styles.walletEmptyFeature}>
               <CreditCard />
-              <div><b>ยังไม่มีบัตรที่เชื่อมต่อ</b><span>ระบบบันทึกบัตรจะเปิดใช้งานเมื่อเชื่อมต่อผู้ให้บริการชำระเงิน</span></div>
+              <div>
+                <b>ยังไม่มีบัตรที่เชื่อมต่อ</b>
+                <span>
+                  ระบบบันทึกบัตรจะเปิดใช้งานเมื่อเชื่อมต่อผู้ให้บริการชำระเงิน
+                </span>
+              </div>
             </div>
-            <button type="button" className={styles.addCardButton} disabled><Plus /> เพิ่มบัตรใหม่ · ยังไม่เปิดใช้งาน</button>
+            <button type="button" className={styles.addCardButton} disabled>
+              <Plus /> เพิ่มบัตรใหม่ · ยังไม่เปิดใช้งาน
+            </button>
           </section>
 
           <section className={`${styles.card} ${styles.walletSection}`}>
-            <h2 className={styles.walletSectionTitle}><Gift /> รหัสโปรโมชั่น</h2>
-            <p className={styles.walletSectionDescription}>กรอกโค้ดเพื่อรับเหรียญหรือส่วนลดพิเศษ</p>
+            <h2 className={styles.walletSectionTitle}>
+              <Gift /> รหัสโปรโมชั่น
+            </h2>
+            <p className={styles.walletSectionDescription}>
+              กรอกโค้ดเพื่อรับเหรียญหรือส่วนลดพิเศษ
+            </p>
             <div className={styles.promoForm}>
-              <input type="text" placeholder="กรอกรหัสโปรโมชั่น เช่น READ100" disabled aria-label="รหัสโปรโมชั่น" />
-              <button type="button" disabled>ใช้โค้ด</button>
+              <input
+                type="text"
+                placeholder="กรอกรหัสโปรโมชั่น เช่น READ100"
+                disabled
+                aria-label="รหัสโปรโมชั่น"
+              />
+              <button type="button" disabled>
+                ใช้โค้ด
+              </button>
             </div>
-            <div className={styles.promoNote}><Info /> ระบบใช้รหัสโปรโมชั่นยังไม่เปิดใช้งาน</div>
+            <div className={styles.promoNote}>
+              <Info /> ระบบใช้รหัสโปรโมชั่นยังไม่เปิดใช้งาน
+            </div>
           </section>
         </div>
       </div>
 
-      <section className={`${styles.card} ${styles.walletSection} ${styles.walletHistory}`}>
-        <h2 className={styles.walletSectionTitle}><Clock3 /> ประวัติการเติมเหรียญ</h2>
-        <p className={styles.walletSectionDescription}>รายการเติมเหรียญทั้งหมดของคุณ</p>
-        <div className={styles.historyTabs} role="tablist" aria-label="กรองประวัติการเติมเหรียญ">
+      <section
+        className={`${styles.card} ${styles.walletSection} ${styles.walletHistory}`}
+      >
+        <h2 className={styles.walletSectionTitle}>
+          <Clock3 /> ประวัติการเติมเหรียญ
+        </h2>
+        <p className={styles.walletSectionDescription}>
+          รายการเติมเหรียญทั้งหมดของคุณ
+        </p>
+        <div
+          className={styles.historyTabs}
+          role="tablist"
+          aria-label="กรองประวัติการเติมเหรียญ"
+        >
           {HISTORY_FILTERS.map((filter) => (
             <button
               type="button"
               role="tab"
               key={filter.id}
               aria-selected={historyFilter === filter.id}
-              className={historyFilter === filter.id ? styles.historyTabActive : ''}
+              className={
+                historyFilter === filter.id ? styles.historyTabActive : ""
+              }
               onClick={() => setHistoryFilter(filter.id)}
-            >{filter.label}</button>
+            >
+              {filter.label}
+            </button>
           ))}
         </div>
         {loading && transactions.length === 0 ? (
-          <div className={styles.walletHistoryEmpty}>กำลังโหลดประวัติการเติมเหรียญ…</div>
+          <div className={styles.walletHistoryEmpty}>
+            กำลังโหลดประวัติการเติมเหรียญ…
+          </div>
         ) : visibleTransactions.length === 0 ? (
-          <div className={styles.walletHistoryEmpty}>ยังไม่มีรายการในสถานะนี้</div>
+          <div className={styles.walletHistoryEmpty}>
+            ยังไม่มีรายการในสถานะนี้
+          </div>
         ) : (
           <div className={styles.walletTableWrap}>
             <table className={styles.walletTable}>
-              <thead><tr><th>วันที่ / เวลา</th><th>ช่องทาง</th><th>จำนวนเหรียญ</th><th>ยอดเงิน</th><th>สถานะ</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>วันที่ / เวลา</th>
+                  <th>ช่องทาง</th>
+                  <th>จำนวนเหรียญ</th>
+                  <th>ยอดเงิน</th>
+                  <th>สถานะ</th>
+                </tr>
+              </thead>
               <tbody>
                 {visibleTransactions.map((transaction) => {
-                  const method = paymentMethod(transaction.paymentMethod)
-                  const status = HISTORY_STATUS[transaction.status]
+                  const method = paymentMethod(transaction.paymentMethod);
+                  const status = historyStatus(transaction.status);
                   return (
                     <tr key={transaction.id}>
-                      <td data-label="วันที่ / เวลา">{formatDate(transaction.createdAt)}{transaction.reference && <small className={styles.historyReference}>{transaction.reference}</small>}</td>
+                      <td data-label="วันที่ / เวลา">
+                        {formatDate(transaction.createdAt)}
+                        {transaction.reference && (
+                          <small className={styles.historyReference}>
+                            {transaction.reference}
+                          </small>
+                        )}
+                      </td>
                       <td data-label="ช่องทาง">
-                        {method ? <span className={styles.historyMethod}><PaymentMethodLogo method={method} compact />{method.label}</span> : 'ไม่ระบุ'}
+                        {method ? (
+                          <span className={styles.historyMethod}>
+                            <PaymentMethodLogo
+                              id={method.id}
+                              logos={method.logos}
+                              compact
+                            />
+                            {method.label}
+                          </span>
+                        ) : (
+                          "ไม่ระบุ"
+                        )}
                       </td>
-                      <td data-label="จำนวนเหรียญ" className={styles.historyCoins}>
-                        +{transaction.coins.toLocaleString('th-TH')} เหรียญ
-                        {transaction.bonusCoins > 0 && <small>รวมโบนัส {transaction.bonusCoins.toLocaleString('th-TH')}</small>}
+                      <td
+                        data-label="จำนวนเหรียญ"
+                        className={styles.historyCoins}
+                      >
+                        +{transaction.coins.toLocaleString("th-TH")} เหรียญ
+                        {transaction.bonusCoins > 0 && (
+                          <small>
+                            รวมโบนัส{" "}
+                            {transaction.bonusCoins.toLocaleString("th-TH")}
+                          </small>
+                        )}
                       </td>
-                      <td data-label="ยอดเงิน" className={styles.historyBaht}>{transaction.paidAmountBaht === null ? 'ไม่ระบุ' : `฿${transaction.paidAmountBaht.toLocaleString('th-TH')}`}</td>
-                      <td data-label="สถานะ"><span className={`${styles.historyStatus} ${status.className}`}>{status.label}</span>{transaction.rejectionReason && <small className={styles.historyRejection}>{transaction.rejectionReason}</small>}</td>
+                      <td data-label="ยอดเงิน" className={styles.historyBaht}>
+                        {transaction.paidAmountBaht === null
+                          ? "ไม่ระบุ"
+                          : `฿${transaction.paidAmountBaht.toLocaleString("th-TH")}`}
+                      </td>
+                      <td data-label="สถานะ">
+                        <span
+                          className={`${styles.historyStatus} ${status.className}`}
+                        >
+                          {status.label}
+                        </span>
+                        {transaction.rejectionReason && (
+                          <small className={styles.historyRejection}>
+                            {transaction.rejectionReason}
+                          </small>
+                        )}
+                      </td>
                     </tr>
-                  )
+                  );
                 })}
               </tbody>
             </table>
@@ -380,61 +785,171 @@ export function OwnerWallet() {
           showCloseButton={!busy}
           aria-busy={busy}
         >
-          {result === 'submitted' ? (
+          {result === "submitted" ? (
             <div className={styles.walletResult}>
-              <span className={styles.walletResultSuccess}><CheckCircle2 /></span>
+              <span className={styles.walletResultSuccess}>
+                <CheckCircle2 />
+              </span>
               <DialogTitle>ส่งหลักฐานเรียบร้อยแล้ว</DialogTitle>
-              <DialogDescription>รายการ {reference} อยู่ระหว่างรอตรวจสอบ เมื่ออนุมัติแล้วระบบจะเติม {totalCoins.toLocaleString('th-TH')} เหรียญให้ทันที</DialogDescription>
-              <button type="button" onClick={() => handleDialogChange(false)}>เรียบร้อย</button>
+              <DialogDescription>
+                รายการ {reference} อยู่ระหว่างรอตรวจสอบ
+                เมื่ออนุมัติแล้วระบบจะเติม {totalCoins.toLocaleString("th-TH")}{" "}
+                เหรียญให้ทันที
+              </DialogDescription>
+              <button type="button" onClick={() => handleDialogChange(false)}>
+                เรียบร้อย
+              </button>
             </div>
           ) : (
             <>
               <div className={styles.walletDialogHeader}>
                 <DialogTitle>อัปโหลดหลักฐานการชำระเงิน</DialogTitle>
-                <DialogDescription>ตรวจสอบแพ็กเกจและแนบสลิปก่อนส่งให้เจ้าหน้าที่อนุมัติ</DialogDescription>
+                <DialogDescription>
+                  ตรวจสอบแพ็กเกจและแนบสลิปก่อนส่งให้เจ้าหน้าที่อนุมัติ
+                </DialogDescription>
               </div>
               <div className={styles.walletDialogBody}>
                 <div className={styles.walletDialogPackage}>
-                  <Image src="/profile/readify-coin.png" width={48} height={48} alt="เหรียญ ReadLead" />
-                  <div><span>แพ็กเกจที่เลือก</span><b>{totalCoins.toLocaleString('th-TH')} เหรียญ</b></div>
-                  <strong>฿{selectedPackage?.price.toLocaleString('th-TH') ?? '—'}</strong>
+                  <Image
+                    src="/profile/readify-coin.png"
+                    width={48}
+                    height={48}
+                    alt="เหรียญ ReadLead"
+                  />
+                  <div>
+                    <span>แพ็กเกจที่เลือก</span>
+                    <b>{totalCoins.toLocaleString("th-TH")} เหรียญ</b>
+                  </div>
+                  <strong>
+                    ฿{selectedPackage?.price.toLocaleString("th-TH") ?? "—"}
+                  </strong>
                 </div>
                 <dl className={styles.walletSummary}>
-                  <div><dt>เหรียญหลัก</dt><dd>{selectedPackage?.coins.toLocaleString('th-TH') ?? '—'} เหรียญ</dd></div>
-                  <div><dt>โบนัส</dt><dd className={styles.walletSummaryBonus}>+{selectedPackage?.bonus.toLocaleString('th-TH') ?? '0'} เหรียญ</dd></div>
+                  <div>
+                    <dt>เหรียญหลัก</dt>
+                    <dd>
+                      {selectedPackage?.coins.toLocaleString("th-TH") ?? "—"}{" "}
+                      เหรียญ
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>โบนัส</dt>
+                    <dd className={styles.walletSummaryBonus}>
+                      +{selectedPackage?.bonus.toLocaleString("th-TH") ?? "0"}{" "}
+                      เหรียญ
+                    </dd>
+                  </div>
                   <div>
                     <dt>ช่องทางชำระเงิน</dt>
                     <dd className={styles.walletSummaryMethod}>
-                      <PaymentMethodLogo method={selectedPayment} compact />
-                      <span>{selectedPayment.label}</span>
+                      <PaymentMethodLogo
+                        id={selectedPaymentDisplay.id}
+                        logos={selectedPaymentDisplay.logos}
+                        compact
+                      />
+                      <span>
+                        {selectedChannel?.label ?? selectedPaymentDisplay.label}
+                      </span>
                     </dd>
                   </div>
-                  <div className={styles.walletSummaryTotal}><dt>ยอดชำระทั้งหมด</dt><dd>฿{selectedPackage?.price.toLocaleString('th-TH') ?? '—'}</dd></div>
+                  <div className={styles.walletSummaryTotal}>
+                    <dt>ยอดชำระทั้งหมด</dt>
+                    <dd>
+                      ฿{selectedPackage?.price.toLocaleString("th-TH") ?? "—"}
+                    </dd>
+                  </div>
                 </dl>
                 <div className={styles.slipUploadBlock}>
-                  <b>หลักฐานการชำระเงิน <em>*</em></b>
-                  {slip ? <div className={styles.slipPreview}>
-                    <SlipPreview key={`${slip.name}-${slip.size}-${slip.lastModified}`} file={slip} />
-                    <span><b>{slip.name}</b><small>{(slip.size / 1024 / 1024).toFixed(2)} MB</small></span>
-                    <button type="button" onClick={() => { setSlip(null); setSlipError(''); setResult(null) }} aria-label="ลบสลิป"><X /></button>
-                  </div> : <label className={styles.slipDropzone}>
-                    <input type="file" accept="image/jpeg,image/png" onChange={(event) => { selectSlip(event.target.files?.[0]); event.target.value = '' }} />
-                    <Upload /><b>คลิกเพื่อเลือกสลิป</b><span>รองรับ JPG, PNG ขนาดไม่เกิน 5MB</span>
-                  </label>}
+                  <b>
+                    หลักฐานการชำระเงิน <em>*</em>
+                  </b>
+                  {slip ? (
+                    <div className={styles.slipPreview}>
+                      <SlipPreview
+                        key={`${slip.name}-${slip.size}-${slip.lastModified}`}
+                        file={slip}
+                      />
+                      <span>
+                        <b>{slip.name}</b>
+                        <small>{(slip.size / 1024 / 1024).toFixed(2)} MB</small>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSlip(null);
+                          setSlipError("");
+                          setResult(null);
+                        }}
+                        aria-label="ลบสลิป"
+                      >
+                        <X />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className={styles.slipDropzone}>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png"
+                        onChange={(event) => {
+                          selectSlip(event.target.files?.[0]);
+                          event.target.value = "";
+                        }}
+                      />
+                      <Upload />
+                      <b>คลิกเพื่อเลือกสลิป</b>
+                      <span>รองรับ JPG, PNG ขนาดไม่เกิน 5MB</span>
+                    </label>
+                  )}
                 </div>
-                <p className={styles.walletDialogNotice}><Info /> ระบบจะยังไม่เพิ่มเหรียญจนกว่าเจ้าหน้าที่ตรวจสอบและอนุมัติหลักฐาน</p>
-                {(result === 'error' || slipError) && <p className={styles.walletDialogError} role="alert"><AlertCircle /> {slipError || 'ส่งหลักฐานไม่สำเร็จ กรุณาลองใหม่'}</p>}
+                <p className={styles.walletDialogNotice}>
+                  <Info />{" "}
+                  ระบบจะยังไม่เพิ่มเหรียญจนกว่าเจ้าหน้าที่ตรวจสอบและอนุมัติหลักฐาน
+                </p>
+                {(result === "error" || slipError) && (
+                  <p className={styles.walletDialogError} role="alert">
+                    <AlertCircle />{" "}
+                    {slipError || "ส่งหลักฐานไม่สำเร็จ กรุณาลองใหม่"}
+                  </p>
+                )}
               </div>
               <div className={styles.walletDialogActions}>
-                <button type="button" className={styles.walletCancelButton} onClick={() => handleDialogChange(false)} disabled={busy}>ยกเลิก</button>
-                <button type="button" className={styles.walletConfirmButton} onClick={() => void confirmTopUp()} disabled={busy || !topUpEnabled || !selectedPackage || !slip}>
-                  {busy ? <><RefreshCw className={styles.walletSpinner} /> กำลังส่งหลักฐาน…</> : 'ยืนยันและส่งรอตรวจสอบ'}
+                <button
+                  type="button"
+                  className={styles.walletCancelButton}
+                  onClick={() => handleDialogChange(false)}
+                  disabled={busy}
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="button"
+                  className={styles.walletConfirmButton}
+                  onClick={() => void confirmTopUp()}
+                  disabled={busy || !topUpEnabled || !selectedPackage || !slip}
+                >
+                  {busy ? (
+                    <>
+                      <RefreshCw className={styles.walletSpinner} />{" "}
+                      กำลังส่งหลักฐาน…
+                    </>
+                  ) : (
+                    "ยืนยันและส่งรอตรวจสอบ"
+                  )}
                 </button>
               </div>
             </>
           )}
         </DialogContent>
       </Dialog>
+
+      {selectedChannel?.kind === "gateway" && (
+        <GatewayChargeDialog
+          open={gatewayDialogOpen}
+          onOpenChange={setGatewayDialogOpen}
+          walletPackage={selectedPackage}
+          channel={selectedChannel}
+        />
+      )}
     </div>
-  )
+  );
 }

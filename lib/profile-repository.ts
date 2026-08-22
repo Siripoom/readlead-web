@@ -61,6 +61,11 @@ function safeParse<T>(value: string | null, fallback: T): T {
   }
 }
 
+function isPlaceholderDisplayName(value?: string) {
+  const normalized = value?.trim().toLowerCase() ?? ''
+  return !normalized || normalized === 'test'
+}
+
 function followBox(): Record<string, string[]> {
   return safeParse(localStorage.getItem(FOLLOW_KEY), {})
 }
@@ -141,10 +146,11 @@ export function readStoredUserProfile(user: AuthUser): UserProfile {
   const migrated = Object.keys(stored).length
     ? stored
     : safeParse<Partial<UserProfile>>(localStorage.getItem('rl_profile'), {})
+  const storedDisplayName = migrated.displayName?.trim()
   const next: UserProfile = {
     ...MOCK_USER_PROFILE,
     ...migrated,
-    displayName: migrated.displayName?.trim() || user.name,
+    displayName: isPlaceholderDisplayName(storedDisplayName) ? user.name : storedDisplayName || user.name,
     handle: migrated.handle?.trim() || user.email.split('@')[0],
     bio: migrated.bio ?? (user.userType === 'creator' ? 'นักเขียนบน ReadLead' : 'นักอ่าน ReadLead'),
     coverGradient: migrated.coverGradient ?? READER_DEMO.coverGradient,

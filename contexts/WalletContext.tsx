@@ -2,18 +2,25 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { useRole } from '@/contexts/RoleContext'
-import type { PaymentMethod, WalletPackage, WalletTransaction } from '@/lib/types'
+import type { GatewayChargeResult, PaymentChannel, PaymentMethod, WalletPackage, WalletTransaction } from '@/lib/types'
 
-export type WalletTopUpMethod = Extract<PaymentMethod, 'credit-card' | 'promptpay' | 'truemoney' | 'counter-service' | 'proof-upload'>
+// Web-selectable subset: excludes historical-only ids (counter-service),
+// unused legacy ids (paypal, bank-transfer), and app-only IAP ids.
+export type WalletTopUpMethod = Exclude<PaymentMethod, 'counter-service' | 'paypal' | 'bank-transfer' | 'google-play' | 'app-store'>
 
 export type TopUpSubmissionResult =
   | { ok: true; reference: string }
+  | { ok: false; error: string }
+
+export type GatewayChargeSubmissionResult =
+  | { ok: true; charge: GatewayChargeResult }
   | { ok: false; error: string }
 
 type WalletSnapshot = {
   balance: number
   topUpEnabled: boolean
   packages: WalletPackage[]
+  channels: PaymentChannel[]
   transactions: WalletTransaction[]
 }
 
@@ -21,11 +28,14 @@ interface WalletContextValue {
   balance: number
   topUpEnabled: boolean
   packages: WalletPackage[]
+  channels: PaymentChannel[]
   transactions: WalletTransaction[]
   loading: boolean
   error: boolean
   spend: (n: number) => boolean
   submitTopUp: (packageId: string, slip: File) => Promise<TopUpSubmissionResult>
+  initiateGatewayCharge: (packageId: string, channelId: WalletTopUpMethod, omiseToken?: string, mobileNumber?: string) => Promise<GatewayChargeSubmissionResult>
+  pollGatewayCharge: (chargeId: string) => Promise<GatewayChargeSubmissionResult>
   refresh: () => Promise<void>
 }
 
@@ -33,11 +43,14 @@ const WalletContext = createContext<WalletContextValue>({
   balance: 0,
   topUpEnabled: false,
   packages: [],
+  channels: [],
   transactions: [],
   loading: false,
   error: false,
   spend: () => false,
   submitTopUp: async () => ({ ok: false, error: 'กรุณาเข้าสู่ระบบ' }),
+  initiateGatewayCharge: async () => ({ ok: false, error: 'กรุณาเข้าสู่ระบบ' }),
+  pollGatewayCharge: async () => ({ ok: false, error: 'กรุณาเข้าสู่ระบบ' }),
   refresh: async () => undefined,
 })
 
@@ -51,6 +64,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [balance, setBalance] = useState(0)
   const [topUpEnabled, setTopUpEnabled] = useState(false)
   const [packages, setPackages] = useState<WalletPackage[]>([])
+  const [channels, setChannels] = useState<PaymentChannel[]>([])
   const [transactions, setTransactions] = useState<WalletTransaction[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -60,7 +74,10 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setBalance(snapshot.balance)
     setTopUpEnabled(snapshot.topUpEnabled)
     setPackages(snapshot.packages)
-    setTransactions(snapshot.transactions)
+    // Defensive default: falls back to [] if the backoffice hasn't shipped
+    // the `channels` field yet (deployed independently of this repo).
+    setChannels(snapshot.channels ?? [])
+    setTransactions(snapshot.transactions ?? [])
     setError(false)
   }, [])
 
@@ -73,6 +90,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       setBalance(0)
       setTopUpEnabled(false)
       setPackages([])
+      setChannels([])
       setTransactions([])
       setError(false)
       setLoading(false)
@@ -116,8 +134,42 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const initiateGatewayCharge = async (
+    packageId: string,
+    channelId: WalletTopUpMethod,
+    omiseToken?: string,
+    mobileNumber?: string,
+  ): Promise<GatewayChargeSubmissionResult> => {
+    if (!user) return { ok: false, error: 'กรุณาเข้าสู่ระบบ' }
+    try {
+      const response = await fetch('/api/member/wallet/topups/charge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'idempotency-key': `web-${crypto.randomUUID()}` },
+        body: JSON.stringify({ packageId, channelId, omiseToken, mobileNumber }),
+      })
+      const data = await response.json().catch(() => ({})) as { charge?: GatewayChargeResult; error?: string }
+      if (!response.ok || !data.charge) return { ok: false, error: data.error || 'ทำรายการชำระเงินไม่สำเร็จ กรุณาลองใหม่' }
+      if (data.charge.status === 'approved') await refresh()
+      return { ok: true, charge: data.charge }
+    } catch {
+      return { ok: false, error: 'เชื่อมต่อระบบไม่สำเร็จ กรุณาลองใหม่' }
+    }
+  }
+
+  const pollGatewayCharge = async (chargeId: string): Promise<GatewayChargeSubmissionResult> => {
+    try {
+      const response = await fetch(`/api/member/wallet/topups/charge/${encodeURIComponent(chargeId)}`, { cache: 'no-store' })
+      const data = await response.json().catch(() => ({})) as { charge?: GatewayChargeResult; error?: string }
+      if (!response.ok || !data.charge) return { ok: false, error: data.error || 'ตรวจสอบสถานะการชำระเงินไม่สำเร็จ' }
+      if (data.charge.status === 'approved') await refresh()
+      return { ok: true, charge: data.charge }
+    } catch {
+      return { ok: false, error: 'เชื่อมต่อระบบไม่สำเร็จ กรุณาลองใหม่' }
+    }
+  }
+
   return (
-    <WalletContext.Provider value={{ balance, topUpEnabled, packages, transactions, loading, error, spend, submitTopUp, refresh }}>
+    <WalletContext.Provider value={{ balance, topUpEnabled, packages, channels, transactions, loading, error, spend, submitTopUp, initiateGatewayCharge, pollGatewayCharge, refresh }}>
       {children}
     </WalletContext.Provider>
   )

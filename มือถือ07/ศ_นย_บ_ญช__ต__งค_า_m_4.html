@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ReadLead — การตั้งค่า (มือถือ)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800;900&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#e0281e; --red-d:#b81b12;
+  --brand:#cc4452; --brand-d:#b23a48; --brand-soft:#fae8ea;
+  --ink:#1c1b22; --ink2:#4a4656; --mut:#8a8894; --mut3:#a8a2bd; --line:#ececf1; --bg:#ffffff; --soft:#f2f3f6;
+  --green:#1f9d62; --green-soft:#e6f6ee; --red2:#e2453a;
+  --mxw:480px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg)}
+body{font-family:'Noto Sans Thai',sans-serif;color:var(--ink)}
+img{display:block}
+a{text-decoration:none;color:inherit}
+svg{display:block}
+
+/* ── topbar (มีปุ่มย้อนกลับ) ── */
+#stop{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:var(--mxw);height:52px;background:#fff;border-bottom:1px solid #E9EDF2;display:flex;align-items:center;gap:4px;padding:0 6px;z-index:9000}
+#stop .back{width:38px;height:38px;border:none;background:none;display:flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;flex:none}
+#stop .back svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#stop h1{font-size:16.5px;font-weight:800;flex:1}
+
+#swrap{max-width:var(--mxw);margin:52px auto 0;padding:16px 16px 32px}
+.phead{margin-bottom:16px}
+.phead p{margin:4px 0 0;font-size:12.5px;color:var(--mut)}
+
+.settings{display:flex;flex-direction:column;gap:16px}
+.sgroup{background:#fff;border:1px solid var(--line);border-radius:16px;padding:4px 16px 6px}
+.sgh{display:flex;align-items:center;gap:11px;padding:16px 0 6px}
+.sgi{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:0 0 36px}
+.sgi svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:1.8}
+.sgh h2{font-size:15px;font-weight:800;margin:0}
+.sgh .desc{margin:2px 0 0;font-size:11.5px;color:var(--mut)}
+
+.srow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+.sl{min-width:0}
+.sl b{font-size:13.5px;font-weight:700;display:block}
+.sl span{font-size:11px;color:var(--mut);margin-top:2px;display:block}
+.sr{display:flex;align-items:center;gap:8px;flex:none}
+.val{font-size:12.5px;font-weight:600;color:var(--ink2);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sbtn{font-size:12px;font-weight:700;color:var(--brand-d);background:var(--brand-soft);padding:7px 12px;border-radius:9px;cursor:pointer;white-space:nowrap;border:none;font-family:inherit}
+.sbtn.ghost{color:var(--ink2);background:var(--soft)}
+.vbadge{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;color:var(--green);background:var(--green-soft);padding:3px 8px;border-radius:999px;font-weight:700}
+.vbadge svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.4}
+
+.tg{width:42px;height:24px;border-radius:999px;background:#d6d8e2;position:relative;cursor:pointer;transition:.2s;flex:0 0 42px;border:none}
+.tg::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+.tg.on{background:var(--brand)}
+.tg.on::after{left:21px}
+
+.prov{display:flex;align-items:center;gap:11px;min-width:0}
+.pic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;flex:0 0 36px}
+.pic img{width:78%;height:78%;object-fit:contain}
+.pic.google{background:#fff;color:#4285f4;border:1px solid var(--line)}
+.pic.facebook{background:#1877f2}
+.pic.apple{background:#000}
+.provcol{min-width:0}
+.provcol b{font-size:13.5px;font-weight:700;display:block}
+.provcol span{font-size:11px;color:var(--mut);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdate{font-size:10.5px;color:var(--mut);display:block;margin-top:1px}
+.connected{font-size:11px;color:var(--green);font-weight:700;white-space:nowrap}
+
+.sgroup.danger{border-color:#f3cdca}
+.danger .sgi{background:linear-gradient(135deg,#e2453a,#c43a30)!important}
+.danger .dtxt{padding:2px 0 14px}
+.danger .dtxt p{margin:4px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.6}
+.delbtn{display:flex;align-items:center;justify-content:center;gap:7px;color:#fff;background:linear-gradient(135deg,#e2453a,#c43a30);font-weight:700;font-size:13.5px;padding:12px;border:none;border-radius:11px;cursor:pointer;margin-bottom:16px}
+.delbtn svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:1.9}
+</style>
+</head>
+<body>
+
+<div id="stop">
+  <a href="#" class="rl-brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>ReadLead</a>
+  <button class="tbtn" aria-label="ค้นหา"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
+  <button class="tbtn" aria-label="แจ้งเตือน"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></button>
+  <button id="mLogin">เข้าสู่ระบบ</button>
+  <button class="tbtn" id="mAva" style="display:none" aria-label="โปรไฟล์"><span class="ava-c" id="mAvaC"></span></button>
+</div>
+
+<!-- ═══ หน้าโปรไฟล์ (กดรูปโปรไฟล์บน topbar) ═══ -->
+<div id="mprof">
+  <div class="ph">
+    <div class="pava" id="mProfAva"></div>
+    <div class="pwho"><b id="mProfName"></b><span id="mProfHandle"></span></div>
+  </div>
+  <div class="pcoin">
+    <span class="ci"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8.5 10.5h5a1.75 1.75 0 010 3.5h-3a1.75 1.75 0 000 3.5h5"/></svg></span>
+    <b id="mProfCoins">0.00</b>
+    <a class="topup" href="#">เติมเหรียญ</a>
+  </div>
+  <nav>
+    <a href="ศูนย์บัญชี_สมัครนักเขียน_m.html" id="mProfApply"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>สมัครนักเขียน</a>
+    <a href="ศูนย์บัญชี_ศูนย์นักเขียน_m.html" id="mProfDash" style="display:none"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>ศูนย์นักเขียน</a>
+    <a href="ศูนย์บัญชี_กระเป๋าเงิน_m.html"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><path d="M16 14h2"/></svg>กระเป๋าเงิน</a>
+    <a href="ศูนย์บัญชี_แจ้งปัญหา_m.html"><svg viewBox="0 0 24 24"><path d="M4 13a8 8 0 0 1 16 0"/><rect x="2.5" y="13" width="4" height="7" rx="2"/><rect x="17.5" y="13" width="4" height="7" rx="2"/><path d="M20 19a3 3 0 0 1-3 3h-3"/></svg>แจ้งปัญหา</a>
+    <a href="ศูนย์บัญชี_คอมเม้นและรีวิว_m.html"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.8-.8L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/><path d="M8.5 11h7M8.5 14h4"/></svg>คอมเมนต์ & รีวิวของฉัน</a>
+    <a href="ศูนย์บัญชี_คู่มือ_m.html"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2V5z"/><path d="M19 3v18"/><path d="M8 8h7M8 12h7"/></svg>คู่มือผู้ใช้</a>
+    <a href="ศูนย์บัญชี_ตั้งค่า_m.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33h0a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h0a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>การตั้งค่า</a>
+  </nav>
+  <div class="psep"></div>
+  <nav>
+    <a href="#"><svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 11-12.72 0"/><path d="M12 2v10"/></svg>ออกจากระบบ</a>
+  </nav>
+</div>
+
+<div id="swrap">
+  <div class="phead"><p>จัดการข้อมูลส่วนตัว ความปลอดภัย และการตั้งค่าบัญชีของคุณ</p></div>
+
+  <div class="settings">
+
+    <!-- ข้อมูลโปรไฟล์ -->
+    <section class="sgroup">
+      <div class="sgh"><span class="sgi" style="background:linear-gradient(135deg,#cc4452,#b23a48)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 21a7 7 0 0 1 14 0"/></svg></span><div><h2>ข้อมูลโปรไฟล์</h2><p class="desc">จัดการชื่อผู้ใช้ อีเมล และเบอร์โทรศัพท์</p></div></div>
+      <div class="srow"><div class="sl"><b>ชื่อผู้ใช้</b><span id="unChangeLeft">เปลี่ยนได้อีก 3 ครั้ง</span></div><div class="sr"><span class="val" id="valUser">–</span><button class="sbtn" data-target="เปลี่ยนชื่อผู้ใช้">เปลี่ยน</button></div></div>
+      <div class="srow"><div class="sl"><b>อีเมล</b><span>ใช้สำหรับเข้าสู่ระบบและรับการแจ้งเตือน</span></div><div class="sr"><span class="val" id="valEmail">–</span><span class="vbadge"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>ยืนยันแล้ว</span><button class="sbtn" data-target="เปลี่ยนอีเมล">เปลี่ยน</button></div></div>
+      <div class="srow"><div class="sl"><b>เบอร์โทรศัพท์</b><span>ใช้กู้คืนบัญชีและยืนยันตัวตน</span></div><div class="sr"><span class="val" id="phoneVal">ยังไม่ระบุ</span><button class="sbtn" id="phoneBtn">เพิ่ม</button></div></div>
+    </section>
+
+    <!-- ความปลอดภัย -->
+    <section class="sgroup">
+      <div class="sgh"><span class="sgi" style="background:linear-gradient(135deg,#4fa3f5,#2b7de0)"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span><div><h2>ความปลอดภัย</h2><p class="desc">รหัสผ่านและการยืนยันตัวตน</p></div></div>
+      <div class="srow"><div class="sl"><b>รหัสผ่าน</b><span>จัดการรหัสผ่านของบัญชี</span></div><div class="sr"><button class="sbtn" data-target="เปลี่ยนรหัสผ่าน">เปลี่ยนรหัสผ่าน</button></div></div>
+    </section>
+
+    <!-- การแจ้งเตือน -->
+    <section class="sgroup">
+      <div class="sgh"><span class="sgi" style="background:linear-gradient(135deg,#fbab4a,#f6921e)"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><div><h2>การแจ้งเตือน</h2><p class="desc">เลือกสิ่งที่อยากให้แจ้งเตือน</p></div></div>
+      <div class="srow"><div class="sl"><b>อัปเดตผลงาน</b><span>แจ้งเตือนเมื่อมีการอัปเดตผลงาน</span></div><div class="sr"><button class="tg on" data-toggle></button></div></div>
+      <div class="srow"><div class="sl"><b>โปรโมชั่นและกิจกรรม</b><span>ดีลพิเศษ เหรียญฟรี และอีเวนต์</span></div><div class="sr"><button class="tg" data-toggle></button></div></div>
+    </section>
+
+    <!-- บัญชีที่เชื่อมต่อ -->
+    <section class="sgroup">
+      <div class="sgh"><span class="sgi" style="background:linear-gradient(135deg,#5ad6a0,#16b06a)"><svg viewBox="0 0 24 24"><path d="M9 15l6-6"/><path d="M11 7l1-1a4 4 0 0 1 6 6l-1 1"/><path d="M13 17l-1 1a4 4 0 0 1-6-6l1-1"/></svg></span><div><h2>บัญชีที่เชื่อมต่อ</h2><p class="desc">เข้าสู่ระบบได้เร็วขึ้นด้วยบัญชีโซเชียล</p></div></div>
+      <div class="srow"><div class="prov" data-prov="google"><span class="pic google">G</span><div class="provcol"><b>Google</b><span>ยังไม่เชื่อมต่อ</span></div></div><div class="sr"><button class="sbtn" data-target="เชื่อมต่อ Google">เชื่อมต่อ</button></div></div>
+      <div class="srow"><div class="prov" data-prov="facebook"><span class="pic facebook">f</span><div class="provcol"><b>Facebook</b><span>ยังไม่เชื่อมต่อ</span></div></div><div class="sr"><button class="sbtn" data-target="เชื่อมต่อ Facebook">เชื่อมต่อ</button></div></div>
+      <div class="srow"><div class="prov" data-prov="apple"><span class="pic apple"></span><div class="provcol"><b>Apple</b><span>ยังไม่เชื่อมต่อ</span></div></div><div class="sr"><button class="sbtn" data-target="เชื่อมต่อ Apple">เชื่อมต่อ</button></div></div>
+    </section>
+
+    <!-- ลบบัญชี -->
+    <section class="sgroup danger">
+      <div class="sgh"><span class="sgi"><svg viewBox="0 0 24 24" stroke="#e2453a"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></span><div><h2 style="color:#c43a30">ลบบัญชี</h2><p class="desc">การดำเนินการนี้ไม่สามารถย้อนกลับได้</p></div></div>
+      <div class="dtxt"><p>เมื่อลบบัญชีแล้ว ข้อมูลทั้งหมดจะถูกลบอย่างถาวรและไม่สามารถกู้คืนได้</p></div>
+      <button class="delbtn" type="button" data-target="ลบบัญชีถาวร"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>ลบบัญชีถาวร</button>
+    </section>
+
+  </div>
+</div>
+
+<script id="rlAuthJS">
+window.RLAuth = (function(){
+  var K_USERS='rl_users', K_SES='rl_session';
+  /* คู่สีพาสเทล [พื้น, ตัวอักษร] — สุ่มครั้งเดียวตอนสมัคร แล้วติดตัวผู้ใช้ตลอด */
+  var PALETTE=[['#fde2e4','#b2455a'],['#e2ecfd','#3a62b2'],['#e4f7e9','#2d7a4f'],['#fdf3d8','#a3771b'],['#f0e4fd','#6b3ab2'],['#e0f5f5','#1f7a7a'],['#fde9d8','#b25e2a'],['#e8ecf4','#4a5568']];
+
+  function users(){ try{return JSON.parse(localStorage.getItem(K_USERS))||[];}catch(e){return [];} }
+  function saveUsers(a){ localStorage.setItem(K_USERS, JSON.stringify(a)); }
+  function session(){ try{return JSON.parse(localStorage.getItem(K_SES))||null;}catch(e){return null;} }
+  function me(){ var s=session(); if(!s)return null;
+    var u=users().find(function(x){return x&&x.id===s.uid&&typeof x.user==='string';})||null;
+    if(u&&u.status==='banned'){ try{localStorage.removeItem(K_SES);}catch(e){} return null; }  /* บัญชีถูกระงับ — เด้งออกทันที */
+    return u; }
+
+  function el(id){return document.getElementById(id);}
+  function err(id,msg){ var e=el(id); if(!e)return; if(msg){e.textContent=msg;e.classList.add('show');} else e.classList.remove('show'); }
+
+  /* ── modal ── */
+  function storageOK(){ try{localStorage.setItem('__rl_probe','1');localStorage.removeItem('__rl_probe');return true;}catch(e){return false;} }
+  var STORAGE_MSG='เบราว์เซอร์ไม่อนุญาตให้เว็บนี้บันทึกข้อมูลในเครื่อง ระบบสมาชิก (จำลอง) จึงทำงานไม่ได้ มักเกิดจากโหมดไม่ระบุตัวตน/InPrivate, การตั้งค่าบล็อกคุกกี้และข้อมูลไซต์ หรือส่วนขยายด้านความเป็นส่วนตัว ลองเปิดในหน้าต่างปกติหรือเบราว์เซอร์อื่นดูครับ';
+  function open(m){ mode(m||'login'); el('rlAuthModal').classList.add('show');
+    if(!storageOK()){ err('rlLoginErr',STORAGE_MSG); err('rlRegErr',STORAGE_MSG); err('rlForgotErr',STORAGE_MSG); } }
+  function close(){ el('rlAuthModal').classList.remove('show'); }
+  function mode(m){
+    el('rlAuthModal').setAttribute('data-mode',m);
+    if(storageOK()){ err('rlLoginErr');err('rlRegErr');err('rlForgotErr'); }
+    else{ err('rlLoginErr',STORAGE_MSG); err('rlRegErr',STORAGE_MSG); err('rlForgotErr',STORAGE_MSG); }
+    var ok=el('rlForgotOk'); if(ok)ok.classList.remove('show');
+  }
+  function eye(id,btn){var i=el(id);var on=i.type==='password';i.type=on?'text':'password';
+    btn.innerHTML=on?'<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18" stroke-width="1.8"/></svg>':'<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';}
+
+  /* ── validate รหัสผ่าน (เกณฑ์เดียวกับหน้า login เดิม) ── */
+  function pwcheck(){
+    var v=(el('rlRegPass')||{}).value||'';
+    var len=v.length>=8, cse=/[a-z]/.test(v)&&/[A-Z]/.test(v);
+    var sp=/[!@#$%^&*_+\-=?]/.test(v), num=/[0-9]/.test(v)||sp;
+    [['len',len],['case',cse],['num',num],['sp',sp]].forEach(function(r){
+      var e=document.querySelector('#rlAuthModal .pw-item[data-rule="'+r[0]+'"]'); if(e)e.classList.toggle('ok',r[1]);
+    });
+    var pc=document.querySelector('#rlAuthModal .pw-check'); if(pc)pc.classList.toggle('show',v.length>0);
+    var agree=(el('rlAgree')||{}).checked;
+    var btn=el('rlRegSubmit'); if(btn)btn.disabled=!(len&&cse&&num&&sp&&agree);
+  }
+
+  /* ── สมัครสมาชิก ── */
+  function register(){ try{ registerInner(); }catch(e){ err('rlRegErr', storageOK()? 'สมัครไม่สำเร็จ ระบบขัดข้อง กรุณาแคปหน้าจอนี้ส่งให้ผู้พัฒนา (รายละเอียด: '+e.message+')' : 'สมัครไม่สำเร็จ '+STORAGE_MSG); } }
+  function registerInner(){
+    var u=(el('rlRegUser').value||'').trim();
+    var em=(el('rlRegEmail').value||'').trim().toLowerCase();
+    var pw=el('rlRegPass').value||'';
+    if(!/^[A-Za-z0-9_]{3,20}$/.test(u)){ err('rlRegErr','ชื่อผู้ใช้ต้องยาว 3–20 ตัว ใช้ได้เฉพาะ a–z, 0–9 และ _'); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ err('rlRegErr','รูปแบบอีเมลไม่ถูกต้อง'); return; }
+    var all=users();
+    if(all.some(function(x){return x&&typeof x.user==='string'&&x.user.toLowerCase()===u.toLowerCase();})){ err('rlRegErr','ชื่อผู้ใช้นี้ถูกใช้แล้ว'); return; }
+    if(all.some(function(x){return x&&typeof x.email==='string'&&x.email.toLowerCase()===em;})){ err('rlRegErr','อีเมลนี้ถูกใช้สมัครแล้ว'); return; }
+    var color=PALETTE[Math.floor(Math.random()*PALETTE.length)];
+    var rec={ id:'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+      user:u, email:em, pass:pw, /* เว็บจริง: hash ฝั่ง server เท่านั้น */
+      color:color, coins:0, exp:0, level:0, createdAt:new Date().toISOString() };
+    all.push(rec); saveUsers(all);
+    localStorage.setItem(K_SES, JSON.stringify({uid:rec.id, at:Date.now()}));
+    close(); render();
+  }
+
+  /* ── เข้าสู่ระบบ ── */
+  function login(){ try{ loginInner(); }catch(e){ err('rlLoginErr', storageOK()? 'เข้าสู่ระบบไม่สำเร็จ ระบบขัดข้อง กรุณาแคปหน้าจอนี้ส่งให้ผู้พัฒนา (รายละเอียด: '+e.message+')' : 'เข้าสู่ระบบไม่สำเร็จ '+STORAGE_MSG); } }
+  function loginInner(){
+    var q=(el('rlLoginUser').value||'').trim().toLowerCase();
+    var pw=el('rlLoginPass').value||'';
+    var u=users().find(function(x){return x&&(String(x.user||'').toLowerCase()===q||String(x.email||'').toLowerCase()===q);});
+    if(!u||u.pass!==pw){ err('rlLoginErr','ชื่อผู้ใช้/อีเมล หรือรหัสผ่านไม่ถูกต้อง'); return; }
+    if(u.status==='banned'){ err('rlLoginErr','บัญชีนี้ถูกระงับการใช้งาน ติดต่อทีมงานผ่านหน้าแจ้งปัญหา'); return; }
+    localStorage.setItem(K_SES, JSON.stringify({uid:u.id, at:Date.now()}));
+    close(); render();
+  }
+
+  /* ── ลืมรหัสผ่าน (จำลอง) ── */
+  function forgot(){
+    var em=(el('rlForgotEmail').value||'').trim().toLowerCase();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ err('rlForgotErr','รูปแบบอีเมลไม่ถูกต้อง'); return; }
+    err('rlForgotErr'); el('rlForgotOk').classList.add('show');
+  }
+
+  function logout(){ localStorage.removeItem(K_SES); toggleMenu(false); render(); }
+
+  /* ── header: สลับ ปุ่มเข้าสู่ระบบ ↔ avatar ── */
+  function render(){
+    try{document.dispatchEvent(new CustomEvent('rlauth:render'));}catch(e){}
+    var u=me();
+    var btn=document.querySelector('.rl-header .rl-login');
+    var box=el('rlUserBox');
+    if(!btn||!box)return;
+    if(u){
+      btn.classList.add('off'); box.classList.add('on');
+      var ch=((u.user||'?')[0]||'?').toUpperCase();
+      var uc=(u.color&&u.color.length>=2)?u.color:['#e2ecfd','#3a62b2'];   /* บัญชีเก่าไม่มีสี → สีสำรอง */
+      var a=el('rlAvaBtn'); if(a){ a.textContent=ch; a.style.background=uc[0]; a.style.color=uc[1]; }
+      var a2=el('rlMenuAva'); if(a2){ a2.textContent=ch; a2.style.background=uc[0]; a2.style.color=uc[1]; }
+      el('rlMenuName').textContent=u.user;
+      el('rlMenuHandle').textContent='@'+u.user.toLowerCase();
+      el('rlMenuCoins').textContent=(u.coins||0).toFixed(2);
+    }else{
+      btn.classList.remove('off'); box.classList.remove('on'); toggleMenu(false);
+    }
+  }
+  function toggleMenu(force){
+    var m=el('rlUserMenu'); if(!m)return;
+    var show=(typeof force==='boolean')?force:!m.classList.contains('show');
+    m.classList.toggle('show',show);
+  }
+
+  document.addEventListener('click',function(ev){
+    var box=el('rlUserBox');
+    if(box&&!box.contains(ev.target)) toggleMenu(false);
+    if(ev.target===el('rlAuthModal')) close();
+  });
+
+  document.addEventListener('DOMContentLoaded',render);
+
+  return {open:open, close:close, mode:mode, eye:eye, pwcheck:pwcheck,
+          register:register, login:login, forgot:forgot, logout:logout,
+          render:render, toggleMenu:toggleMenu, me:me};
+})();
+</script>
+<script>
+/* ═══ ผูกข้อมูลจริง + แก้ไขได้จริง (เขียนกลับ localStorage rl_users) ═══ */
+(function(){
+  var K_USERS='rl_users';
+  function getUsers(){ try{ return JSON.parse(localStorage.getItem(K_USERS))||[]; }catch(e){ return []; } }
+  function saveUsers(a){ localStorage.setItem(K_USERS, JSON.stringify(a)); }
+  function me(){ return window.RLAuth && RLAuth.me && RLAuth.me(); }
+  function updateMe(patch){
+    var all = getUsers(), u = me(); if(!u) return null;
+    var i = all.findIndex(function(x){ return x.id===u.id; });
+    if(i<0) return null;
+    Object.assign(all[i], patch);
+    saveUsers(all);
+    return all[i];
+  }
+
+  function sync(){
+    var u = me();
+    if(!u){ location.href = 'ศูนย์บัญชี_m.html'; return; }
+    document.getElementById('valUser').textContent = u.user || '–';
+    document.getElementById('valEmail').textContent = u.email || '–';
+
+    var left = Math.max(0, 3 - (u.usernameChanges||0));
+    document.getElementById('unChangeLeft').textContent = left>0 ? ('เปลี่ยนได้อีก '+left+' ครั้ง') : 'เปลี่ยนชื่อผู้ใช้ครบจำนวนครั้งแล้ว';
+    document.querySelector('.sbtn[data-target="เปลี่ยนชื่อผู้ใช้"]').style.display = left>0 ? '' : 'none';
+
+    var phoneRow = document.getElementById('phoneVal'), phoneBtn = document.getElementById('phoneBtn');
+    if(u.phone){ phoneRow.textContent = u.phone; phoneRow.classList.remove('mut'); phoneBtn.textContent = 'เปลี่ยน'; }
+    else{ phoneRow.textContent = 'ยังไม่ระบุ'; phoneBtn.textContent = 'เพิ่ม'; }
+
+    ['google','facebook','apple'].forEach(function(key){
+      var row = document.querySelector('.prov[data-prov="'+key+'"]').closest('.srow');
+      var statusEl = row.querySelector('.provcol span');
+      var btn = row.querySelector('.sbtn');
+      var on = !!u['social_'+key];
+      statusEl.textContent = on ? 'เชื่อมต่อแล้ว' : 'ยังไม่เชื่อมต่อ';
+      btn.textContent = on ? 'ยกเลิก' : 'เชื่อมต่อ';
+      btn.classList.toggle('ghost', on);
+    });
+  }
+  document.addEventListener('DOMContentLoaded', sync);
+  sync();
+
+
+  document.querySelectorAll('.tg[data-toggle]').forEach(function(t){
+    t.addEventListener('click', function(){ t.classList.toggle('on'); });
+  });
+
+  /* ── เปลี่ยนชื่อผู้ใช้ ── */
+  document.querySelector('.sbtn[data-target="เปลี่ยนชื่อผู้ใช้"]').addEventListener('click', function(){
+    var u = me(); if(!u) return;
+    var left = 3 - (u.usernameChanges||0);
+    if(left<=0){ alert('เปลี่ยนชื่อผู้ใช้ครบ 3 ครั้งแล้ว'); return; }
+    var v = prompt('ตั้งชื่อผู้ใช้ใหม่ (3–20 ตัว, a-z 0-9 และ _)', u.user);
+    if(v==null) return;
+    v = v.trim();
+    if(!/^[A-Za-z0-9_]{3,20}$/.test(v)){ alert('ชื่อผู้ใช้ต้องยาว 3–20 ตัว ใช้ได้เฉพาะ a–z, 0–9 และ _'); return; }
+    if(getUsers().some(function(x){ return x.id!==u.id && (x.user||'').toLowerCase()===v.toLowerCase(); })){
+      alert('ชื่อผู้ใช้นี้ถูกใช้แล้ว'); return;
+    }
+    updateMe({ user:v, usernameChanges:(u.usernameChanges||0)+1 });
+    sync();
+  });
+
+  /* ── เปลี่ยนอีเมล ── */
+  document.querySelector('.sbtn[data-target="เปลี่ยนอีเมล"]').addEventListener('click', function(){
+    var u = me(); if(!u) return;
+    var v = prompt('อีเมลใหม่', u.email);
+    if(v==null) return;
+    v = v.trim().toLowerCase();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){ alert('รูปแบบอีเมลไม่ถูกต้อง'); return; }
+    if(getUsers().some(function(x){ return x.id!==u.id && (x.email||'').toLowerCase()===v; })){
+      alert('อีเมลนี้ถูกใช้สมัครแล้ว'); return;
+    }
+    updateMe({ email:v });
+    sync();
+  });
+
+  /* ── เพิ่ม/เปลี่ยนเบอร์โทรศัพท์ ── */
+  document.getElementById('phoneBtn').addEventListener('click', function(){
+    var u = me(); if(!u) return;
+    var v = prompt('เบอร์โทรศัพท์ (10 หลัก)', u.phone||'');
+    if(v==null) return;
+    v = v.trim();
+    if(!/^0[0-9]{9}$/.test(v)){ alert('กรุณากรอกเบอร์โทรศัพท์ 10 หลัก ขึ้นต้นด้วย 0'); return; }
+    updateMe({ phone:v });
+    sync();
+  });
+
+  /* ── เปลี่ยนรหัสผ่าน ── */
+  document.querySelector('.sbtn[data-target="เปลี่ยนรหัสผ่าน"]').addEventListener('click', function(){
+    var u = me(); if(!u) return;
+    var cur = prompt('รหัสผ่านปัจจุบัน');
+    if(cur==null) return;
+    if(cur !== u.pass){ alert('รหัสผ่านปัจจุบันไม่ถูกต้อง'); return; }
+    var v = prompt('รหัสผ่านใหม่ (อย่างน้อย 8 ตัว มีทั้งตัวพิมพ์เล็ก-ใหญ่ และตัวเลขหรืออักขระพิเศษ)');
+    if(v==null) return;
+    var ok = v.length>=8 && /[a-z]/.test(v) && /[A-Z]/.test(v) && (/[0-9]/.test(v)||/[!@#$%^&*_+\-=?]/.test(v));
+    if(!ok){ alert('รหัสผ่านไม่ตรงตามเงื่อนไข'); return; }
+    updateMe({ pass:v });
+    alert('เปลี่ยนรหัสผ่านสำเร็จ');
+  });
+
+  /* ── เชื่อมต่อ/ยกเลิกโซเชียล (จำลอง ไม่มี OAuth จริง) ── */
+  document.querySelectorAll('.prov').forEach(function(p){
+    var key = p.getAttribute('data-prov');
+    var row = p.closest('.srow'), btn = row.querySelector('.sbtn');
+    btn.addEventListener('click', function(){
+      var u = me(); if(!u) return;
+      var on = !!u['social_'+key];
+      if(on){
+        if(!confirm('ยกเลิกการเชื่อมต่อ '+key+' ?')) return;
+        var patch = {}; patch['social_'+key] = false;
+        updateMe(patch);
+      } else {
+        var patch2 = {}; patch2['social_'+key] = true;
+        updateMe(patch2);
+      }
+      sync();
+    });
+  });
+
+  /* ── ลบบัญชีถาวร ── */
+  document.querySelector('.delbtn').addEventListener('click', function(){
+    var u = me(); if(!u) return;
+    if(!confirm('ยืนยันลบบัญชี "'+u.user+'" ถาวร? ข้อมูลทั้งหมดจะหายไปและกู้คืนไม่ได้')) return;
+    var again = prompt('พิมพ์ชื่อผู้ใช้ "'+u.user+'" เพื่อยืนยันการลบ');
+    if(again !== u.user){ alert('ชื่อผู้ใช้ไม่ตรง ยกเลิกการลบบัญชี'); return; }
+    var all = getUsers().filter(function(x){ return x.id!==u.id; });
+    saveUsers(all);
+    localStorage.removeItem('rl_session');
+    alert('ลบบัญชีเรียบร้อยแล้ว');
+    location.href = 'ศูนย์บัญชี_m.html';
+  });
+})();
+</script>
+
+<style id="rlSTopRightCSS">
+/* ═══ โลโก้ซ้าย + ปุ่มขวาบน (แบบหน้าแจ้งปัญหา) + หน้าโปรไฟล์ ═══ */
+#stop .rl-brand{display:flex;align-items:center;gap:7px;font-size:19px;font-weight:800;color:#cc4452;flex:1;text-decoration:none}
+#stop .rl-brand svg{width:21px;height:21px}
+#stop .tbtn{width:38px;height:38px;border:none;background:none;display:flex;align-items:center;justify-content:center;color:#4a4656;cursor:pointer;flex:none}
+#stop .tbtn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#mLogin{background:#cc4452;color:#fff;font-family:'Noto Sans Thai',sans-serif;font-size:13px;font-weight:800;padding:8px 14px;border-radius:8px;border:none;cursor:pointer;flex:none}
+#stop .ava-c{width:32px;height:32px;border-radius:50%;background:#f1eef6;display:flex;align-items:center;justify-content:center;color:#a8a2bd;overflow:hidden;font-size:14.5px;font-weight:800}
+#mprof{--mxw2:480px}
+/* ── หน้าโปรไฟล์เต็มจอ (สไตล์ Fictionlog) ── */
+#mprof{position:fixed;top:52px;bottom:0;left:50%;transform:translateX(calc(-50% + 100vw));width:100%;max-width:var(--mxw2,480px);background:#fff;z-index:9500;transition:transform .28s cubic-bezier(.33,1,.68,1);overflow-y:auto;font-family:'Noto Sans Thai',sans-serif;visibility:hidden}
+#mprof.show{transform:translateX(-50%);visibility:visible}
+#mprof .ph{padding:22px 20px;border-bottom:1px solid #ececf1;display:flex;align-items:center;gap:14px}
+#mprof .pava{width:56px;height:56px;border-radius:50%;background:#f1eef6;display:flex;align-items:center;justify-content:center;color:#a8a2bd;flex:none;font-size:24px;font-weight:800}
+#mprof .pwho b{display:block;font-size:17px;font-weight:800;color:#cc4452}
+#mprof .pwho span{font-size:13px;color:#8a8894;font-weight:600}
+#mprof .pcoin{padding:16px 20px;border-bottom:1px solid #ececf1;display:flex;align-items:center;gap:10px}
+#mprof .pcoin .ci{width:26px;height:26px;border-radius:50%;background:#fdf3e0;display:flex;align-items:center;justify-content:center;color:#dfa321;flex:none}
+#mprof .pcoin .ci svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#mprof .pcoin b{font-size:16.5px;font-weight:800;color:var(--ink);flex:1}
+#mprof .pcoin .topup{background:#cc4452;color:#fff;font-size:14px;font-weight:800;padding:9px 20px;border-radius:9px}
+#mprof nav{padding:8px 0}
+#mprof nav a{display:flex;align-items:center;gap:15px;padding:14px 20px;font-size:15.5px;font-weight:700;color:#3a3644}
+#mprof nav a svg{width:21px;height:21px;stroke:#6b6580;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#mprof nav a:active{background:#faf8fc}
+#mprof .psep{height:1px;background:#ececf1;margin:4px 0}
+</style>
+
+<script id="rlSTopSyncJS">
+/* ═══ ปุ่มโปรไฟล์เชื่อม RLAuth ของหน้านี้ (โครงเดียวกับหน้าหลัก) ═══ */
+(function(){
+  var login=document.getElementById('mLogin'),ava=document.getElementById('mAva'),p=document.getElementById('mprof');
+  var avaC=document.getElementById('mAvaC'),pAva=document.getElementById('mProfAva');
+  var pName=document.getElementById('mProfName'),pHandle=document.getElementById('mProfHandle'),pCoins=document.getElementById('mProfCoins');
+  function sync(){
+    var u=window.RLAuth&&RLAuth.me();
+    login.style.display=u?'none':'';
+    ava.style.display=u?'':'none';
+    if(u){
+      var ch=((u.user||'?')[0]||'?').toUpperCase();
+      var uc=(u.color&&u.color.length>=2)?u.color:['#e2ecfd','#3a62b2'];
+      avaC.textContent=ch; avaC.style.background=uc[0]; avaC.style.color=uc[1];
+      pAva.textContent=ch; pAva.style.background=uc[0]; pAva.style.color=uc[1];
+      pName.textContent=u.user;
+      pHandle.textContent='@'+(u.user||'').toLowerCase();
+      pCoins.textContent=(u.coins||0).toFixed(2);
+    }else{
+      p.classList.remove('show'); document.body.style.overflow='';
+    }
+  }
+  login.addEventListener('click',function(){ if(window.RLAuth) RLAuth.open('login'); });
+  ava.addEventListener('click',function(){
+    var on=p.classList.toggle('show');
+    document.body.style.overflow=on?'hidden':'';
+  });
+  p.querySelector('nav:last-of-type a').addEventListener('click',function(e){ e.preventDefault(); RLAuth.logout(); });
+  document.addEventListener('rlauth:render',sync);
+  document.addEventListener('DOMContentLoaded',sync);
+  sync();
+})();
+</script>
+
+<script id="rlWriterToggleJS">
+/* ═══ สมัครนักเขียนเสร็จแล้วถึงขึ้นศูนย์นักเขียน (ตรรกะเดียวกับหน้าศูนย์บัญชีหลัก) ═══ */
+(function(){
+  function isWriter(u){
+    if(!u) return false;
+    if(u.isWriter) return true;
+    try{
+      var L=JSON.parse(localStorage.getItem('rl_novels'))||[];
+      if(Array.isArray(L)) return L.some(function(n){return n&&n.ownerUid===u.id;});
+    }catch(e){}
+    return false;
+  }
+  function refresh(){
+    var u=window.RLAuth&&RLAuth.me&&RLAuth.me();
+    var w=isWriter(u);
+    var aApply=document.getElementById('mProfApply'), aDash=document.getElementById('mProfDash');
+    if(aApply) aApply.style.display = w?'none':'';
+    if(aDash)  aDash.style.display  = w?'':'none';
+  }
+  document.addEventListener('rlauth:render', refresh);
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(refresh, 300); });
+  refresh();
+  setInterval(refresh, 3000);
+})();
+</script>
+</body>
+</html>

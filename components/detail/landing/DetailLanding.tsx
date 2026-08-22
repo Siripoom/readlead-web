@@ -1,10 +1,10 @@
 'use client'
 
-import { startTransition, useEffect, useMemo, useState } from 'react'
+import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { BookOpen, Bookmark, ChevronDown, ChevronRight, Clock, Crown, Eye, Headphones, MessageCircle, MoreHorizontal, Pencil, Reply, Share2, Star, Ticket, ThumbsDown, ThumbsUp, Users } from 'lucide-react'
+import { BookOpen, Bookmark, ChevronDown, ChevronRight, Clock, Crown, Eye, Headphones, Heart, MessageCircle, MoreHorizontal, Pause, Pencil, Play, Reply, Share2, Star, Ticket, ThumbsDown, ThumbsUp, Users } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import DonateModal from '@/components/modals/DonateModal'
 import PurchaseEpisodeModal from '@/components/modals/PurchaseEpisodeModal'
@@ -13,6 +13,7 @@ import { useProfile } from '@/contexts/ProfileContext'
 import { localProfileRepository, purchaseStorageKey, recordEpisodePurchase, shelfStorageKey } from '@/lib/profile-repository'
 import { localReaderRepository } from '@/lib/reader-repository'
 import type { DetailCatalogItem, DetailEpisode, DetailReview } from '@/lib/detail-catalog'
+import { AudioPlayerBar, audioEpisodeDurationSeconds, formatTime, type AudioPlayerHandle } from './AudioPlayerBar'
 import styles from './DetailLanding.module.css'
 
 const VOTE_KEY = 'rl_ranking_votes_v1'
@@ -36,7 +37,7 @@ const fmt = (value: number) => value >= 1_000_000 ? `${(value / 1_000_000).toFix
 const typeLabel = (type: DetailCatalogItem['type']) => type === 'novel' ? 'นิยาย' : type === 'manga' ? 'เว็บตูน' : 'หนังสือเสียง'
 const routeForType = (type: DetailCatalogItem['type']) => type === 'novel' ? '/novel' : type === 'manga' ? '/manga' : '/audiobook'
 const formatEpisodeDate = (value: string | null) => value ? new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value)) : ''
-const audioDuration = (episode: DetailEpisode) => `${12 + (episode.episodeNum % 8)}:00`
+const audioDuration = (episode: DetailEpisode) => formatTime(audioEpisodeDurationSeconds(episode))
 
 function mapApiReview(review: ApiReview): DetailReview {
   return {
@@ -87,6 +88,7 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
   const [voteAmount, setVoteAmount] = useState(1)
   const [donateOpen, setDonateOpen] = useState(false)
   const [tipTotal, setTipTotal] = useState(0)
+  const [tipCount, setTipCount] = useState(0)
   const [reviews, setReviews] = useState<DetailReview[]>(() => initialReviews ?? seededReviews(work))
   const [reviewText, setReviewText] = useState('')
   const [rating, setRating] = useState(5)
@@ -105,10 +107,16 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
   const [episodeCommentCounts, setEpisodeCommentCounts] = useState<Record<string, number>>({})
   const [purchased, setPurchased] = useState<Set<string>>(new Set())
   const [purchaseEpisode, setPurchaseEpisode] = useState<DetailEpisode | null>(null)
-  const [fanMode, setFanMode] = useState<'month' | 'all'>('month')
-  const [fanKind, setFanKind] = useState<'daily' | 'monthly' | 'tip'>('daily')
+  const [fanMode, setFanMode] = useState<'today' | 'month' | 'all'>('month')
   const [fanOpen, setFanOpen] = useState(false)
   const [coverFailed, setCoverFailed] = useState(false)
+  const audioPlayerRef = useRef<AudioPlayerHandle>(null)
+  const [audioActiveId, setAudioActiveId] = useState<string | null>(null)
+  const [audioPlaying, setAudioPlaying] = useState(false)
+  const [chapterMode, setChapterMode] = useState<'read' | 'listen'>('read')
+  const hasAudioEdition = work.type === 'novel' && Boolean(work.hasAudioEdition)
+  const showAudioPlayer = work.type === 'audiobook' || hasAudioEdition
+  const listenMode = work.type === 'audiobook' || (hasAudioEdition && chapterMode === 'listen')
 
   useEffect(() => {
     if (serverBacked) {
@@ -171,7 +179,9 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
         setShelved(localStorage.getItem(`rl_detail_shelf:${work.detailId}`) === '1' || savedShelf.includes(work.detailId))
         setReviews(savedReviews ?? seededReviews(work))
         setPurchased(new Set(savedPurchases))
-        setTipTotal(supportLogs.filter((log) => log.detailId === work.detailId).reduce((sum, log) => sum + (log.amount ?? 0), 0))
+        const ownSupportLogs = supportLogs.filter((log) => log.detailId === work.detailId)
+        setTipTotal(ownSupportLogs.reduce((sum, log) => sum + (log.amount ?? 0), 0))
+        setTipCount(ownSupportLogs.length)
       })
     } catch { startTransition(() => setLedgerReady(true)) }
   }, [comingSoon, episodes.length, initialReviews, serverBacked, user, work])
@@ -213,7 +223,8 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
   const newestEpisode = useMemo(() => [...sortedEpisodes].reverse().find((episode) => episode.status === 'published'), [sortedEpisodes])
   const sortedReviews = useMemo(() => [...reviews].sort((a, b) => reviewSort === 'new' ? +new Date(b.createdAt) - +new Date(a.createdAt) : +new Date(a.createdAt) - +new Date(b.createdAt)), [reviews, reviewSort])
   const visibleReviews = reviewsExpanded ? sortedReviews : sortedReviews.slice(0, 3)
-  const fans = useMemo(() => ['มะลิในสายฝน','เจ้าหญิงชาเย็น','Bookworm99','ดาวเหนือ','คุณนักอ่าน'].map((name, index) => ({ name, score: (fanMode === 'month' ? 820 : 3280) - index * 137 + (fanKind === 'tip' ? 200 : fanKind === 'monthly' ? 80 : 0) })), [fanMode, fanKind])
+  const fans = useMemo(() => ['มะลิในสายฝน','เจ้าหญิงชาเย็น','Bookworm99','ดาวเหนือ','คุณนักอ่าน'].map((name, index) => ({ name, score: (fanMode === 'today' ? 96 : fanMode === 'month' ? 820 : 3280) - index * (fanMode === 'today' ? 14 : fanMode === 'month' ? 137 : 420) })), [fanMode])
+  const fanSubtitle = fanMode === 'today' ? 'จัดอันดับผู้สนับสนุนวันนี้' : fanMode === 'month' ? 'จัดอันดับผู้สนับสนุนประจำเดือนนี้' : 'จัดอันดับผู้สนับสนุนตลอดกาล'
 
   function requireLogin(action: () => void) { if (!isLoggedIn) { router.push('/login'); return } action() }
   function togglePersist(kind: 'follow' | 'shelf', value: boolean) { requireLogin(() => {
@@ -340,6 +351,7 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
   }
   function toggleChapterGroup(index: number) { setOpenChapterGroups((current) => { const next = new Set(current); if (next.has(index)) next.delete(index); else next.add(index); return next }) }
   function openEpisode(episode: DetailEpisode) { if (episode.status === 'scheduled') { setNotice(`ตอนนี้จะเผยแพร่ ${formatEpisodeDate(episode.publishedAt)}`); return } const unlocked = episode.price === 0 || purchased.has(episode.id); if (unlocked) router.push(`/reader?bookId=${encodeURIComponent(work.detailId)}&episodeId=${encodeURIComponent(episode.id)}`); else setPurchaseEpisode(episode) }
+  function startListening(episode?: DetailEpisode) { if (!episode || episode.status === 'scheduled') return; const unlocked = episode.price === 0 || purchased.has(episode.id); if (!unlocked) { setPurchaseEpisode(episode); return } audioPlayerRef.current?.toggle(episode) }
   function purchasedEpisode(id: string) { const next = new Set([...purchased, id]); setPurchased(next); if (!serverBacked && user) recordEpisodePurchase(user.id, id); const episode = episodes.find((item) => item.id === id); if (episode) router.push(`/reader?bookId=${encodeURIComponent(work.detailId)}&episodeId=${encodeURIComponent(id)}`) }
   async function purchaseOnServer(id: string) {
     const response = await fetch(`/api/episodes/${encodeURIComponent(id)}/purchase`, { method: 'POST' })
@@ -347,7 +359,7 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
     return { ok: response.ok, error: data.error }
   }
 
-  return <main className={styles.page}><div className={styles.wrap}>
+  return <main className={`${styles.page} ${audioActiveId ? styles.pageWithPlayer : ''}`}><div className={styles.wrap}>
     <nav className={styles.breadcrumbs}><Link href="/">หน้าแรก</Link><ChevronRight size={13}/><Link href={routeForType(work.type)}>{typeLabel(work.type)}</Link><ChevronRight size={13}/><span>{work.title}</span></nav>
     <section className={`${styles.card} ${styles.hero}`}>
       <div className={styles.heroMain}><div className={styles.cover} style={{ background: work.coverGradient }}>{work.coverUrl && !coverFailed && <Image unoptimized fill sizes="(max-width: 640px) 150px, 210px" src={work.coverUrl} alt={`ภาพปก ${work.title}`} className="object-cover" onError={() => setCoverFailed(true)} />}<span className={styles.coverType}>{typeLabel(work.type)}</span></div><div>
@@ -355,16 +367,16 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
         <div className={styles.authorRow}><span>โดย</span><Link href={`/profile/${encodeURIComponent(work.authorId)}`} className={styles.author}>{work.authorName}</Link><button className={`${styles.follow} ${followed ? styles.followActive : ''}`} onClick={() => togglePersist('follow', followed)}>{followed ? 'กำลังติดตาม' : '+ ติดตาม'}</button></div>
         <div className={styles.meta}><span className={styles.pill}>{work.genreLabel}</span><span>{work.originLabel}</span><span>•</span><span>{comingSoon ? 'เร็ว ๆ นี้' : work.status === 'completed' ? 'จบแล้ว' : 'กำลังอัปเดต'}</span><span>•</span><span>{comingSoon ? `อนุมัติ ${formatEpisodeDate(work.updatedAt)}` : `อัปเดต ${formatEpisodeDate(work.updatedAt)}`}</span></div>
         <p className={styles.synopsis}>{work.synopsis}</p>
-        <div className={styles.stats}><div className={styles.stat}><b>{fmt(work.voteCount + bonus.daily)}</b><span>โหวตแนะนำ</span></div><div className={styles.stat}><b>{fmt(work.weeklyVoteCount + bonus.monthly)}</b><span>โหวตรายเดือน</span></div><div className={styles.stat}><b>{fmt(work.viewCount)}</b><span>{work.type === 'audiobook' ? 'ยอดฟัง' : 'ยอดอ่าน'}</span></div><div className={styles.stat}><b>{work.episodeCount}</b><span>ตอนทั้งหมด</span></div></div>
-        <div className={styles.actions}>{!comingSoon && <><button className={styles.primary} onClick={() => episodes[0] && openEpisode(episodes[0])}>{work.type === 'audiobook' ? <Headphones size={16}/> : <BookOpen size={16}/>} {work.type === 'audiobook' ? 'เริ่มฟัง' : 'เริ่มอ่าน'}</button><button className={`${styles.secondary} ${shelved ? styles.secondaryActive : ''}`} onClick={() => togglePersist('shelf', shelved)}><Bookmark size={15} fill={shelved ? 'currentColor' : 'none'}/> {shelved ? 'อยู่ในชั้นแล้ว' : 'เพิ่มเข้าชั้น'}</button></>}<button className={styles.ghost} onClick={share}><Share2 size={16}/> แชร์</button></div>
+        <div className={styles.stats}>{work.type !== 'manga' && <><div className={styles.stat}><b>{fmt(work.voteCount + bonus.daily)}</b><span>โหวตแนะนำ</span></div><div className={styles.stat}><b>{fmt(work.weeklyVoteCount + bonus.monthly)}</b><span>โหวตรายเดือน</span></div></>}<div className={styles.stat}><b>{fmt(work.viewCount)}</b><span>{work.type === 'audiobook' ? 'ยอดฟัง' : 'ยอดอ่าน'}</span></div>{hasAudioEdition && <div className={styles.stat}><b>{fmt(work.viewCount)}</b><span>ยอดฟัง</span></div>}<div className={styles.stat}><b>{work.episodeCount}</b><span>ตอนทั้งหมด</span></div></div>
+        <div className={styles.actions}>{!comingSoon && <><button className={styles.primary} onClick={() => episodes[0] && openEpisode(episodes[0])}>{work.type === 'audiobook' ? <Headphones size={16}/> : <BookOpen size={16}/>} {work.type === 'audiobook' ? 'เริ่มฟัง' : 'เริ่มอ่าน'}</button>{hasAudioEdition && <button className={styles.listenBtn} onClick={() => startListening(sortedEpisodes[0])}><Headphones size={16}/> เริ่มฟัง</button>}<button className={`${styles.secondary} ${shelved ? styles.secondaryActive : ''}`} onClick={() => togglePersist('shelf', shelved)}><Bookmark size={15} fill={shelved ? 'currentColor' : 'none'}/> {shelved ? 'อยู่ในชั้นแล้ว' : 'เพิ่มเข้าชั้น'}</button></>}<button className={styles.ghost} onClick={share}><Share2 size={16}/> แชร์</button></div>
       </div></div>
-      {comingSoon ? <div className={styles.comingSoonNotice}><b>เร็ว ๆ นี้</b><span>ผลงานผ่านการอนุมัติแล้ว นักเขียนกำลังเตรียมตอนแรก</span></div> : <div className={styles.support}>
+      {comingSoon ? <div className={styles.comingSoonNotice}><b>เร็ว ๆ นี้</b><span>ผลงานผ่านการอนุมัติแล้ว นักเขียนกำลังเตรียมตอนแรก</span></div> : work.type === 'manga' ? null : <div className={styles.support}>
         <Support variant="daily" title="โหวตแนะนำ" subtitle="แนะนำเรื่องโปรดของคุณ" score={fmt(work.voteCount + bonus.daily)} detail={serverBacked ? `เหลือ ${availableTickets('daily')} / ${serverTickets?.daily.allowance ?? DAILY_MAX} ใบวันนี้` : `เหลือ ${availableTickets('daily')} / ${DAILY_MAX} ใบวันนี้`} action="โหวต" onClick={() => openVote('daily')}/>
         <Support variant="monthly" title="โหวตรายเดือน" subtitle="คะแนนชิงอันดับประจำเดือนนี้" score={fmt(work.weeklyVoteCount + bonus.monthly)} detail={serverBacked ? `คงเหลือ ${availableTickets('monthly')} ใบ` : `เหลือ ${availableTickets('monthly')} / ${MONTHLY_MAX} ใบเดือนนี้`} action="โหวต" onClick={() => openVote('monthly')}/>
         <Support variant="tip" title="ทิปนักเขียน" subtitle="สนับสนุนนักเขียนโดยตรง" score={fmt(tipTotal)} unit="เหรียญ" detail={tipTotal ? 'ขอบคุณสำหรับทุกกำลังใจ' : 'ส่งกำลังใจพร้อมข้อความ'} action="ทิป" onClick={() => requireLogin(() => setDonateOpen(true))}/>
       </div>}
     </section>
-    <section className={`${styles.card} ${styles.description}`}><h2 className={styles.sectionTitle}>รายละเอียดเรื่อง</h2><p className={expanded ? '' : 'line-clamp-3'}>{work.synopsis} {work.synopsis} เรื่องราวจะค่อย ๆ เปิดเผยปริศนาและความสัมพันธ์ของตัวละคร ผ่านบททดสอบที่ไม่มีใครสามารถหลีกเลี่ยงได้</p><button className={styles.readMore} onClick={() => setExpanded((value) => !value)}>{expanded ? 'ย่อรายละเอียด' : 'อ่านเพิ่มเติม'}</button><div className={styles.tags}>{work.tags.map((tag) => <span key={tag} className={styles.tag}>#{tag}</span>)}</div></section>
+    <section className={`${styles.card} ${styles.description}`}><h2 className={styles.sectionTitle}>รายละเอียด</h2><p className={expanded ? '' : 'line-clamp-3'}>{work.synopsis} {work.synopsis} เรื่องราวจะค่อย ๆ เปิดเผยปริศนาและความสัมพันธ์ของตัวละคร ผ่านบททดสอบที่ไม่มีใครสามารถหลีกเลี่ยงได้</p><button className={styles.readMore} onClick={() => setExpanded((value) => !value)}>{expanded ? 'ย่อรายละเอียด' : '...อ่านเพิ่มเติม'}</button><div className={styles.tagsBlock}><p className={styles.tagsLabel}>แท็ก</p><div className={styles.tags}>{work.tags.map((tag) => <span key={tag} className={styles.tag}>#{tag}</span>)}</div></div></section>
     <div className={styles.columns}><div className={styles.stack}>
       {!comingSoon && <section className={`${styles.card} ${styles.section} ${styles.reviewsSection}`}>
         <div className={styles.reviewsHeader}>
@@ -423,8 +435,14 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
       </section>}
       <section className={`${styles.card} ${styles.section}`}>
         <div className={styles.chapterHeader}>
-          <h2 className={styles.chapterHeading}>สารบัญ</h2>
-          <p className={styles.chapterSummary}>{episodes.length} ตอน{newestEpisode?.publishedAt ? ` · เพิ่มตอนล่าสุด ${formatEpisodeDate(newestEpisode.publishedAt)}` : ''}</p>
+          <div>
+            <h2 className={styles.chapterHeading}>สารบัญ</h2>
+            <p className={styles.chapterSummary}>{episodes.length} ตอน{newestEpisode?.publishedAt ? ` · เพิ่มตอนล่าสุด ${formatEpisodeDate(newestEpisode.publishedAt)}` : ''}</p>
+          </div>
+          {hasAudioEdition && <div className={styles.chapterModeTabs}>
+            <button type="button" className={chapterMode === 'read' ? styles.chapterModeActive : ''} onClick={() => setChapterMode('read')}><BookOpen size={14}/> อ่าน</button>
+            <button type="button" className={chapterMode === 'listen' ? styles.chapterModeActive : ''} onClick={() => setChapterMode('listen')}><Headphones size={14}/> ฟัง</button>
+          </div>}
         </div>
         {chapterGroups.length ? <div className={styles.chapterList}>{chapterGroups.map((group) => {
           const isOpen = openChapterGroups.has(group.index)
@@ -437,30 +455,59 @@ export function DetailLanding({ work, episodes, related, initialReviews, serverB
               const isNewest = episode.id === newestEpisode?.id
               const isScheduled = episode.status === 'scheduled'
               const showPrice = episode.price > 0 && !purchased.has(episode.id)
-              return <button key={episode.id} type="button" className={`${styles.chapterRow} ${isScheduled ? styles.chapterScheduled : ''}`} aria-disabled={isScheduled} onClick={() => openEpisode(episode)}>
+              const rowInner = <>
                 <span className={styles.chapterInfo}>
-                  <span className={styles.chapterTitleLine}><span className={styles.chapterRowTitle}>{episode.title}</span>{isNewest && <span className={styles.chapterNew}>NEW</span>}</span>
-                  <span className={styles.chapterDate}>{isScheduled ? 'ตั้งเวลา ' : ''}{formatEpisodeDate(episode.publishedAt)}</span>
+                  <span className={styles.chapterTitleLine}><span className={styles.chapterRowTitle}>{work.type === 'manga' ? `ตอนที่ ${episode.episodeNum}` : episode.title}</span>{isNewest && <span className={styles.chapterNew}>NEW</span>}</span>
+                  <span className={styles.chapterDate}>{isScheduled ? 'ตั้งเวลา ' : ''}{formatEpisodeDate(episode.publishedAt)}{listenMode && <span className={styles.chapterInlineDuration}><Clock aria-hidden="true"/>{audioDuration(episode)}</span>}</span>
                 </span>
                 <span className={styles.chapterRowMeta}>
                   <span className={styles.chapterPrice}>{showPrice && <><span className={styles.chapterCoin} aria-hidden="true"/>{episode.price}</>}</span>
                   <span className={styles.chapterStat}><MessageCircle aria-hidden="true"/>{fmt(episodeCommentCounts[episode.id] ?? 0)}</span>
-                  {work.type === 'audiobook' && <span className={styles.chapterStat}><Clock aria-hidden="true"/>{audioDuration(episode)}</span>}
                 </span>
-              </button>
+              </>
+              if (listenMode) {
+                const unlocked = episode.price === 0 || purchased.has(episode.id)
+                const isAudioPlaying = audioActiveId === episode.id && audioPlaying
+                return <div key={episode.id} className={`${styles.chapterRow} ${styles.chapterRowAudio} ${isScheduled ? styles.chapterScheduled : ''}`}>
+                  <button
+                    type="button"
+                    className={styles.chapterPlayBtn}
+                    aria-label={isAudioPlaying ? 'หยุด' : 'เล่น'}
+                    disabled={isScheduled}
+                    onClick={(event) => { event.stopPropagation(); if (!unlocked) { openEpisode(episode); return } audioPlayerRef.current?.toggle(episode) }}
+                  >
+                    {isAudioPlaying ? <Pause size={18}/> : <Play size={18}/>}
+                  </button>
+                  <button type="button" className={styles.chapterRowBody} aria-disabled={isScheduled} onClick={() => openEpisode(episode)}>{rowInner}</button>
+                </div>
+              }
+              return <button key={episode.id} type="button" className={`${styles.chapterRow} ${isScheduled ? styles.chapterScheduled : ''}`} aria-disabled={isScheduled} onClick={() => openEpisode(episode)}>{rowInner}</button>
             })}</div>
           </div>
         })}</div> : <div className={styles.chapterEmpty}>ยังไม่มีตอน — นักเขียนกำลังเตรียมเนื้อหา</div>}
       </section>
     </div><aside className={`${styles.stack} ${styles.sidebar}`}>
-      {!comingSoon && <section className={`${styles.card} ${styles.section}`}><div className={styles.sectionHeader}><h2 className={styles.sectionTitle}>อันดับแฟนคลับ</h2><Users size={18}/></div><div className={styles.sideTabs}><button className={fanMode==='month'?styles.sideTabActive:''} onClick={()=>setFanMode('month')}>เดือนนี้</button><button className={fanMode==='all'?styles.sideTabActive:''} onClick={()=>setFanMode('all')}>ตลอดกาล</button></div><div className={styles.sideTabs}><button className={fanKind==='daily'?styles.sideTabActive:''} onClick={()=>setFanKind('daily')}>แนะนำ</button><button className={fanKind==='monthly'?styles.sideTabActive:''} onClick={()=>setFanKind('monthly')}>รายเดือน</button><button className={fanKind==='tip'?styles.sideTabActive:''} onClick={()=>setFanKind('tip')}>บริจาค</button></div>{fans.slice(0,5).map((fan,index)=><div key={fan.name} className={styles.fan}><span className={styles.fanRank}>{index+1}</span><span className={styles.avatar}>{fan.name[0]}</span><strong>{fan.name}</strong><span>{fmt(fan.score)}</span></div>)}{isLoggedIn&&<div className={`${styles.fan} ${styles.currentFan}`}><span>–</span><span className={styles.avatar}>{profile.displayName[0]}</span><strong>{profile.displayName}</strong><span>{bonus.daily+bonus.monthly+tipTotal}</span></div>}<button className={styles.allButton} onClick={()=>setFanOpen(true)}>ดูอันดับทั้งหมด</button></section>}
+      {!comingSoon && work.type === 'manga' && <section className={`${styles.card} ${styles.section} ${styles.tipCard}`}>
+        <div className={styles.tipCardHead}>
+          <span className={styles.tipCardIcon}><Heart size={18}/></span>
+          <div className={styles.tipCardHeadText}><p className={styles.tipCardTitle}>สนับสนุนผลงาน</p><p className={styles.tipCardSubtitle}>สนับสนุนนักเขียนโดยตรง</p></div>
+        </div>
+        <div className={styles.tipCardAmount}><strong>{fmt(tipTotal)}</strong><span>บาท</span></div>
+        <div className={styles.tipCardLine}/>
+        <div className={styles.tipCardFoot}>
+          <span className={styles.tipCardSupporters}><Users size={13}/> ผู้สนับสนุน <b>{tipCount}</b> คน</span>
+          <button className={styles.tipCardButton} onClick={() => requireLogin(() => setDonateOpen(true))}>สนับสนุน</button>
+        </div>
+      </section>}
+      {!comingSoon && <section className={`${styles.card} ${styles.section}`}><div className={styles.fanHeader}><h2 className={styles.sectionTitle}>อันดับแฟนคลับ</h2><p className={styles.sectionSubtitle}>{fanSubtitle}</p></div><div className={styles.sideTabs}><button className={fanMode==='today'?styles.sideTabActive:''} onClick={()=>setFanMode('today')}>วันนี้</button><button className={fanMode==='month'?styles.sideTabActive:''} onClick={()=>setFanMode('month')}>รายเดือน</button><button className={fanMode==='all'?styles.sideTabActive:''} onClick={()=>setFanMode('all')}>ตลอดกาล</button></div>{fans.slice(0,5).map((fan,index)=><div key={fan.name} className={styles.fan}><span className={`${styles.fanRank} ${index===0?styles.fanRankGold:index===1?styles.fanRankSilver:index===2?styles.fanRankBronze:''}`}>{index+1}</span><span className={styles.avatar}>{fan.name[0]}</span><strong>{fan.name}</strong><span>{fmt(fan.score)}</span></div>)}{isLoggedIn&&<div className={`${styles.fan} ${styles.currentFan}`}><span>–</span><span className={styles.avatar}>{profile.displayName[0]}</span><strong>{profile.displayName}</strong><span>{bonus.daily+bonus.monthly+tipTotal}</span></div>}<button className={styles.allButtonLink} onClick={()=>setFanOpen(true)}>ดูเพิ่มเติม ›</button></section>}
       <section className={`${styles.card} ${styles.section}`}><div className={styles.sectionHeader}><h2 className={styles.sectionTitle}>เรื่องแนะนำ</h2><Star size={18}/></div><div className={styles.related}>{related.map((item)=><Link key={item.detailId} href={`/detail?bookId=${encodeURIComponent(item.detailId)}`} className={styles.relatedItem}><span className={styles.relatedCover} style={{background:item.coverGradient}}/><span><b>{item.title}</b><span>{item.authorName}<br/>{item.genreLabel}</span></span></Link>)}</div></section>
     </aside></div>
   </div>
   {!comingSoon && <><Dialog open={voteOpen} onOpenChange={setVoteOpen}><DialogContent><DialogHeader><DialogTitle>ใช้ตั๋วโหวตให้ “{work.title}”</DialogTitle></DialogHeader><div className={styles.dialogOptions}><button className={voteKind==='daily'?styles.dialogOptionActive:''} disabled={availableTickets('daily')<=0} onClick={()=>{setVoteKind('daily');setVoteAmount(1)}}><span><Ticket size={16}/> โหวตแนะนำ</span><b>เหลือ {availableTickets('daily')} ใบ</b></button><button className={voteKind==='monthly'?styles.dialogOptionActive:''} disabled={availableTickets('monthly')<=0} onClick={()=>{setVoteKind('monthly');setVoteAmount(1)}}><span><Crown size={16}/> โหวตรายเดือน</span><b>เหลือ {availableTickets('monthly')} ใบ</b></button></div><div className={styles.quantity}><label htmlFor="vote-amount">จำนวนตั๋ว</label><input id="vote-amount" type="number" min={1} max={Math.max(1,availableTickets(voteKind))} value={voteAmount} onChange={(event)=>setVoteAmount(Number(event.target.value))}/><button className={styles.primary} disabled={voteBusy||availableTickets(voteKind)<=0} onClick={()=>void submitVote()}>{voteBusy?'กำลังโหวต...':'ยืนยันโหวต'}</button></div></DialogContent></Dialog>
   <Dialog open={fanOpen} onOpenChange={setFanOpen}><DialogContent><DialogHeader><DialogTitle>อันดับแฟนคลับทั้งหมด</DialogTitle></DialogHeader><div className={styles.fanDialog}>{[...fans,...fans.map((fan,index)=>({...fan,name:`${fan.name} ${index+2}`,score:fan.score-420}))].map((fan,index)=><div key={`${fan.name}-${index}`} className={styles.fan}><span className={styles.fanRank}>{index+1}</span><span className={styles.avatar}>{fan.name[0]}</span><strong>{fan.name}</strong><span>{fmt(fan.score)}</span></div>)}</div></DialogContent></Dialog>
-  <DonateModal authorName={work.authorName} detailId={work.detailId} open={donateOpen} onOpenChange={setDonateOpen} onSuccess={(amount)=>{setTipTotal((value)=>value+amount);setNotice('ส่งกำลังใจให้นักเขียนแล้ว')}}/></>}
+  <DonateModal authorName={work.authorName} detailId={work.detailId} open={donateOpen} onOpenChange={setDonateOpen} onSuccess={(amount)=>{setTipTotal((value)=>value+amount);setTipCount((value)=>value+1);setNotice('ส่งกำลังใจให้นักเขียนแล้ว')}}/></>}
   <PurchaseEpisodeModal episode={purchaseEpisode} workTitle={work.title} open={Boolean(purchaseEpisode)} onOpenChange={(open)=>!open&&setPurchaseEpisode(null)} onPurchased={purchasedEpisode} serverPurchase={serverBacked ? purchaseOnServer : undefined}/>
+  {showAudioPlayer && <AudioPlayerBar ref={audioPlayerRef} episodes={sortedEpisodes} authorName={work.authorName} coverUrl={work.coverUrl} coverGradient={work.coverGradient} onStateChange={(id, playing) => { setAudioActiveId(id); setAudioPlaying(playing) }}/>}
   {notice&&<div className={styles.notice}>{notice}</div>}</main>
 }
 

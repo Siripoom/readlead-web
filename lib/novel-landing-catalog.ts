@@ -153,6 +153,7 @@ function mapCard(raw: RawNovelCard, index: number): HomeBookStripItem {
     coverUrl: raw.hasCover ? `/api/catalog/works/${encodeURIComponent(raw.id)}/cover` : undefined,
     availability: raw.availability,
     contentType: 'novel',
+    tagline: raw.tagline,
     gradient: REAL_COVER_GRADIENTS[index % REAL_COVER_GRADIENTS.length],
   }
 }

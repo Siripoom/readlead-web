@@ -58,6 +58,9 @@ export interface AudioRankingGroup {
 
 export interface AudioLatestUpdate extends AudioBookItem {
   updatedLabel: string
+  description?: string
+  episodeTitle?: string
+  updatedAt?: string
 }
 
 const COVER_GRADIENTS = [

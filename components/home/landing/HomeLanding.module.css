@@ -29,6 +29,7 @@
 .heroSlide {
   position: absolute;
   inset: 0;
+  container-type: inline-size;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -39,6 +40,10 @@
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+}
+
+.heroDots {
+  min-height: 8px;
 }
 
 .heroMedia,
@@ -139,7 +144,8 @@
 .cmsBannerViewport {
   position: relative;
   width: 100%;
-  aspect-ratio: 750 / 700;
+  container-type: inline-size;
+  aspect-ratio: var(--cms-banner-mobile-aspect, 750 / 700);
   overflow: hidden;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(35, 25, 60, .12);
@@ -277,19 +283,43 @@
   background: var(--home-purple);
 }
 
+.mobileRailDots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.mobileRailDots button {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(204, 68, 82, .3);
+  transition: width 180ms ease, background-color 180ms ease;
+}
+
+.mobileRailDots button.mobileRailDotActive {
+  background: var(--home-red);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .heroSlide,
   .heroCopy,
   .rankDetail,
   .scrollRow,
   .cmsBannerSlide,
-  .cmsBannerDots button {
+  .cmsBannerDots button,
+  .mobileRailDots button {
     scroll-behavior: auto;
     transition: none;
   }
 }
 
 @media (min-width: 640px) {
+  .mobileRailDots {
+    display: none;
+  }
+
   .cmsBannerViewport {
     aspect-ratio: var(--cms-banner-aspect);
   }
@@ -314,6 +344,10 @@
 }
 
 @media (max-width: 639px) {
+  .root {
+    background: #fbfbfc;
+  }
+
   .heroPositioner {
     top: 50%;
     right: 20px;
@@ -322,7 +356,44 @@
   }
 
   .heroCmsTitle {
-    font-size: clamp(27px, 8.5vw, 38px);
+    font-size: clamp(14px, 3.7cqw, 18px);
+  }
+
+  .heroCmsDescription {
+    margin-top: 5px;
+    font-size: clamp(8px, 1.95cqw, 11px);
+    line-height: 1.45;
+  }
+
+  .heroCopy > span {
+    padding: 3px 9px;
+    font-size: clamp(7px, 1.75cqw, 10px);
+  }
+
+  .heroCopy > a {
+    margin-top: 9px;
+    gap: 3px;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: clamp(8px, 2cqw, 11px);
+  }
+
+  .heroCopy > a svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .heroDots {
+    min-height: 6px;
+  }
+
+  .heroDots button {
+    width: 6px;
+    height: 6px;
+  }
+
+  .heroDots button[aria-current='true'] {
+    width: 16px;
   }
 
   .heroShadeDark {
@@ -331,5 +402,56 @@
 
   .heroShadeLight {
     background: rgba(255, 255, 255, .68);
+  }
+
+  .cmsBannerViewport {
+    border-radius: 12px;
+  }
+
+  .cmsBannerElement_badge {
+    padding: .36em 1em;
+    font-size: clamp(6px, 1.75cqw, 11px);
+  }
+
+  .cmsBannerElement_title {
+    font-size: clamp(8px, 3.7cqw, 18px);
+  }
+
+  .cmsBannerElement_text {
+    font-size: clamp(6px, 1.95cqw, 12px);
+  }
+
+  .cmsBannerElement_button {
+    border-radius: .7em;
+    font-size: clamp(7px, 2cqw, 13px);
+  }
+
+  .cmsBannerElement_votes {
+    font-size: clamp(9px, 4cqw, 20px);
+  }
+
+  .cmsBannerElement_countdown {
+    padding: 3px 6px;
+    font-size: clamp(7px, 2cqw, 11px);
+  }
+
+  .cmsBannerDots {
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .cmsBannerDots button {
+    width: 6px;
+    height: 6px;
+    background: rgba(204, 68, 82, .3);
+  }
+
+  .cmsBannerDots button.cmsBannerDotActive {
+    width: 16px;
+    background: var(--home-red);
+  }
+
+  .mobileRailDots button.mobileRailDotActive {
+    width: 6px;
   }
 }

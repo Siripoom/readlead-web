@@ -91,7 +91,7 @@ export function OwnerReport() {
       const response = await fetch('/api/member/reports', { cache: 'no-store', signal })
       if (!response.ok) throw new Error(await responseError(response, 'โหลดประวัติการแจ้งปัญหาไม่สำเร็จ'))
       const data = await response.json() as { items: ProfileReportSummary[] }
-      setItems(data.items)
+      setItems(data.items ?? [])
     } catch (error) {
       if (!(error instanceof DOMException && error.name === 'AbortError')) setHistoryError(error instanceof Error ? error.message : 'โหลดประวัติการแจ้งปัญหาไม่สำเร็จ')
     } finally {

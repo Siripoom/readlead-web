@@ -48,6 +48,9 @@ export interface HomeBookStripItem {
   coverUrl?: string
   availability?: 'coming_soon' | 'published'
   contentType?: 'novel' | 'manga' | 'audiobook'
+  href?: string
+  isMock?: boolean
+  tagline?: string
   gradient: string
 }
 
@@ -64,6 +67,8 @@ export interface HomeLimitedOffer {
   mediaType?: LandingMediaType
   views?: string
   chapters?: string
+  href?: string
+  isMock?: boolean
 }
 
 export interface HomeRankingItem {
@@ -79,6 +84,8 @@ export interface HomeRankingItem {
   coverUrl?: string
   workId?: string
   contentType?: 'novel' | 'manga' | 'audiobook'
+  href?: string
+  isMock?: boolean
 }
 
 export interface HomeRankingColumn {
@@ -103,6 +110,8 @@ export interface HomeLatestUpdate {
   workId?: string
   coverUrl?: string
   contentType?: 'novel' | 'manga' | 'audiobook'
+  href?: string
+  isMock?: boolean
 }
 
 const COVER_GRADIENTS = [

@@ -92,7 +92,7 @@ export function NovelGenreSpotlight({ items, options, activeGenre, banners, slid
               {items.map((item, index) => (
                 <Link
                   key={item.id}
-                  href={`/detail?bookId=${encodeURIComponent(item.detailId)}`}
+                  href={item.href ?? `/detail?bookId=${encodeURIComponent(item.detailId)}`}
                   className="group min-w-0 snap-start"
                 >
                   <div className="relative aspect-[2/3] overflow-hidden rounded-[13px] shadow-[0_2px_7px_rgba(0,0,0,0.12)]" style={{ background: item.gradient }}>

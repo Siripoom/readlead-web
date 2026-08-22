@@ -1,19 +1,20 @@
 import { ActiveGenreChip } from '@/components/home/ActiveGenreChip'
 import { CmsBannerCarousel } from '@/components/home/landing/CmsBannerCarousel'
 import { HomeBookStrip } from '@/components/home/landing/HomeBookStrip'
-import { LandingSectionHeading } from '@/components/home/landing/LandingSectionHeading'
 import { LatestUpdates } from '@/components/home/landing/LatestUpdates'
 import { LimitedTimeCarousel } from '@/components/home/landing/LimitedTimeCarousel'
 import { RankingTables } from '@/components/home/landing/RankingTables'
-import styles from '@/components/home/landing/HomeLanding.module.css'
+import Link from 'next/link'
+import { ChevronRight } from 'lucide-react'
 import type { CmsBanner } from '@/lib/cms-catalog'
 import type { NovelCmsCatalog } from '@/lib/novel-cms-catalog'
 import type { NovelLandingCatalog } from '@/lib/novel-landing-catalog'
 import { NOVEL_GENRE_OPTIONS } from '@/lib/novel-landing-data'
 import type { Genre } from '@/lib/types'
-import { cn } from '@/lib/utils'
 import { NovelCmsCoverflow } from './NovelCmsCoverflow'
 import { NovelGenreSpotlight } from './NovelGenreSpotlight'
+import { NovelPopularityShowcase } from './NovelPopularityShowcase'
+import styles from './NovelLanding.module.css'
 
 function parseGenre(value: string | null): Genre | null {
   if (!value) return null
@@ -26,10 +27,11 @@ function matchesGenre(genreKeys: Genre[], activeGenre: Genre | null) {
   return !activeGenre || genreKeys.includes(activeGenre)
 }
 
-function CatalogError({ message }: { message: string }) {
+function SectionHeading({ title, href }: { title: string; href: string }) {
   return (
-    <div role="status" className="rounded-2xl border border-dashed border-[var(--home-line)] bg-[var(--home-soft)] px-6 py-10 text-center text-sm text-[var(--home-ink-2)]">
-      {message}
+    <div className={styles.sectionHeading}>
+      <h2>{title}</h2>
+      <Link href={href}>ดูเพิ่มเติม <ChevronRight /></Link>
     </div>
   )
 }
@@ -48,7 +50,7 @@ function CmsBannerColumns({
   const visibleColumns = columns.filter((items) => items.length > 0)
   if (!visibleColumns.length) return null
   return (
-    <div className={cn('grid gap-5', visibleColumns.length > 1 && 'sm:grid-cols-2')}>
+    <div className={visibleColumns.length > 1 ? styles.bannerColumns : undefined}>
       {visibleColumns.map((items, index) => (
         <CmsBannerCarousel
           key={`${label}-${index}-${items[0]?.id}`}
@@ -65,12 +67,10 @@ function CmsBannerColumns({
 export function NovelLanding({
   activeGenre = null,
   catalog,
-  catalogError,
   cms,
 }: {
   activeGenre?: string | null
   catalog: NovelLandingCatalog
-  catalogError: string | null
   cms: NovelCmsCatalog
 }) {
   const genre = parseGenre(activeGenre)
@@ -81,7 +81,7 @@ export function NovelLanding({
   const hasWebPicks = Boolean(cms.coverflow) || webBooks.length > 0
 
   return (
-    <div className={`${styles.root} pb-5 sm:pb-9`}>
+    <div className={styles.root}>
       {cms.hero.length > 0 && (
         <CmsBannerCarousel
           items={cms.hero}
@@ -92,9 +92,9 @@ export function NovelLanding({
         />
       )}
 
-      <main className="mx-auto max-w-[1200px] px-5 sm:px-6">
+      <main className={styles.container}>
         {hasActivity && (
-          <section className="mt-8">
+          <section className={styles.bannerSection}>
             <CmsBannerColumns
               columns={cms.activity}
               aspect="566 / 169"
@@ -105,38 +105,42 @@ export function NovelLanding({
         )}
 
         {genre && (
-          <div className="mt-8 rounded-xl border border-[var(--home-line)] bg-[var(--home-soft)] px-4 py-3">
+          <div className={`${styles.genreNotice} rounded-xl border border-[var(--home-line)] bg-[var(--home-soft)] px-4 py-3`}>
             <ActiveGenreChip genre={genre} clearHref="/novel" />
           </div>
         )}
 
         {cms.limitedOffers.length > 0 && (
-          <section className="mt-10">
-            <LandingSectionHeading title="จำกัดเวลาพิเศษ" href="/discover" />
+          <section className={styles.section}>
+            <SectionHeading title="จำกัดเวลาพิเศษ" href="/discover" />
             <LimitedTimeCarousel items={cms.limitedOffers} />
           </section>
         )}
 
-        <section className="mt-10">
-          <LandingSectionHeading title="ความนิยมสูงสุด" href="/ranking" />
-          {catalogError
-            ? <CatalogError message={catalogError} />
-            : <HomeBookStrip items={catalog.popular} variant="popular" />}
-        </section>
+        <NovelPopularityShowcase items={catalog.popular} />
 
-        <section className="mt-10">
-          <LandingSectionHeading title="อันดับรวมยอดนิยมสูงสุด" href="/ranking" />
-          {catalogError
-            ? <CatalogError message={catalogError} />
-            : <RankingTables columns={catalog.rankings} />}
+        {cms.act3.length > 0 && (
+          <section className={styles.bannerSection}>
+            <CmsBannerCarousel
+              items={cms.act3}
+              aspect="1152 / 247"
+              slideSeconds={cms.slideSeconds}
+              label="แบนเนอร์กิจกรรมอันดับ"
+            />
+          </section>
+        )}
+
+        <section className={styles.bannerSection}>
+          <SectionHeading title="อันดับรวมยอดนิยมสูงสุด" href="/ranking" />
+          <RankingTables columns={catalog.rankings} />
         </section>
 
         {hasWebPicks && (
-          <section className="mt-10">
-            <LandingSectionHeading title="แนะนำโดยเว็บ" href="/discover" />
+          <section className={styles.section}>
+            <SectionHeading title="แนะนำโดยเว็บ" href="/discover" />
             {cms.coverflow && <NovelCmsCoverflow data={cms.coverflow} slideSeconds={cms.slideSeconds} />}
             {webBooks.length > 0 && (
-              <div className={cms.coverflow ? 'mt-7' : undefined}>
+              <div className={cms.coverflow ? 'mt-[26px]' : undefined}>
                 <HomeBookStrip items={webBooks} variant="recommended" />
               </div>
             )}
@@ -144,7 +148,7 @@ export function NovelLanding({
         )}
 
         {cms.writerBanners.length > 0 && (
-          <section className="mt-10">
+          <section className={styles.section}>
             <CmsBannerCarousel
               items={cms.writerBanners}
               aspect="1152 / 244"
@@ -154,15 +158,13 @@ export function NovelLanding({
           </section>
         )}
 
-        <section className="mt-10">
-          <LandingSectionHeading title="ผลงานเรื่องใหม่" href="/discover" />
-          {catalogError
-            ? <CatalogError message={catalogError} />
-            : <HomeBookStrip items={catalog.newWorks} variant="recommended" />}
+        <section className={styles.section}>
+          <SectionHeading title="ผลงานเรื่องใหม่" href="/discover" />
+          <HomeBookStrip items={catalog.newWorks} variant="recommended" />
         </section>
 
         {hasWebRecommend && (
-          <section className="mt-10">
+          <section className={styles.bannerSection}>
             <CmsBannerColumns
               columns={cms.webRecommend}
               aspect="567 / 169"
@@ -172,22 +174,18 @@ export function NovelLanding({
           </section>
         )}
 
-        <section className="mt-10">
-          <LandingSectionHeading title="ผลงานไทยเรื่องใหม่" href="/discover" />
-          {catalogError
-            ? <CatalogError message={catalogError} />
-            : <HomeBookStrip items={catalog.newThaiWorks} variant="recommended" />}
+        <section className={styles.section}>
+          <SectionHeading title="ผลงานไทยเรื่องใหม่" href="/discover" />
+          <HomeBookStrip items={catalog.newThaiWorks} variant="recommended" />
         </section>
 
-        <section className="mt-10">
-          <LandingSectionHeading title="ผลงานแปลเรื่องใหม่" href="/discover" />
-          {catalogError
-            ? <CatalogError message={catalogError} />
-            : <HomeBookStrip items={catalog.translatedWorks} variant="recommended" />}
+        <section className={styles.section}>
+          <SectionHeading title="ผลงานแปลเรื่องใหม่" href="/discover" />
+          <HomeBookStrip items={catalog.translatedWorks} variant="recommended" />
         </section>
 
         {hasLaunch && (
-          <section className="mt-10">
+          <section className={styles.bannerSection}>
             <CmsBannerColumns
               columns={cms.launch}
               aspect="1140 / 400"
@@ -197,41 +195,21 @@ export function NovelLanding({
           </section>
         )}
 
-        <section className="mt-10">
-          <LandingSectionHeading title="เรื่องฮิตตามหมวดหมู่" href="/discover" />
-          {catalogError
-            ? (
-                <>
-                  {cms.categoryBanners.length > 0 && (
-                    <CmsBannerCarousel
-                      items={cms.categoryBanners}
-                      aspect="1152 / 228"
-                      slideSeconds={cms.slideSeconds}
-                      label="แบนเนอร์เติมเต็มทุกอารมณ์"
-                    />
-                  )}
-                  <div className={cms.categoryBanners.length > 0 ? 'mt-6' : undefined}>
-                    <CatalogError message={catalogError} />
-                  </div>
-                </>
-              )
-            : (
-                <NovelGenreSpotlight
-                  key={genre ?? 'all'}
-                  items={catalog.categoryPopular}
-                  options={NOVEL_GENRE_OPTIONS}
-                  activeGenre={genre}
-                  banners={cms.categoryBanners}
-                  slideSeconds={cms.slideSeconds}
-                />
-              )}
+        <section className={styles.section}>
+          <SectionHeading title="เรื่องฮิตตามหมวดหมู่" href="/discover" />
+          <NovelGenreSpotlight
+            key={genre ?? 'all'}
+            items={catalog.categoryPopular}
+            options={NOVEL_GENRE_OPTIONS}
+            activeGenre={genre}
+            banners={cms.categoryBanners}
+            slideSeconds={cms.slideSeconds}
+          />
         </section>
 
-        <section className="mt-10" id="latest">
-          <LandingSectionHeading title="อัปเดตล่าสุด" href="/discover" />
-          {catalogError
-            ? <CatalogError message={catalogError} />
-            : <LatestUpdates key={genre ?? 'all'} items={catalog.latestUpdates} />}
+        <section className={styles.section} id="latest">
+          <SectionHeading title="อัปเดตล่าสุด" href="/discover" />
+          <LatestUpdates key={genre ?? 'all'} items={catalog.latestUpdates} />
         </section>
       </main>
     </div>

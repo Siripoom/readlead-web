@@ -15,7 +15,6 @@ import {
   MessageSquareText,
   PenSquare,
   Search,
-  Settings,
   WalletCards,
 } from 'lucide-react'
 import { NotificationDropdown } from '@/components/ui/NotificationDropdown'
@@ -415,7 +414,6 @@ function MobileAccountPanel({
     { href: `${profileHref}?tab=report`, label: 'แจ้งปัญหา', Icon: Headphones },
     { href: `${profileHref}?tab=activity`, label: 'คอมเมนต์ & รีวิวของฉัน', Icon: MessageSquareText },
     { href: `${profileHref}?tab=help`, label: 'คู่มือผู้ใช้', Icon: BookOpen },
-    { href: `${profileHref}?tab=account`, label: 'การตั้งค่า', Icon: Settings },
   ]
 
   return (

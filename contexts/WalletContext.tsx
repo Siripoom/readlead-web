@@ -20,15 +20,25 @@ type WalletSnapshot = {
   balance: number
   topUpEnabled: boolean
   packages: WalletPackage[]
-  channels: PaymentChannel[]
+  channels?: PaymentChannel[]
+  paymentConfig?: PublicPaymentConfig
   transactions: WalletTransaction[]
 }
+
+export type PublicPaymentConfig = {
+  omisePublicKey: string
+  applePayMerchantId: string
+  googlePayMerchantId: string
+}
+
+const EMPTY_PAYMENT_CONFIG: PublicPaymentConfig = { omisePublicKey: '', applePayMerchantId: '', googlePayMerchantId: '' }
 
 interface WalletContextValue {
   balance: number
   topUpEnabled: boolean
   packages: WalletPackage[]
   channels: PaymentChannel[]
+  paymentConfig: PublicPaymentConfig
   transactions: WalletTransaction[]
   loading: boolean
   error: boolean
@@ -44,6 +54,7 @@ const WalletContext = createContext<WalletContextValue>({
   topUpEnabled: false,
   packages: [],
   channels: [],
+  paymentConfig: EMPTY_PAYMENT_CONFIG,
   transactions: [],
   loading: false,
   error: false,
@@ -65,6 +76,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [topUpEnabled, setTopUpEnabled] = useState(false)
   const [packages, setPackages] = useState<WalletPackage[]>([])
   const [channels, setChannels] = useState<PaymentChannel[]>([])
+  const [paymentConfig, setPaymentConfig] = useState<PublicPaymentConfig>(EMPTY_PAYMENT_CONFIG)
   const [transactions, setTransactions] = useState<WalletTransaction[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -77,6 +89,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     // Defensive default: falls back to [] if the backoffice hasn't shipped
     // the `channels` field yet (deployed independently of this repo).
     setChannels(snapshot.channels ?? [])
+    setPaymentConfig(snapshot.paymentConfig ?? EMPTY_PAYMENT_CONFIG)
     setTransactions(snapshot.transactions ?? [])
     setError(false)
   }, [])
@@ -91,6 +104,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       setTopUpEnabled(false)
       setPackages([])
       setChannels([])
+      setPaymentConfig(EMPTY_PAYMENT_CONFIG)
       setTransactions([])
       setError(false)
       setLoading(false)
@@ -169,7 +183,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <WalletContext.Provider value={{ balance, topUpEnabled, packages, channels, transactions, loading, error, spend, submitTopUp, initiateGatewayCharge, pollGatewayCharge, refresh }}>
+    <WalletContext.Provider value={{ balance, topUpEnabled, packages, channels, paymentConfig, transactions, loading, error, spend, submitTopUp, initiateGatewayCharge, pollGatewayCharge, refresh }}>
       {children}
     </WalletContext.Provider>
   )

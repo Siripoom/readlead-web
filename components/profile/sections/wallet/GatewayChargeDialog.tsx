@@ -78,31 +78,6 @@ declare global {
 const POLL_INTERVAL_MS = 3000
 const MAX_POLL_ATTEMPTS = 60 // ~3 minutes
 
-// Test mode needs no registered Google merchant to function; switches to
-// PRODUCTION automatically once the public key is swapped to pkey_live_ —
-// see the matching note in readlead-backoffice/lib/wallet-channels.ts.
-const GOOGLE_PAY_ENVIRONMENT = process.env.NEXT_PUBLIC_OMISE_PUBLIC_KEY?.startsWith('pkey_live_') ? 'PRODUCTION' : 'TEST'
-const GOOGLE_PAY_METHOD: GooglePayPaymentMethod = {
-  type: 'CARD',
-  parameters: { allowedAuthMethods: ['PAN_ONLY'], allowedCardNetworks: ['VISA', 'MASTERCARD'] },
-  tokenizationSpecification: {
-    type: 'PAYMENT_GATEWAY',
-    parameters: { gateway: 'omise', gatewayMerchantId: process.env.NEXT_PUBLIC_OMISE_PUBLIC_KEY ?? '' },
-  },
-}
-// merchantId (from the Google Pay & Wallet Business Console, not Omise) is
-// optional in TEST but required once GOOGLE_PAY_ENVIRONMENT is PRODUCTION —
-// included whenever it's configured so it's already wired for go-live.
-// Apple merchant identifier (e.g. merchant.co.th.readlead), issued by Apple
-// and registered with Omise. Unlike Google Pay there is no test environment:
-// without this, a registered domain, and the hosted domain-association file,
-// the Apple Pay sheet cannot open at all.
-const APPLE_PAY_MERCHANT_ID = process.env.NEXT_PUBLIC_APPLE_PAY_MERCHANT_ID ?? ''
-const GOOGLE_PAY_MERCHANT_INFO = {
-  merchantName: 'ReadLead',
-  ...(process.env.NEXT_PUBLIC_GOOGLE_PAY_MERCHANT_ID ? { merchantId: process.env.NEXT_PUBLIC_GOOGLE_PAY_MERCHANT_ID } : {}),
-}
-
 type Stage = 'input' | 'busy' | 'qr' | 'redirect' | 'success' | 'error'
 
 interface GatewayChargeDialogProps {
@@ -113,7 +88,7 @@ interface GatewayChargeDialogProps {
 }
 
 export function GatewayChargeDialog({ open, onOpenChange, walletPackage, channel }: GatewayChargeDialogProps) {
-  const { initiateGatewayCharge, pollGatewayCharge } = useWallet()
+  const { initiateGatewayCharge, pollGatewayCharge, paymentConfig } = useWallet()
   const [omiseReady, setOmiseReady] = useState(false)
   const [stage, setStage] = useState<Stage>('input')
   const [errorMessage, setErrorMessage] = useState('')
@@ -158,6 +133,19 @@ export function GatewayChargeDialog({ open, onOpenChange, walletPackage, channel
   // 'gateway'); PaymentMethod is the broader historical id space.
   const channelId = channel.id as WalletTopUpMethod
   const totalCoins = walletPackage ? walletPackage.coins + walletPackage.bonus : 0
+  const googlePayEnvironment = paymentConfig.omisePublicKey.startsWith('pkey_live_') ? 'PRODUCTION' : 'TEST'
+  const googlePayMethod: GooglePayPaymentMethod = {
+    type: 'CARD',
+    parameters: { allowedAuthMethods: ['PAN_ONLY'], allowedCardNetworks: ['VISA', 'MASTERCARD'] },
+    tokenizationSpecification: {
+      type: 'PAYMENT_GATEWAY',
+      parameters: { gateway: 'omise', gatewayMerchantId: paymentConfig.omisePublicKey },
+    },
+  }
+  const googlePayMerchantInfo = {
+    merchantName: 'ReadLead',
+    ...(paymentConfig.googlePayMerchantId ? { merchantId: paymentConfig.googlePayMerchantId } : {}),
+  }
 
   function stopPolling() {
     if (pollTimer.current) clearInterval(pollTimer.current)
@@ -241,7 +229,7 @@ export function GatewayChargeDialog({ open, onOpenChange, walletPackage, channel
   function startApplePay() {
     const ApplePay = window.ApplePaySession
     if (!walletPackage || !ApplePay) return
-    if (!APPLE_PAY_MERCHANT_ID) {
+    if (!paymentConfig.applePayMerchantId) {
       setErrorMessage('ยังไม่ได้ตั้งค่า Apple Pay กรุณาติดต่อผู้ดูแลระบบ')
       setStage('error')
       return
@@ -294,7 +282,7 @@ export function GatewayChargeDialog({ open, onOpenChange, walletPackage, channel
           // Omise's documented shape is the stringified paymentData object
           // (their example starts with {"data":"..."}), not the outer token.
           data: JSON.stringify(token.paymentData),
-          merchant_id: APPLE_PAY_MERCHANT_ID,
+          merchant_id: paymentConfig.applePayMerchantId,
           brand: token.paymentMethod.network,
         },
         (_statusCode, response) => {
@@ -326,7 +314,7 @@ export function GatewayChargeDialog({ open, onOpenChange, walletPackage, channel
   function ensureGooglePayClient() {
     if (googlePayClientRef.current) return googlePayClientRef.current
     if (!window.google) return null
-    googlePayClientRef.current = new window.google.payments.api.PaymentsClient({ environment: GOOGLE_PAY_ENVIRONMENT })
+    googlePayClientRef.current = new window.google.payments.api.PaymentsClient({ environment: googlePayEnvironment })
     return googlePayClientRef.current
   }
 
@@ -339,7 +327,7 @@ export function GatewayChargeDialog({ open, onOpenChange, walletPackage, channel
     const container = googlePayContainerRef.current
     if (!client || !container) return
     client
-      .isReadyToPay({ apiVersion: 2, apiVersionMinor: 0, allowedPaymentMethods: [GOOGLE_PAY_METHOD] })
+      .isReadyToPay({ apiVersion: 2, apiVersionMinor: 0, allowedPaymentMethods: [googlePayMethod] })
       .then((response) => {
         if (!response.result) {
           console.info('Google Pay: isReadyToPay returned false — no eligible payment method on this device/browser')
@@ -366,8 +354,8 @@ export function GatewayChargeDialog({ open, onOpenChange, walletPackage, channel
       const paymentData = await googlePayClientRef.current.loadPaymentData({
         apiVersion: 2,
         apiVersionMinor: 0,
-        allowedPaymentMethods: [GOOGLE_PAY_METHOD],
-        merchantInfo: GOOGLE_PAY_MERCHANT_INFO,
+        allowedPaymentMethods: [googlePayMethod],
+        merchantInfo: googlePayMerchantInfo,
         transactionInfo: {
           totalPriceStatus: 'FINAL',
           totalPrice: walletPackage.price.toFixed(2),
@@ -496,8 +484,8 @@ export function GatewayChargeDialog({ open, onOpenChange, walletPackage, channel
   return (
     <>
       <Script src="https://cdn.omise.co/omise.js" strategy="afterInteractive" onLoad={() => {
-        if (window.Omise && process.env.NEXT_PUBLIC_OMISE_PUBLIC_KEY) {
-          window.Omise.setPublicKey(process.env.NEXT_PUBLIC_OMISE_PUBLIC_KEY)
+        if (window.Omise && paymentConfig.omisePublicKey) {
+          window.Omise.setPublicKey(paymentConfig.omisePublicKey)
           setOmiseReady(true)
         }
       }} />

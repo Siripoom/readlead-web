@@ -26,7 +26,6 @@ import {
 } from "@/components/ui/dialog";
 import { useWallet, type WalletTopUpMethod } from "@/contexts/WalletContext";
 import type {
-  PaymentChannel,
   PaymentMethod,
   Role,
   WalletTransaction,
@@ -164,84 +163,6 @@ const PAYMENT_METHOD_DISPLAY: Record<
   },
 };
 
-// Boundary default for when the backoffice hasn't shipped `channels` on
-// GET /api/member/wallet yet (deployed independently of this repo) — mirrors
-// the shape backoffice's WALLET_CHANNELS is expected to return, so the wallet
-// page degrades to today's slip-only behavior instead of showing an empty
-// grid. Delete once the backoffice snapshot always includes `channels`.
-const FALLBACK_WEB_CHANNELS: PaymentChannel[] = [
-  {
-    id: "proof-upload",
-    label: "อัปโหลดหลักฐาน",
-    description: "แนบสลิปเพื่อรออนุมัติ",
-    kind: "slip",
-    enabled: true,
-    platforms: ["web"],
-  },
-  {
-    id: "promptpay",
-    label: "พร้อมเพย์",
-    description: "สแกน QR จ่ายทันที",
-    kind: "gateway",
-    provider: "omise",
-    instrument: "promptpay",
-    enabled: true,
-    platforms: ["web"],
-  },
-  {
-    id: "credit-card",
-    label: "บัตรเครดิต/เดบิต",
-    description: "Visa, Mastercard",
-    kind: "gateway",
-    provider: "omise",
-    instrument: "card",
-    enabled: true,
-    platforms: ["web"],
-  },
-  {
-    id: "truemoney",
-    label: "ทรูมันนี่ วอลเล็ท",
-    description: "TrueMoney Wallet",
-    kind: "gateway",
-    provider: "omise",
-    instrument: "truemoney",
-    enabled: true,
-    platforms: ["web"],
-  },
-  {
-    id: "shopeepay",
-    label: "ShopeePay",
-    description: "จ่ายผ่าน ShopeePay",
-    kind: "gateway",
-    provider: "omise",
-    instrument: "shopeepay",
-    enabled: true,
-    platforms: ["web"],
-  },
-  {
-    id: "apple-pay",
-    label: "Apple Pay",
-    description: "จ่ายด้วย Apple Pay",
-    kind: "gateway",
-    provider: "omise",
-    instrument: "apple-pay",
-    // Mirrors the temporary UI-review flag in the backoffice's
-    // WALLET_CHANNELS — see the warning there before deploying.
-    enabled: true,
-    platforms: ["web", "ios"],
-  },
-  {
-    id: "google-pay",
-    label: "Google Pay",
-    description: "จ่ายด้วย Google Pay",
-    kind: "gateway",
-    provider: "omise",
-    instrument: "google-pay",
-    enabled: true,
-    platforms: ["web", "android"],
-  },
-];
-
 type HistoryFilter = "all" | "approved" | "rejected" | "pending";
 type TopUpResult = "submitted" | "error" | null;
 
@@ -376,10 +297,9 @@ export function OwnerWallet() {
   const [reference, setReference] = useState("");
 
   const webChannels = useMemo(() => {
-    const fromServer = channels.filter((channel) =>
-      channel.platforms.includes("web"),
+    return channels.filter(
+      (channel) => channel.enabled && channel.platforms.includes("web"),
     );
-    return fromServer.length > 0 ? fromServer : FALLBACK_WEB_CHANNELS;
   }, [channels]);
   const selectedPackage =
     packages.find((item) => item.id === selectedPackageId) ?? packages[0];
@@ -404,6 +324,7 @@ export function OwnerWallet() {
   }, [historyFilter, transactions]);
 
   function openConfirmation() {
+    if (!selectedChannel) return;
     if (selectedChannel?.kind === "gateway") {
       setGatewayDialogOpen(true);
       return;
@@ -518,7 +439,7 @@ export function OwnerWallet() {
               <CreditCard /> ช่องทางการเติมเหรียญ
             </h2>
             <p className={styles.walletSectionDescription}>
-              แนบหลักฐานการชำระเงินเพื่อส่งให้เจ้าหน้าที่ตรวจสอบ
+              เลือกช่องทางที่ต้องการใช้เติมเหรียญ
             </p>
             <div className={styles.paymentGrid}>
               {webChannels.map((channel) => {
@@ -528,22 +449,14 @@ export function OwnerWallet() {
                   <button
                     type="button"
                     key={channel.id}
-                    className={`${styles.paymentMethod} ${active ? styles.paymentMethodActive : ""} ${!channel.enabled ? styles.paymentMethodDisabled : ""}`}
-                    onClick={() =>
-                      channel.enabled &&
-                      setSelectedMethod(channel.id as WalletTopUpMethod)
-                    }
+                    className={`${styles.paymentMethod} ${active ? styles.paymentMethodActive : ""}`}
+                    onClick={() => setSelectedMethod(channel.id as WalletTopUpMethod)}
                     aria-pressed={active}
-                    disabled={!channel.enabled}
                   >
                     <PaymentMethodLogo id={channel.id} logos={logos} />
                     <span className={styles.paymentText}>
                       <b>{channel.label}</b>
-                      <small>
-                        {channel.enabled
-                          ? channel.description
-                          : "ยังไม่เปิดใช้งาน"}
-                      </small>
+                      <small>{channel.description}</small>
                     </span>
                     <span className={styles.paymentRadio} aria-hidden="true" />
                   </button>
@@ -603,14 +516,14 @@ export function OwnerWallet() {
               type="button"
               className={styles.walletTopUpButton}
               onClick={openConfirmation}
-              disabled={!selectedPackage || loading || !topUpEnabled}
+              disabled={!selectedPackage || !selectedChannel || loading || !topUpEnabled}
             >
               <Plus /> เติม {totalCoins.toLocaleString("th-TH")} เหรียญ · ฿
               {selectedPackage?.price.toLocaleString("th-TH") ?? "—"}
             </button>
             {!loading && !topUpEnabled && (
               <p className={styles.walletDisabledNote}>
-                ระบบส่งหลักฐานยังไม่พร้อมใช้งาน
+                ระบบเติมเงินปิดให้บริการชั่วคราว
               </p>
             )}
           </section>

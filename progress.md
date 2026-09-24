@@ -1,6 +1,6 @@
 # Progress: เชื่อมต่อ Omise Payment Gateway ในกระเป๋าเงิน
 
-อัปเดตล่าสุด: 2026-08-21 (แก้บั๊ก Google Pay dialog ค้างว่างเปล่าไม่มีอะไรขึ้น)
+อัปเดตล่าสุด: 2026-09-24 (เพิ่มการเปิด/ปิดช่องทางชำระเงินจาก backoffice)
 
 ## บริบท
 
@@ -22,10 +22,10 @@
 
 **readlead-web**
 - `lib/types.ts` — เพิ่ม type `PaymentChannel`, `GatewayChargeResult`, ขยาย `PaymentMethod` ให้รองรับ `shopeepay` / `apple-pay` / `google-play` / `app-store`, ขยาย `WalletTransaction.status` ให้มี `authorizing` / `failed` / `expired`
-- `contexts/WalletContext.tsx` — wallet snapshot ดึง `channels` จาก backend จริงแทนของ hardcode, เพิ่มฟังก์ชัน `initiateGatewayCharge()` / `pollGatewayCharge()`
-- `components/profile/sections/OwnerCreatorWallet.tsx` — เมนูช่องทางชำระเงินเปลี่ยนจาก array hardcode เป็นดึงจาก `channels` (backend เป็นคนคุมว่าช่องไหนเปิด/ปิด), **เอาเคาน์เตอร์เซอร์วิสออกจากตัวเลือก** (แต่เก็บไว้ในทะเบียนแสดงผลประวัติ กันรายการเก่าพัง), มี `FALLBACK_WEB_CHANNELS` กันหน้าเว็บพังถ้า backoffice ยังไม่ deploy field ใหม่
+- `contexts/WalletContext.tsx` — wallet snapshot ดึง `channels` และ public payment config จาก backend จริง, เพิ่มฟังก์ชัน `initiateGatewayCharge()` / `pollGatewayCharge()`
+- `components/profile/sections/OwnerCreatorWallet.tsx` — เมนูช่องทางชำระเงินดึงจาก `channels` ที่เปิดจริงเท่านั้น (backend เป็นคนคุม), **เอาเคาน์เตอร์เซอร์วิสออกจากตัวเลือก** แต่ยังเก็บทะเบียนชื่อไว้แสดงประวัติเก่า
 - `lib/profile-help-data.ts` — แก้ FAQ ไม่พูดถึงเคาน์เตอร์เซอร์วิสแล้ว
-- `.env.example` / `.env.local` — เพิ่ม `NEXT_PUBLIC_OMISE_PUBLIC_KEY`
+- public key/merchant ID ถูกส่งมาจาก wallet snapshot ณ runtime เพื่อใช้ config ชุดเดียวกับ readiness check ใน backoffice
 
 **readlead-backoffice**
 - `prisma/schema.prisma` — แก้ตาราง `CoinTopUpRequest`: เพิ่ม enum status ใหม่ (`authorizing`/`failed`/`expired`), ทำให้ฟิลด์สลิปเป็น nullable, เพิ่มฟิลด์ `paymentMethod`, `omiseChargeId`, `omiseChargeStatus`, `omiseSourceType`, `amountReceivedSatang` — **รัน migration ลง DB จริงในเครื่องแล้ว** (`20260817070000_add_gateway_topup_fields`)
@@ -64,11 +64,16 @@
 
 ## สถานะตอนนี้ (สำคัญ)
 
-**เปิดใช้งานช่องทางชำระเงินแล้ว 5 ช่อง** (`enabled: true` ใน `readlead-backoffice/lib/wallet-channels.ts`): อัปโหลดหลักฐาน, พร้อมเพย์, บัตรเครดิต/เดบิต, ทรูมันนี่ วอลเล็ท, ShopeePay
+สถานะเปิด/ปิดจริงอยู่ใน `PaymentChannelSetting` และจัดการจากแท็บ **การเงิน → ช่องทางชำระเงิน** ใน backoffice ส่วน catalog/ชื่อ/provider/ลำดับยังอยู่ในโค้ด ช่องทางที่ config provider ไม่ครบจะเปิดไม่ได้และแสดงเหตุผล ส่วน iOS/Android แสดงเป็นรายการเตรียมไว้แต่ยังแก้ไม่ได้
 
-**ยังปิดอยู่:**
-- `apple-pay` — ต้องมี Apple Merchant ID + domain verification file + certificate ผูกกับ Omise ก่อน (ยังไม่เริ่ม Phase 3b)
-- `google-play` / `app-store` — เป็นแค่ stub เตรียมไว้สำหรับแอปมือถือในอนาคต ไม่เกี่ยวกับเว็บ
+### Phase 4 — ตั้งค่าช่องทางจาก backoffice — เสร็จ
+
+- เพิ่ม `PaymentChannelSetting` แยกตาม channel + platform และ migration `20260924150000_payment_channel_settings`
+- bootstrap ครั้งแรกจะรักษาสถานะเดิมเฉพาะช่องทางที่ readiness ผ่าน; ช่องทางที่ยังไม่พร้อมถูกบันทึกเป็นปิดและจะไม่เปิดเองเมื่อเติม env ภายหลัง
+- `GET/PATCH /api/finance/payment-channels` ใช้สิทธิ์ `finance`; PATCH บันทึก Audit Log ใน transaction เดียว
+- web ซ่อนช่องทางที่ปิดทั้งหมด; ถ้าปิดทุกช่องจะแสดง “ระบบเติมเงินปิดให้บริการชั่วคราว”
+- API สร้างรายการใหม่คืน 409 เมื่อช่องทางปิด แต่ idempotent retry, polling, webhook, ประวัติ และรายการรอตรวจสลิปเดิมยังทำงานต่อ
+- public Omise/Apple/Google identifiers ใช้ env `WEB_OMISE_PUBLIC_KEY`, `WEB_APPLE_PAY_MERCHANT_ID`, `WEB_GOOGLE_PAY_MERCHANT_ID` ที่ backoffice แล้วส่งให้ web ผ่าน wallet snapshot ลดความเสี่ยง config สองฝั่งไม่ตรงกัน
 
 ### Phase 3 — เปิด ShopeePay/TrueMoney จริง — เสร็จ
 
@@ -106,7 +111,7 @@
 
 **Google Pay เป็นคนละอย่างกับ Google Play** — อันนี้คือกระเป๋าเงินจ่ายเงินบนเว็บ (เหมือน Apple Pay) ไม่ใช่ Google Play Billing (ซื้อในแอป ที่เตรียมไว้เฉยๆ สำหรับแอปมือถือในอนาคต) เพิ่ม `instrument: 'google-pay'` ใหม่แยกจากของเดิม
 
-**ทำไมเปิดใช้งานได้เลยต่างจาก Apple Pay:** Apple Pay ต้องมี Apple Merchant ID + ไฟล์ยืนยันโดเมน + certificate ก่อนถึงจะทำงานได้แม้แต่ในโหมดทดสอบ แต่ Google Pay โหมด TEST ของ Google ใช้งานได้เลยโดยไม่ต้องลงทะเบียน merchant (Omise มองว่า Google Pay เป็นแค่บัตรที่ผ่านการ tokenize มา — ใช้ charge flow เดียวกับบัตรเครดิตเป๊ะๆ) เลยเปิด `enabled: true` ได้เลย — **ก่อนขึ้น production ต้องไปลงทะเบียน merchant ID จริงที่ Google Pay & Wallet Console แล้วสลับ environment จาก TEST เป็น PRODUCTION** (ทำเป็น: อ่านจาก prefix ของ `NEXT_PUBLIC_OMISE_PUBLIC_KEY` อัตโนมัติแล้ว — พอสลับเป็น `pkey_live_...` ระบบจะสลับเป็น PRODUCTION ให้เอง)
+**ทำไมเปิดใช้งานได้เลยต่างจาก Apple Pay:** Apple Pay ต้องมี Apple Merchant ID + ไฟล์ยืนยันโดเมน + certificate ก่อนถึงจะทำงานได้แม้แต่ในโหมดทดสอบ แต่ Google Pay โหมด TEST ของ Google ใช้งานได้โดยไม่ต้องลงทะเบียน merchant — **ก่อนขึ้น production ต้องลงทะเบียน merchant ID จริง** ระบบอ่านโหมด TEST/PRODUCTION จาก prefix ของ `WEB_OMISE_PUBLIC_KEY` ใน backoffice
 
 **สิ่งที่แก้:**
 - `lib/types.ts`, `lib/wallet-channels.ts` (backoffice): เพิ่ม `'google-pay'` เป็น instrument ใหม่
@@ -185,14 +190,14 @@ npx tsx prisma/seed-wallet-demo.ts artorsiriratpoom@gmail.com --remove   # ล�
 - `readlead-backoffice/app/api/auth/member/wallet/applepay/session/route.ts` (ใหม่) — endpoint จำกัดเฉพาะสมาชิกที่ login แล้ว (กันคนนอกมายิงใช้ certificate เรามั่วๆ)
 - `readlead-web/app/api/member/wallet/applepay/session/route.ts` (ใหม่) — proxy ตามแพตเทิร์น `forwardBackoffice` เดิม
 - `GatewayChargeDialog.tsx` — `ApplePaySession` flow เต็มรูปแบบ (validate merchant → `Omise.createToken('tokenization', {method:'applepay', ...})` → charge), ปุ่ม Apple Pay ทางการ, จับ user cancel แยกจาก error
-- env: `NEXT_PUBLIC_APPLE_PAY_MERCHANT_ID` (web), `APPLE_PAY_MERCHANT_ID`/`_CERT`/`_KEY`/`_DISPLAY_NAME` (backoffice)
+- env อยู่ฝั่ง backoffice ทั้งหมด: `WEB_APPLE_PAY_MERCHANT_ID`, `APPLE_PAY_MERCHANT_ID`/`_CERT`/`_KEY`/`_DISPLAY_NAME`
 - `public/.well-known/README.md` — อธิบายว่าไฟล์ยืนยันโดเมนจาก Omise ต้องวางตรงไหน (ไม่ได้ commit ไฟล์จริงเพราะ Omise ออกให้เฉพาะโดเมน)
 
 **ยืนยันแล้ว:** typecheck + lint + `npm run build` ผ่านทั้ง 2 repo, และทดสอบจริงว่า Next.js เสิร์ฟไฟล์จาก `public/.well-known/` ได้ (curl ได้ 200 + เนื้อไฟล์ตรง) — จุดนี้สำคัญเพราะโฟลเดอร์ขึ้นต้นด้วยจุด
 
 **ยังไม่ได้ยืนยันเลย (ทดสอบไม่ได้จนกว่าจะ setup เสร็จ):** ทุกอย่างที่เป็น runtime ของ Apple Pay — ไม่มี Safari, ไม่มีโดเมนจริง, ไม่มี certificate จุดที่เสี่ยงผิดที่สุดคือรูปแบบ `data` ที่ส่งให้ Omise: ผมใช้ `JSON.stringify(token.paymentData)` อ้างอิงจากตัวอย่างใน docs ที่ขึ้นต้นด้วย `{"data":"..."}` ซึ่งตรงกับโครงสร้าง `paymentData` ของ Apple — แต่ docs ไม่ได้เขียนชัด ให้เช็คจุดนี้เป็นอันดับแรกถ้าเจอ error ตอนทดสอบจริง
 
-**⚠️ `apple-pay` ตอนนี้ตั้ง `enabled: true` ไว้ชั่วคราวเพื่อรีวิว UI เท่านั้น — ต้องเปลี่ยนกลับเป็น `false` ก่อน deploy** (ทั้งใน `readlead-backoffice/lib/wallet-channels.ts` และ `FALLBACK_WEB_CHANNELS` ใน `OwnerCreatorWallet.tsx`) เพราะยังชำระเงินจริงไม่ได้จนกว่าจะมี certificate + ไฟล์ยืนยันโดเมนครบ ถ้าปล่อยขึ้น production ผู้ใช้จริงจะเห็นช่องทางที่กดแล้วพัง
+Apple Pay มีค่า legacy default เป็นเปิด แต่ readiness bootstrap จะบันทึกเป็นปิดโดยอัตโนมัติถ้า certificate, merchant ID, public key หรือ URL ยังไม่ครบ และ admin จะเปิดสวิตช์ไม่ได้จนกว่าจะพร้อม
 
 ### บั๊กที่เจอและแก้แล้ว (รอบ 2): Google Pay ขึ้น "ไม่รองรับ" ตลอด ทั้งที่เครื่องรองรับ
 

@@ -61,6 +61,7 @@ function isPayload(value: unknown): value is RawHeroPayload {
 }
 
 function absoluteMediaUrl(value: string, baseUrl: string) {
+  if (value.startsWith('/api/public/media/')) return value
   try {
     const url = new URL(value, `${baseUrl}/`)
     return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : null

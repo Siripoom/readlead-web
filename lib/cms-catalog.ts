@@ -90,6 +90,7 @@ export function compactNumber(value: number) {
 
 export function absoluteMediaUrl(value: unknown, baseUrl: string) {
   if (typeof value !== 'string' || !value.trim()) return undefined
+  if (value.startsWith('/api/public/media/')) return value
   try {
     const url = new URL(value, `${baseUrl}/`)
     return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : undefined

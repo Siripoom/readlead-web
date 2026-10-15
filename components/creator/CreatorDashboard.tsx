@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertCircle, BookOpen, ChevronLeft, ChevronRight, Headphones, ImageIcon, LoaderCircle, Search, Trash2 } from 'lucide-react'
 import { useProfile } from '@/contexts/ProfileContext'
 import { Button } from '@/components/ui/button'
@@ -83,6 +83,7 @@ export default function CreatorDashboard() {
   const [withdrawOpen, setWithdrawOpen] = useState(false)
   const [withdrawAmount, setWithdrawAmount] = useState('')
   const [withdrawBusy, setWithdrawBusy] = useState(false)
+  const withdrawalAttempt = useRef<{ amount: string; key: string } | null>(null)
   const [deleteWork, setDeleteWork] = useState<CreatorDashboardWork | null>(null)
   const [deleteReason, setDeleteReason] = useState('')
   const [actionMessage, setActionMessage] = useState('')
@@ -124,8 +125,10 @@ export default function CreatorDashboard() {
   async function withdraw() {
     setWithdrawBusy(true); setActionMessage('')
     try {
-      const response = await fetch('/api/creator/withdrawals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: Number(withdrawAmount) }) })
+      if (withdrawalAttempt.current?.amount !== withdrawAmount) withdrawalAttempt.current = { amount: withdrawAmount, key: crypto.randomUUID() }
+      const response = await fetch('/api/creator/withdrawals', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': withdrawalAttempt.current.key }, body: JSON.stringify({ amount: Number(withdrawAmount) }) })
       if (!response.ok) throw new Error(await apiError(response, 'ส่งคำขอไม่สำเร็จ'))
+      withdrawalAttempt.current = null
       setWithdrawOpen(false); setWithdrawAmount(''); setActionMessage('ส่งคำขอถอนเงินเรียบร้อยแล้ว'); await load()
     } catch (cause) { setActionMessage(cause instanceof Error ? cause.message : 'ส่งคำขอไม่สำเร็จ') }
     finally { setWithdrawBusy(false) }

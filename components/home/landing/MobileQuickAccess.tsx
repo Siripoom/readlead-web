@@ -2,9 +2,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 const QUICK_ACCESS_ITEMS = [
-  { key: 'novel', label: 'นิยาย', href: '/discover?type=novel', icon: '/home/quick-novel.png' },
-  { key: 'manga', label: 'เว็บตูน', href: '/discover?type=manga', icon: '/home/quick-webtoon.png' },
-  { key: 'audiobook', label: 'หนังสือเสียง', href: '/discover?type=audiobook', icon: '/home/quick-audiobook.png' },
+  { key: 'novel', label: 'นิยาย', href: '/novel', icon: '/home/quick-novel.png' },
+  { key: 'manga', label: 'เว็บตูน', href: '/manga', icon: '/home/quick-webtoon.png' },
+  { key: 'audiobook', label: 'หนังสือเสียง', href: '/audiobook', icon: '/home/quick-audiobook.png' },
   { key: 'ranking', label: 'อันดับ', href: '/ranking', icon: '/home/quick-ranking.png' },
 ] as const
 

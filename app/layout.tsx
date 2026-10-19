@@ -1,24 +1,27 @@
 import type { Metadata } from 'next'
-import { Noto_Sans, Noto_Sans_Mono, Noto_Sans_Thai } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 import { Providers } from '@/components/layout/Providers'
 import { SiteHeader } from '@/components/layout/SiteHeader'
 import { SiteFooter } from '@/components/layout/SiteFooter'
 
-const notoSans = Noto_Sans({
+const notoSans = localFont({
+  src: './fonts/NotoSans.ttf',
+  display: 'swap',
   variable: '--font-noto-sans',
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  weight: '400 700',
 })
-const notoSansThai = Noto_Sans_Thai({
+const notoSansThai = localFont({
+  src: './fonts/NotoSansThai.ttf',
+  display: 'swap',
   variable: '--font-noto-sans-thai',
-  subsets: ['thai'],
-  weight: ['400', '500', '600', '700'],
+  weight: '400 700',
 })
-const notoSansMono = Noto_Sans_Mono({
+const notoSansMono = localFont({
+  src: './fonts/NotoSansMono.ttf',
+  display: 'swap',
   variable: '--font-noto-sans-mono',
-  subsets: ['latin'],
-  weight: ['400', '700'],
+  weight: '400 700',
 })
 
 export const metadata: Metadata = {

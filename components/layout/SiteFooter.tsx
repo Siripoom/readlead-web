@@ -8,6 +8,7 @@ const EXPLORE_LINKS = [
   { href: "/novel", label: "นิยาย" },
   { href: "/manga", label: "เว็บตูน" },
   { href: "/audiobook", label: "หนังสือเสียง" },
+  { href: "/about", label: "เกี่ยวกับเรา" },
 ];
 
 const ACCOUNT_LINKS = [

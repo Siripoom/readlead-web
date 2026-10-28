@@ -1,0 +1,331 @@
+@font-face {
+  font-family: "ReadLead About Thai";
+  src: url("../fonts/NotoSansThai.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "ReadLead About Sarabun";
+  src: url("../fonts/Sarabun-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "ReadLead About Sarabun";
+  src: url("../fonts/Sarabun-SemiBold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+.root {
+  min-width: 1152px;
+  background: #fff;
+  color: #1a1a1a;
+  font-family: "ReadLead About Thai", sans-serif;
+  font-size: 16px;
+  line-height: normal;
+  -webkit-font-smoothing: auto;
+}
+
+.root *,
+.root *::before,
+.root *::after {
+  box-sizing: border-box;
+}
+
+.root * {
+  margin: 0;
+  padding: 0;
+}
+
+.root a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.root img {
+  display: block;
+}
+
+.stage {
+  width: 1280px;
+  margin: 0 auto;
+  zoom: 0.9;
+}
+.hero {
+  position: relative;
+  height: 404px;
+  background: #fcf7f7;
+  overflow: hidden;
+}
+.hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+.hero-in {
+  position: relative;
+  z-index: 2;
+  padding: 76px 0 0 100px;
+  max-width: 600px;
+}
+.eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: #cd2733;
+}
+.hero-in h1 {
+  font-size: 44px;
+  line-height: 1.32;
+  font-weight: 800;
+  margin-top: 14px;
+  color: #191919;
+}
+.hero-in h1 span {
+  color: #cd2733;
+}
+.hero-sub {
+  margin-top: 16px;
+  font-family: "ReadLead About Sarabun", sans-serif;
+  font-size: 16.5px;
+  line-height: 1.75;
+  color: #1a1a1a;
+}
+.hero-cta {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  margin-top: 30px;
+}
+.root .btn-red {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 46px;
+  padding: 0 24px;
+  border-radius: 8px;
+  background: #cd2733;
+  color: #fff;
+  font-size: 15.5px;
+  font-weight: 600;
+  box-shadow: 0 6px 14px rgba(205, 39, 51, 0.28);
+}
+
+.sec {
+  padding: 0 100px;
+}
+.sec-head {
+  text-align: center;
+}
+.sec-head .eyebrow {
+  display: block;
+}
+.sec-head h2 {
+  font-size: 29px;
+  font-weight: 800;
+  color: #191919;
+  margin-top: 4px;
+}
+
+.story {
+  display: flex;
+  align-items: flex-start;
+  gap: 70px;
+  padding: 20px 100px 26px;
+  position: relative;
+  overflow: hidden;
+  background: #fdfdfd;
+}
+.story-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
+  z-index: 0;
+  transform-origin: center center;
+  transform: translate(303px, 25px) scale(1.48);
+}
+.story-slot,
+.story-tx {
+  position: relative;
+  z-index: 1;
+}
+.story-slot {
+  width: 520px;
+  flex: none;
+  min-height: 300px;
+}
+.story-tx {
+  padding-top: 14px;
+  max-width: 430px;
+}
+.story-tx h2 {
+  font-size: 30px;
+  font-weight: 800;
+  color: #191919;
+  margin-top: 8px;
+}
+.story-tx p {
+  margin-top: 18px;
+  font-family: "ReadLead About Sarabun", sans-serif;
+  font-size: 15px;
+  line-height: 1.8;
+  color: #1a1a1a;
+}
+
+.mission {
+  padding-top: 56px;
+}
+.mrow {
+  display: flex;
+  align-items: center;
+  margin-top: 28px;
+}
+.mitem {
+  flex: 1;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.75;
+  color: #2c2e33;
+  padding: 8px 0;
+}
+.mitem + .mitem {
+  border-left: 1px solid #dcdee2;
+}
+
+.why {
+  padding-top: 56px;
+}
+.wtext {
+  max-width: 860px;
+  margin: 22px auto 0;
+  text-align: center;
+}
+.wtext p {
+  font-family: "ReadLead About Sarabun", sans-serif;
+  font-size: 15px;
+  line-height: 2;
+  color: #1a1a1a;
+}
+.wtext .brand {
+  color: #cd2733;
+  font-weight: 600;
+}
+
+.vals {
+  padding-top: 56px;
+}
+.vcards {
+  display: flex;
+  gap: 19px;
+  margin-top: 8px;
+}
+.vcard {
+  flex: 1;
+  border: 1px solid #ececef;
+  border-radius: 12px;
+  padding: 20px 20px 22px;
+  background: #fff;
+}
+.vtop {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.vtop h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e1e1e;
+  line-height: 1.45;
+}
+.vtop h3 small {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #cd2733;
+}
+.vcard p {
+  font-family: "ReadLead About Sarabun", sans-serif;
+  font-size: 13px;
+  line-height: 1.75;
+  color: #1a1a1a;
+  margin-top: 12px;
+}
+
+.fc {
+  display: flex;
+  gap: 0;
+  padding: 14px 0 0;
+}
+.contact {
+  flex: 1;
+  background: #faf2f1;
+  border-radius: 0;
+  padding: 22px 100px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.contact-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: right center;
+  z-index: 0;
+  transform-origin: center center;
+  will-change: transform;
+}
+.contact > *:not(.contact-bg) {
+  position: relative;
+  z-index: 1;
+}
+.contact h2 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #191919;
+  margin-top: 4px;
+}
+.contact .csub {
+  font-size: 14px;
+  color: #7d8085;
+  margin-top: 10px;
+}
+.cicons {
+  display: flex;
+  gap: 52px;
+  margin-top: 26px;
+  position: relative;
+  z-index: 2;
+}
+.cic {
+  text-align: center;
+}
+.cic img {
+  height: 40px;
+  width: auto;
+  margin: 0 auto;
+}
+.cic .cn {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e1e1e;
+  margin-top: 10px;
+}
+.cic .cs {
+  font-size: 11px;
+  color: #8a8d93;
+  margin-top: 3px;
+}

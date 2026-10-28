@@ -1,3 +1,7 @@
+## Production
+
+Production runs on EasyPanel. See [Deploy ReadLead on EasyPanel](docs/production.md) for service names, access URLs, deployment steps, and the service Terminal workflow.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

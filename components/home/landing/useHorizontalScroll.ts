@@ -5,11 +5,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 type HorizontalScrollOptions = {
   autoplayMs?: number
   stopAutoplayAfterInteraction?: boolean
+  loopItemCount?: number
 }
 
 export function useHorizontalScroll({
   autoplayMs,
   stopAutoplayAfterInteraction = false,
+  loopItemCount,
 }: HorizontalScrollOptions = {}) {
   const rowRef = useRef<HTMLDivElement>(null)
   const dragState = useRef({ active: false, startX: 0, startScroll: 0, moved: false })
@@ -21,20 +23,23 @@ export function useHorizontalScroll({
   const [isInteracting, setIsInteracting] = useState(false)
   const [documentHidden, setDocumentHidden] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
+  const [cloneCount, setCloneCount] = useState(0)
 
   const metrics = useCallback(() => {
     const row = rowRef.current
-    const firstChild = row?.firstElementChild as HTMLElement | null
-    if (!row || !firstChild) return null
+    const firstChild = row?.firstElementChild
+    if (!row?.clientWidth || !(firstChild instanceof HTMLElement)) return null
     const styles = window.getComputedStyle(row)
     const gap = Number.parseFloat(styles.columnGap || styles.gap) || 0
-    const itemStep = firstChild.getBoundingClientRect().width + gap
-    const visibleItems = Math.max(1, Math.floor((row.clientWidth + gap + 0.5) / itemStep))
-    const count = row.children.length
+    const itemStep = Number.parseFloat(window.getComputedStyle(firstChild).width) + gap
+    const visibleItems = Math.max(1, loopItemCount
+      ? Math.round(row.clientWidth / itemStep)
+      : Math.floor((row.clientWidth + gap + 0.5) / itemStep))
+    const count = loopItemCount ?? row.children.length
     const pages = Math.max(1, Math.ceil(count / visibleItems))
     const pageStep = itemStep * visibleItems
-    return { pages, pageStep, maxScroll: Math.max(0, row.scrollWidth - row.clientWidth) }
-  }, [])
+    return { pages, pageStep, itemStep, realWidth: itemStep * count, maxScroll: Math.max(0, row.scrollWidth - row.clientWidth) }
+  }, [loopItemCount])
 
   const updateControls = useCallback(() => {
     const row = rowRef.current
@@ -44,12 +49,21 @@ export function useHorizontalScroll({
     setCanScrollForward(max > 4 && row.scrollLeft < max - 4)
     const layout = metrics()
     if (!layout) return
+    if (loopItemCount) {
+      const loops = layout.realWidth > row.clientWidth + 1
+      setCloneCount(loops ? Math.min(loopItemCount, Math.ceil((row.clientWidth + 1) / layout.itemStep)) : 0)
+      if (loops && row.scrollLeft >= layout.realWidth - .5) {
+        row.scrollTo({ left: Math.max(0, row.scrollLeft - layout.realWidth), behavior: 'instant' })
+      }
+    }
     setPageCount(layout.pages)
-    const page = layout.maxScroll > 0
+    const page = loopItemCount
+      ? Math.round((row.scrollLeft % layout.realWidth) / layout.pageStep)
+      : layout.maxScroll > 0
       ? Math.round((row.scrollLeft / layout.maxScroll) * (layout.pages - 1))
       : 0
     setActivePage(Math.min(layout.pages - 1, Math.max(0, page)))
-  }, [metrics])
+  }, [loopItemCount, metrics])
 
   useEffect(() => {
     updateControls()
@@ -96,15 +110,21 @@ export function useHorizontalScroll({
   useEffect(() => {
     if (
       !autoplayMs ||
-      pageCount <= 1 ||
+      (loopItemCount ? cloneCount === 0 : pageCount <= 1) ||
       isInteracting ||
       documentHidden ||
       reducedMotion ||
       autoplayStopped.current
     ) return
-    const timer = window.setInterval(() => scrollToPage(activePage + 1), autoplayMs)
+    const timer = window.setInterval(() => {
+      if (!loopItemCount) return scrollToPage(activePage + 1)
+      const row = rowRef.current
+      const layout = metrics()
+      if (!row || !layout) return
+      row.scrollTo({ left: (Math.round(row.scrollLeft / layout.itemStep) + 1) * layout.itemStep, behavior: 'smooth' })
+    }, autoplayMs)
     return () => window.clearInterval(timer)
-  }, [activePage, autoplayMs, documentHidden, isInteracting, pageCount, reducedMotion, scrollToPage])
+  }, [activePage, autoplayMs, cloneCount, documentHidden, isInteracting, loopItemCount, metrics, pageCount, reducedMotion, scrollToPage])
 
   const scroll = (direction: -1 | 1, step?: number) => {
     const row = rowRef.current
@@ -126,6 +146,8 @@ export function useHorizontalScroll({
   }
 
   const pointerHandlers = {
+    onMouseEnter: () => { if (loopItemCount) beginInteraction() },
+    onMouseLeave: () => { if (loopItemCount) endInteraction() },
     onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => {
       beginInteraction()
       if (event.pointerType !== 'mouse' || event.button !== 0) return
@@ -142,7 +164,8 @@ export function useHorizontalScroll({
       const row = rowRef.current
       const drag = dragState.current
       if (!row || !drag.active) return
-      const delta = event.clientX - drag.startX
+      const scale = row.getBoundingClientRect().width / row.offsetWidth || 1
+      const delta = (event.clientX - drag.startX) / scale
       if (Math.abs(delta) > 4 && !drag.moved) {
         drag.moved = true
         row.setPointerCapture(event.pointerId)
@@ -184,5 +207,6 @@ export function useHorizontalScroll({
     scroll,
     scrollToPage,
     pointerHandlers,
+    cloneCount,
   }
 }

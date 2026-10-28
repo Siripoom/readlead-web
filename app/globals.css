@@ -7,6 +7,50 @@ body:has([data-auth-page]) [data-site-footer] {
   display: none;
 }
 
+@media (min-width: 640px) {
+  body:has([data-home-desktop]) {
+    background: #fbfbfc;
+    min-width: 1152px;
+  }
+
+  body:has([data-home-desktop]) [data-site-header] {
+    position: relative;
+    height: auto;
+    border: 0;
+    border-bottom: 1px solid #e9edf2;
+    font-family: 'ReadLead Home Thai', sans-serif;
+  }
+
+  body:has([data-home-desktop]) [data-site-header] > div:first-child {
+    width: 100%;
+    min-width: 1280px;
+    height: 55px;
+    min-height: 0;
+    padding: 9px 40px;
+    gap: 40px;
+    zoom: .82;
+  }
+
+  body:has([data-home-desktop]) [data-site-header] nav[aria-label="เมนูหลัก"] {
+    display: flex;
+    align-self: center;
+  }
+
+  body:has([data-home-desktop]) [data-site-header] > div:first-child > div:last-child {
+    gap: 20px;
+  }
+
+  body:has([data-home-desktop]) [data-site-header] a[aria-label="ค้นหา"] {
+    width: 22px;
+    height: 22px;
+  }
+
+  body:has([data-home-desktop]) [data-site-header] button[aria-label="เปิดเมนู"] {
+    display: none;
+  }
+
+}
+
 @media (max-width: 639px) {
   body:has([data-home-landing]) {
     background: #fbfbfc;

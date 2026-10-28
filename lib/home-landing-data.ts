@@ -51,6 +51,8 @@ export interface HomeBookStripItem {
   href?: string
   isMock?: boolean
   tagline?: string
+  caption?: string
+  coverPlaceholder?: { text: string; color: string }
   gradient: string
 }
 

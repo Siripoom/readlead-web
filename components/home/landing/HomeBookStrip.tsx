@@ -56,13 +56,13 @@ function CoverScene({ index }: { index: number }) {
   )
 }
 
-function BookCover({ item, index, showBadge = true }: { item: HomeBookStripItem; index: number; showBadge?: boolean }) {
+function BookCover({ item, index, showBadge = true, scene = true }: { item: HomeBookStripItem; index: number; showBadge?: boolean; scene?: boolean }) {
   const [coverFailed, setCoverFailed] = useState(false)
   return (
     <>
-      <div className="absolute inset-0 transition-transform duration-300 group-hover:scale-[1.03]">
+      {scene && <div className="absolute inset-0 transition-transform duration-300 group-hover:scale-[1.03]">
         <CoverScene index={index} />
-      </div>
+      </div>}
       {item.coverUrl && !coverFailed && (
         <Image
           unoptimized
@@ -70,7 +70,7 @@ function BookCover({ item, index, showBadge = true }: { item: HomeBookStripItem;
           sizes="(max-width: 640px) 160px, 176px"
           src={item.coverUrl}
           alt={`ภาพปก ${item.title}`}
-          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          className={cn('object-cover', scene && 'transition-transform duration-300 group-hover:scale-[1.03]')}
           onError={() => setCoverFailed(true)}
         />
       )}
@@ -90,10 +90,11 @@ function BookCover({ item, index, showBadge = true }: { item: HomeBookStripItem;
 
 type Props = {
   items: HomeBookStripItem[]
-  variant?: 'popular' | 'recommended' | 'compact'
+  variant?: 'popular' | 'recommended' | 'compact' | 'desktop'
+  slideSeconds?: number
 }
 
-export function HomeBookStrip({ items, variant = 'popular' }: Props) {
+export function HomeBookStrip({ items, variant = 'popular', slideSeconds = 4.2 }: Props) {
   const {
     rowRef,
     canScrollBack,
@@ -104,7 +105,8 @@ export function HomeBookStrip({ items, variant = 'popular' }: Props) {
     activePage,
     pageCount,
     scrollToPage,
-  } = useHorizontalScroll({ autoplayMs: variant === 'compact' ? 4200 : undefined })
+    cloneCount,
+  } = useHorizontalScroll({ autoplayMs: variant === 'compact' || variant === 'desktop' ? slideSeconds * 1000 : undefined, loopItemCount: variant === 'desktop' ? items.length : undefined })
 
   if (items.length === 0) {
     return (
@@ -114,12 +116,12 @@ export function HomeBookStrip({ items, variant = 'popular' }: Props) {
     )
   }
 
-  const cardWidth = variant === 'compact' ? 'w-[81.75px]' : variant === 'popular' ? 'w-40 sm:w-44' : 'w-40'
-  const gap = variant === 'compact' ? 'gap-[13px]' : variant === 'popular' ? 'gap-5 lg:gap-[48px]' : 'gap-5 lg:gap-[38px]'
+  const cardWidth = variant === 'desktop' ? styles.desktopBook : variant === 'compact' ? 'w-[81.75px]' : variant === 'popular' ? 'w-40 sm:w-44' : 'w-40'
+  const gap = variant === 'compact' || variant === 'desktop' ? 'gap-[13px]' : variant === 'popular' ? 'gap-5 lg:gap-[48px]' : 'gap-5 lg:gap-[38px]'
 
   return (
-    <div className="relative">
-      {canScrollBack && (
+    <div className={cn('relative', variant === 'desktop' && styles.desktopBookRail)}>
+      {canScrollBack && variant !== 'desktop' && (
         <button
           type="button"
           aria-label="รายการก่อนหน้า"
@@ -133,14 +135,16 @@ export function HomeBookStrip({ items, variant = 'popular' }: Props) {
       <div
         ref={rowRef}
         onScroll={updateControls}
-        className={cn(styles.scrollRow, 'flex cursor-grab overflow-x-auto pb-2 pt-1 active:cursor-grabbing', variant === 'compact' ? 'px-0' : 'px-1', gap)}
+        className={cn(styles.scrollRow, 'flex cursor-grab overflow-x-auto active:cursor-grabbing', variant === 'desktop' ? styles.desktopBookTrack : 'pb-2 pt-1', variant === 'compact' || variant === 'desktop' ? 'px-0' : 'px-1', gap)}
         {...pointerHandlers}
       >
-        {items.map((item, index) => {
+        {[...items, ...items.slice(0, cloneCount)].map((item, index) => {
           const StatIcon = item.mediaType === 'audio' ? Headphones : Eye
           return (
             <Link
-              key={item.id}
+              key={`${item.id}-${index}`}
+              aria-hidden={index >= items.length || undefined}
+              tabIndex={index >= items.length ? -1 : undefined}
               href={item.href ?? `/detail?bookId=${encodeURIComponent(item.detailId)}`}
               className={cn('group shrink-0 snap-start', cardWidth)}
             >
@@ -148,9 +152,16 @@ export function HomeBookStrip({ items, variant = 'popular' }: Props) {
                 className="relative aspect-[2/3] overflow-hidden rounded-[13px] shadow-[0_2px_7px_rgba(0,0,0,0.12)]"
                 style={{ background: item.gradient }}
               >
-                <BookCover item={item} index={index} showBadge={variant !== 'compact'} />
+                {variant === 'desktop' && !item.coverUrl
+                  ? <span className={styles.desktopCoverInitial} style={{ color: item.coverPlaceholder?.color }}>{item.coverPlaceholder?.text ?? item.title.slice(0, 1)}</span>
+                  : <BookCover item={item} index={index} showBadge={variant !== 'compact' && variant !== 'desktop'} scene={variant !== 'desktop'} />}
               </div>
-              {variant === 'compact' ? (
+              {variant === 'desktop' ? (
+                <div className={styles.desktopBookMeta}>
+                  <h3>{item.title}</h3>
+                  <p>{item.caption ?? `${item.genreLabel} · ${item.originLabel}`}</p>
+                </div>
+              ) : variant === 'compact' ? (
                 <div className="mt-1.5 min-w-0">
                   <h3 className="truncate text-[12px] font-semibold leading-snug text-[var(--home-ink)]">{item.title}</h3>
                   <p className="mt-0.5 truncate text-[9px] text-[var(--home-ink-3)]">{item.genreLabel}</p>
@@ -175,7 +186,7 @@ export function HomeBookStrip({ items, variant = 'popular' }: Props) {
         })}
       </div>
 
-      {canScrollForward && (
+      {canScrollForward && variant !== 'desktop' && (
         <button
           type="button"
           aria-label="รายการถัดไป"
@@ -186,7 +197,7 @@ export function HomeBookStrip({ items, variant = 'popular' }: Props) {
         </button>
       )}
 
-      {variant === 'compact' && (
+      {(variant === 'compact' || variant === 'desktop') && (
         <MobileRailDots
           activePage={activePage}
           pageCount={pageCount}

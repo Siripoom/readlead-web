@@ -7,6 +7,7 @@ import {
 } from '@/lib/home-landing-data'
 import {
   cmsPlacement as placement,
+  absoluteMediaUrl,
   compactNumber as compact,
   enabledCmsSection as enabledSection,
   genreFor,
@@ -35,6 +36,7 @@ export type HomeCuratedPicks = {
 
 export type HomeCmsCatalog = {
   slideSeconds: number
+  hero: CmsBanner[]
   limitedOffers: HomeLimitedOffer[]
   act3: CmsBanner[]
   act4: CmsBanner[]
@@ -60,6 +62,7 @@ export type HomeRankingCatalogResult = {
 
 const EMPTY_CMS: HomeCmsCatalog = {
   slideSeconds: 5,
+  hero: [],
   limitedOffers: [],
   act3: [],
   act4: [],
@@ -188,7 +191,22 @@ export async function getHomeCmsCatalog(): Promise<HomeCmsCatalog> {
     const booksByGroup = (section: RawSection | null, group: string) => (section?.items ?? []).flatMap((item, index) => {
       if (!isRecord(item) || typeof item.id !== 'string' || placement(item.placement).group !== group) return []
       const book = parseBook(item.book)
-      return book ? [mapBook(book, item.id, index)] : []
+      if (!book) return []
+      const mapped = mapBook(book, item.id, index)
+      const visual = parseBanner(item, baseUrl)
+      const cmsCover = absoluteMediaUrl(item.imageUrl, baseUrl)
+      const cmsCoverPath = cmsCover ? new URL(cmsCover, baseUrl).pathname : null
+      const workCoverPaths = [
+        `/api/public/catalog/works/${encodeURIComponent(book.id)}/cover`,
+        `/api/catalog/works/${encodeURIComponent(book.id)}/cover`,
+      ]
+      return [{
+        ...mapped,
+        coverUrl: mapped.coverUrl ?? (cmsCoverPath && workCoverPaths.includes(cmsCoverPath) ? undefined : cmsCover),
+        caption: typeof item.caption === 'string' && item.caption.trim() ? item.caption.trim() : undefined,
+        gradient: visual?.background || mapped.gradient,
+        coverPlaceholder: visual?.elements.find((element) => element.type === 'title'),
+      }]
     })
 
     const recommendColumns: HomeRecommendColumns = {
@@ -203,6 +221,7 @@ export async function getHomeCmsCatalog(): Promise<HomeCmsCatalog> {
 
     return {
       slideSeconds,
+      hero: bannersFor(enabledSection(payload, 'hero')),
       limitedOffers,
       act3: bannersFor(act3),
       act4: bannersFor(act4),

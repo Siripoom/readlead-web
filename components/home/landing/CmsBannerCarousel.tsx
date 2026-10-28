@@ -13,6 +13,8 @@ type Props = {
   slideSeconds: number
   label: string
   fullWidth?: boolean
+  priority?: boolean
+  desktop?: boolean
 }
 
 type BannerStyle = CSSProperties & { '--cms-banner-aspect': string; '--cms-banner-mobile-aspect'?: string }
@@ -27,38 +29,40 @@ function countdownLabel(totalSeconds: number) {
   return `${days} วัน ${pad(hours)}:${pad(minutes)}:${pad(rest)}`
 }
 
-function elementStyle(element: CmsBannerElement): CSSProperties {
+function elementStyle(element: CmsBannerElement, desktop: boolean): CSSProperties {
   const style: CSSProperties = {
     left: `${element.x}%`,
     top: `${element.y}%`,
     color: element.color,
     fontWeight: element.bold ? 800 : 500,
     textShadow: element.shadow ? '0 1px 6px rgba(0,0,0,.48)' : 'none',
-    transform: `scale(${element.scale})`,
+    transform: desktop ? 'none' : `scale(${element.scale})`,
+    fontSize: desktop ? `calc(var(--cms-element-font-size) * ${element.scale})` : undefined,
     transformOrigin: 'top left',
   }
   if (element.type === 'badge') style.background = element.backgroundColor
   if (element.type === 'button') {
-    style.width = `${element.width ?? 18}%`
-    style.height = `${element.height ?? 12}%`
+    style.width = desktop && element.width === undefined ? undefined : `${element.width ?? 18}%`
+    style.height = desktop && element.height === undefined ? undefined : `${element.height ?? 12}%`
+    if (desktop && element.width !== undefined) style.padding = 0
     style.background = element.backgroundColor
     style.transform = 'none'
   }
   return style
 }
 
-function BannerElement({ element, elapsedSeconds }: { element: CmsBannerElement; elapsedSeconds: number }) {
+function BannerElement({ element, elapsedSeconds, desktop, active }: { element: CmsBannerElement; elapsedSeconds: number; desktop: boolean; active: boolean }) {
   const className = cn(styles.cmsBannerElement, styles[`cmsBannerElement_${element.type}`])
   const content = element.type === 'countdown'
     ? countdownLabel((element.offsetSeconds ?? 0) - elapsedSeconds)
     : element.text
   if (element.type === 'button' && element.link) {
-    return <Link href={element.link} className={className} style={elementStyle(element)}>{content}</Link>
+    return <Link href={element.link} tabIndex={active ? 0 : -1} className={className} style={elementStyle(element, desktop)}>{content}</Link>
   }
-  return <span className={className} style={elementStyle(element)}>{content}</span>
+  return <span className={className} style={elementStyle(element, desktop)}>{content}</span>
 }
 
-export function CmsBannerCarousel({ items, aspect, mobileAspect, slideSeconds, label, fullWidth = false }: Props) {
+export function CmsBannerCarousel({ items, aspect, mobileAspect, slideSeconds, label, fullWidth = false, priority = false, desktop = false }: Props) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -136,8 +140,8 @@ export function CmsBannerCarousel({ items, aspect, mobileAspect, slideSeconds, l
                 <img
                   src={item.imageUrl}
                   alt=""
-                  loading={fullWidth && index === 0 ? 'eager' : 'lazy'}
-                  fetchPriority={fullWidth && index === 0 ? 'high' : 'auto'}
+                  loading={(fullWidth || priority) && index === 0 ? 'eager' : 'lazy'}
+                  fetchPriority={(fullWidth || priority) && index === 0 ? 'high' : 'auto'}
                   draggable={false}
                   style={{
                     objectPosition: `${item.focal.x}% ${item.focal.y}%`,
@@ -151,7 +155,7 @@ export function CmsBannerCarousel({ items, aspect, mobileAspect, slideSeconds, l
               <Link href={item.linkUrl} className={styles.cmsBannerFullLink} tabIndex={index === active ? 0 : -1} aria-label={item.title} />
             )}
             <div className={styles.cmsBannerElements}>
-              {item.elements.map((element) => <BannerElement key={element.id} element={element} elapsedSeconds={elapsedSeconds} />)}
+              {item.elements.map((element) => <BannerElement key={element.id} element={element} elapsedSeconds={elapsedSeconds} desktop={desktop} active={index === active} />)}
             </div>
           </article>
         ))}

@@ -1,0 +1,210 @@
+@font-face {
+  font-family: "ReadLead Legal Thai";
+  src: url("../../app/fonts/NotoSansThai.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+}
+
+.root {
+  --legal-red: #cc4452;
+  --legal-ink: #191b22;
+  --legal-ink-2: #4b5061;
+  --legal-ink-3: #8b91a0;
+  --legal-line: #e9eaef;
+  --legal-side: #fafafb;
+  min-width: 1152px;
+  background: #fff;
+  color: var(--legal-ink);
+  font-family: "ReadLead Legal Thai", sans-serif;
+  font-size: 14px;
+  line-height: 1.9;
+  -webkit-font-smoothing: auto;
+}
+
+.root *,
+.root *::before,
+.root *::after {
+  box-sizing: border-box;
+}
+
+.shell {
+  display: flex;
+  min-height: 100vh;
+  max-width: 1280px;
+  margin: 0 auto;
+  zoom: 0.9;
+}
+
+.sidebar {
+  width: 250px;
+  flex: none;
+  align-self: flex-start;
+  background: var(--legal-side);
+  border-right: 1px solid var(--legal-line);
+  padding: 26px 18px;
+  position: sticky;
+  top: calc(55px / 0.9);
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+}
+
+.group {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--legal-ink);
+  margin: 18px 0 7px;
+  letter-spacing: 0.2px;
+}
+
+.docLink {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--legal-ink-2);
+  text-decoration: none;
+  padding: 6px 9px;
+  border-radius: 8px;
+  margin-bottom: 2px;
+}
+
+.docLink:hover {
+  background: #f0f1f4;
+}
+
+.docLink[aria-current="page"] {
+  background: #f6e4e7;
+  color: var(--legal-red);
+  font-weight: 800;
+}
+
+.toc a {
+  display: block;
+  font-size: 11.5px;
+  color: var(--legal-ink-3);
+  text-decoration: none;
+  padding: 4px 9px;
+  border-left: 2px solid transparent;
+  margin-left: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toc a:hover {
+  color: var(--legal-ink);
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.page {
+  max-width: 720px;
+  width: 100%;
+  padding: 44px 40px 110px;
+}
+
+.page > h1 {
+  font-size: 31px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+}
+
+.page .updated {
+  font-size: 12px;
+  color: var(--legal-ink-3);
+  margin: 8px 0 30px;
+}
+
+.page section {
+  scroll-margin-top: 80px;
+}
+
+.page h2 {
+  font-size: 19.5px;
+  font-weight: 800;
+  margin: 38px 0 12px;
+  letter-spacing: -0.2px;
+}
+
+.page h3 {
+  font-size: 14.5px;
+  font-weight: 800;
+  margin: 20px 0 7px;
+}
+
+.page p {
+  margin-bottom: 11px;
+  color: var(--legal-ink-2);
+}
+
+.page ul {
+  margin: 4px 0 14px 21px;
+  color: var(--legal-ink-2);
+}
+
+.page li {
+  margin-bottom: 7px;
+}
+
+.page b {
+  color: var(--legal-ink);
+}
+
+.contact {
+  background: var(--legal-side);
+  border: 1px solid var(--legal-line);
+  border-radius: 12px;
+  padding: 15px 19px;
+  font-size: 13px;
+  margin-top: 30px;
+}
+
+@media (max-width: 639px) {
+  .root {
+    min-width: 0;
+  }
+
+  .shell {
+    flex-direction: column;
+    zoom: 1;
+  }
+
+  .sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    border-right: 0;
+    padding: 24px 16px 0;
+    background: #fff;
+  }
+
+  .sidebar > .group {
+    margin-top: 0;
+  }
+
+  .documents {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .docLink {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .contents {
+    display: none;
+  }
+
+  .page {
+    padding: 30px 22px 90px;
+  }
+}

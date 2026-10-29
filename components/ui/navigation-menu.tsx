@@ -181,7 +181,7 @@ export function Navbar() {
             )}
           </div>
 
-          <div className="hidden xl:block">
+          <div data-desktop-account className="hidden xl:block">
             {isLoading ? (
               <div className="h-9 w-24 animate-pulse rounded-[9px] bg-[#f1f3f5]" aria-label="กำลังตรวจสอบสถานะเข้าสู่ระบบ" />
             ) : isLoggedIn ? (

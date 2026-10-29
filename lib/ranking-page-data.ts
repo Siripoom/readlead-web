@@ -28,6 +28,7 @@ export interface RankingWorkItem {
   type: RankingContentType
   title: string
   author: string
+  creatorId?: string
   genre: RankingGenreKey
   genreLabel: string
   synopsis: string
@@ -36,6 +37,7 @@ export interface RankingWorkItem {
   latestEpisode: string
   updatedAt: string
   launchedAt: string
+  publishedAt?: string | null
   recommendedVotes: number
   monthlyVotes: number
   views: number

@@ -1,8 +1,16 @@
-'use client'
+"use client";
 
-import { startTransition, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import {
+  startTransition,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   BarChart3,
   BookMarked,
@@ -21,24 +29,24 @@ import {
   Sparkles,
   Ticket,
   UserRound,
-} from 'lucide-react'
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet'
-import { useRole } from '@/contexts/RoleContext'
-import { cn } from '@/lib/utils'
-import { shelfStorageKey } from '@/lib/profile-repository'
+} from "@/components/ui/sheet";
+import { useRole } from "@/contexts/RoleContext";
+import { cn } from "@/lib/utils";
+import { shelfStorageKey } from "@/lib/profile-repository";
 import {
   RANKING_GENRES,
   RANKING_SORT_LABELS,
@@ -52,101 +60,128 @@ import {
   type RankingSort,
   type RankingView,
   type RankingWorkItem,
-} from '@/lib/ranking-page-data'
-import styles from './RankingLanding.module.css'
+} from "@/lib/ranking-page-data";
+import styles from "./RankingLanding.module.css";
 
-const PAGE_SIZE = 20
-const DAILY_MAX = 15
-const MONTHLY_MAX = 30
-const VOTE_STORAGE_KEY = 'rl_ranking_votes_v1'
+const PAGE_SIZE = 20;
+const DAILY_MAX = 15;
+const MONTHLY_MAX = 30;
+const VOTE_STORAGE_KEY = "rl_ranking_votes_v1";
 
-type VoteKind = 'daily' | 'monthly'
-type VoteBonus = { daily: number; monthly: number }
+type VoteKind = "daily" | "monthly";
+type VoteBonus = { daily: number; monthly: number };
 type VoteLedger = {
-  dailyKey: string
-  monthlyKey: string
-  dailyUsed: number
-  monthlyUsed: number
-  bonuses: Record<string, VoteBonus>
-  server?: boolean
-  dailyAllowance?: number
-  dailyBalance?: number
-  monthlyBalance?: number
-}
+  dailyKey: string;
+  monthlyKey: string;
+  dailyUsed: number;
+  monthlyUsed: number;
+  bonuses: Record<string, VoteBonus>;
+  server?: boolean;
+  dailyAllowance?: number;
+  dailyBalance?: number;
+  monthlyBalance?: number;
+};
 
 interface Props {
-  state: RankingRouteState
-  works: RankingWorkItem[]
-  creators: RankingCreatorItem[]
+  state: RankingRouteState;
+  works: RankingWorkItem[];
+  creators: RankingCreatorItem[];
 }
 
-const todayKey = () => new Date().toLocaleDateString('en-CA')
-const monthKey = () => todayKey().slice(0, 7)
+const todayKey = () => new Date().toLocaleDateString("en-CA");
+const monthKey = () => todayKey().slice(0, 7);
 const initialLedger = (): VoteLedger => ({
   dailyKey: todayKey(),
   monthlyKey: monthKey(),
   dailyUsed: 0,
   monthlyUsed: 0,
   bonuses: {},
-})
+});
 
 const remainingTickets = (ledger: VoteLedger, kind: VoteKind) => {
-  if (ledger.server) return kind === 'daily' ? ledger.dailyBalance ?? 0 : ledger.monthlyBalance ?? 0
-  return Math.max(0, (kind === 'daily' ? DAILY_MAX - ledger.dailyUsed : MONTHLY_MAX - ledger.monthlyUsed))
-}
+  if (ledger.server)
+    return kind === "daily"
+      ? (ledger.dailyBalance ?? 0)
+      : (ledger.monthlyBalance ?? 0);
+  return Math.max(
+    0,
+    kind === "daily"
+      ? DAILY_MAX - ledger.dailyUsed
+      : MONTHLY_MAX - ledger.monthlyUsed,
+  );
+};
 
 const fmt = (value: number) => {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(value >= 10_000_000 ? 1 : 2)}M`
-  if (value >= 1_000) return value.toLocaleString('en-US')
-  return String(value)
-}
+  if (value >= 1_000_000)
+    return `${(value / 1_000_000).toFixed(value >= 10_000_000 ? 1 : 2)}M`;
+  if (value >= 1_000) return value.toLocaleString("en-US");
+  return String(value);
+};
 
-const coverStyle = (item: Pick<RankingWorkItem, 'coverFrom' | 'coverTo'>): CSSProperties => ({
+const coverStyle = (
+  item: Pick<RankingWorkItem, "coverFrom" | "coverTo">,
+): CSSProperties => ({
   background: `linear-gradient(155deg, ${item.coverFrom}, ${item.coverTo})`,
-})
+});
 
-function buildHref(state: RankingRouteState, options: { genre?: RankingGenreKey | null; page?: number } = {}) {
-  const params = new URLSearchParams()
+function buildHref(
+  state: RankingRouteState,
+  options: { genre?: RankingGenreKey | null; page?: number } = {},
+) {
+  const params = new URLSearchParams();
   if (state.type && state.sort) {
-    params.set('type', state.type)
-    params.set('sort', state.sort)
-  } else if (state.view !== 'overview') {
-    params.set('view', state.view)
+    params.set("type", state.type);
+    params.set("sort", state.sort);
+  } else if (state.view !== "overview") {
+    params.set("view", state.view);
   }
-  const genre = options.genre === undefined ? state.genre : options.genre
-  if (genre) params.set('genre', genre)
-  if (options.page && options.page > 1) params.set('page', String(options.page))
-  const query = params.toString()
-  return query ? `/ranking?${query}` : '/ranking'
+  const genre = options.genre === undefined ? state.genre : options.genre;
+  if (genre) params.set("genre", genre);
+  if (options.page && options.page > 1)
+    params.set("page", String(options.page));
+  const query = params.toString();
+  return query ? `/ranking?${query}` : "/ranking";
 }
 
 function currentLabel(state: RankingRouteState) {
-  if (state.type && state.sort) return `${RANKING_TYPE_LABELS[state.type]} · ${RANKING_SORT_LABELS[state.sort].label}`
-  if (state.view !== 'overview') return RANKING_VIEW_LABELS[state.view].label
-  return 'ภาพรวม'
+  if (state.type && state.sort)
+    return `${RANKING_TYPE_LABELS[state.type]} · ${RANKING_SORT_LABELS[state.sort].label}`;
+  if (state.view !== "overview") return RANKING_VIEW_LABELS[state.view].label;
+  return "ภาพรวม";
 }
 
 const TYPE_ICONS: Record<RankingContentType, ReactNode> = {
   novel: <BookOpen />,
   manga: <Library />,
   audiobook: <Headphones />,
-}
+};
 
-const SORTS: RankingSort[] = ['recommended', 'monthly', 'views', 'new']
-const OTHER_VIEWS: Array<{ view: Exclude<RankingView, 'overview'>; icon: ReactNode }> = [
-  { view: 'completed', icon: <History /> },
-  { view: 'creators', icon: <UserRound /> },
-  { view: 'shelf', icon: <BookMarked /> },
-  { view: 'reviews', icon: <MessageSquareText /> },
-  { view: 'favorites', icon: <Heart /> },
-]
+const SORTS: RankingSort[] = ["recommended", "monthly", "views", "new"];
+const OTHER_VIEWS: Array<{
+  view: Exclude<RankingView, "overview">;
+  icon: ReactNode;
+}> = [
+  { view: "completed", icon: <History /> },
+  { view: "creators", icon: <UserRound /> },
+  { view: "shelf", icon: <BookMarked /> },
+  { view: "reviews", icon: <MessageSquareText /> },
+  { view: "favorites", icon: <Heart /> },
+];
 
-function SideMenu({ state, onNavigate }: { state: RankingRouteState; onNavigate?: () => void }) {
-  const [openGroups, setOpenGroups] = useState<Record<RankingContentType, boolean>>({
-    novel: state.type === 'novel',
-    manga: state.type === 'manga',
-    audiobook: state.type === 'audiobook',
-  })
+function SideMenu({
+  state,
+  onNavigate,
+}: {
+  state: RankingRouteState;
+  onNavigate?: () => void;
+}) {
+  const [openGroups, setOpenGroups] = useState<
+    Record<RankingContentType, boolean>
+  >({
+    novel: state.type === "novel",
+    manga: state.type === "manga",
+    audiobook: state.type === "audiobook",
+  });
 
   return (
     <>
@@ -154,286 +189,819 @@ function SideMenu({ state, onNavigate }: { state: RankingRouteState; onNavigate?
         <Link
           href="/ranking"
           onClick={onNavigate}
-          aria-current={state.view === 'overview' && !state.type ? 'page' : undefined}
-          className={cn(styles.sideLink, state.view === 'overview' && !state.type && styles.sideLinkActive)}
+          aria-current={
+            state.view === "overview" && !state.type ? "page" : undefined
+          }
+          className={cn(
+            styles.sideLink,
+            state.view === "overview" && !state.type && styles.sideLinkActive,
+          )}
         >
           <BarChart3 className={styles.sideIcon} /> ภาพรวม
         </Link>
 
-        {(['novel', 'manga', 'audiobook'] as RankingContentType[]).map((type) => {
-          const isOpen = openGroups[type]
-          return (
-            <div key={type}>
-              <button
-                type="button"
-                className={styles.groupButton}
-                aria-expanded={isOpen}
-                onClick={() => setOpenGroups((current) => ({ ...current, [type]: !current[type] }))}
-              >
-                <span className={styles.sideIcon}>{TYPE_ICONS[type]}</span>
-                <span className={styles.groupLabel}>{RANKING_TYPE_LABELS[type]}</span>
-                <ChevronDown className={cn(styles.chevron, isOpen && styles.chevronOpen)} />
-              </button>
-              {isOpen && (
-                <div className={styles.subNav}>
-                  {SORTS.map((sort) => {
-                    const active = state.type === type && state.sort === sort
-                    const label = sort === 'new'
-                      ? `อันดับ${type === 'novel' ? 'หนังสือ' : type === 'manga' ? 'เว็บตูน' : 'หนังสือเสียง'}ใหม่`
-                      : RANKING_SORT_LABELS[sort].label
-                    return (
-                      <Link
-                        key={sort}
-                        href={`/ranking?type=${type}&sort=${sort}`}
-                        onClick={onNavigate}
-                        aria-current={active ? 'page' : undefined}
-                        className={cn(styles.subLink, active && styles.subLinkActive)}
-                      >
-                        {label}
-                      </Link>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          )
-        })}
+        {(["novel", "manga", "audiobook"] as RankingContentType[]).map(
+          (type) => {
+            const isOpen = openGroups[type];
+            return (
+              <div key={type}>
+                <button
+                  type="button"
+                  className={styles.groupButton}
+                  aria-expanded={isOpen}
+                  onClick={() =>
+                    setOpenGroups((current) => ({
+                      ...current,
+                      [type]: !current[type],
+                    }))
+                  }
+                >
+                  <span className={styles.sideIcon}>{TYPE_ICONS[type]}</span>
+                  <span className={styles.groupLabel}>
+                    {RANKING_TYPE_LABELS[type]}
+                  </span>
+                  <ChevronDown
+                    className={cn(styles.chevron, isOpen && styles.chevronOpen)}
+                  />
+                </button>
+                {isOpen && (
+                  <div className={styles.subNav}>
+                    {SORTS.filter(
+                      (sort) =>
+                        type !== "manga" || sort === "views" || sort === "new",
+                    ).map((sort) => {
+                      const active = state.type === type && state.sort === sort;
+                      const label =
+                        sort === "new"
+                          ? `อันดับ${type === "novel" ? "หนังสือ" : type === "manga" ? "เว็บตูน" : "หนังสือเสียง"}ใหม่`
+                          : RANKING_SORT_LABELS[sort].label;
+                      return (
+                        <Link
+                          key={sort}
+                          href={`/ranking?type=${type}&sort=${sort}`}
+                          onClick={onNavigate}
+                          aria-current={active ? "page" : undefined}
+                          className={cn(
+                            styles.subLink,
+                            active && styles.subLinkActive,
+                          )}
+                        >
+                          {label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          },
+        )}
 
         <div className={styles.separator} />
-        <div className={styles.sideSectionTitle}><Sparkles className={styles.sideIcon} /> อันดับอื่นๆ</div>
-        {OTHER_VIEWS.map(({ view, icon }) => {
-          const active = state.view === view
-          return (
-            <Link
-              key={view}
-              href={`/ranking?view=${view}`}
-              onClick={onNavigate}
-              aria-current={active ? 'page' : undefined}
-              className={cn(styles.sideLink, active && styles.sideLinkActive)}
-            >
-              <span className={styles.sideIcon}>{icon}</span>
-              {RANKING_VIEW_LABELS[view].label}
-            </Link>
-          )
-        })}
+        <div className={styles.sideSectionTitle}>อันดับอื่นๆ</div>
+        {OTHER_VIEWS.filter((item) => item.view !== "favorites").map(
+          ({ view, icon }) => {
+            const active = state.view === view;
+            return (
+              <Link
+                key={view}
+                href={`/ranking?view=${view}`}
+                onClick={onNavigate}
+                aria-current={active ? "page" : undefined}
+                className={cn(styles.sideLink, active && styles.sideLinkActive)}
+              >
+                <span className={styles.sideIcon}>{icon}</span>
+                {RANKING_VIEW_LABELS[view].label}
+              </Link>
+            );
+          },
+        )}
       </nav>
 
       <div className={styles.promo}>
         <h3>โหวตผลงานที่คุณชื่นชอบ</h3>
-        <p>ทุกการโหวตของคุณ มีผลต่ออันดับผลงานที่คุณรัก</p>
-        <Link href="/ranking?type=novel&sort=recommended" onClick={onNavigate} className={styles.promoLink}>ไปโหวตเลย</Link>
+        <p>ทุกการโหวตของคุณ มีผลต่ออันดับผลงานที่คุณรักได้เลย!</p>
+
         <svg className={styles.gems} viewBox="0 0 100 90" aria-hidden="true">
-          <defs><linearGradient id="rank-gem" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#c69cff"/><stop offset="1" stopColor="#f48fc4"/></linearGradient></defs>
-          <polygon points="50,18 68,43 50,80 32,43" fill="url(#rank-gem)"/><polygon points="50,18 68,43 50,51 32,43" fill="#fff" opacity=".38"/>
-          <polygon points="76,43 87,57 76,79 64,57" fill="#f4a0cc"/><polygon points="25,49 38,62 30,84 17,64" fill="#b98bee" opacity=".9"/>
+          <defs>
+            <linearGradient id="rank-gem" x1="0" y1="0" x2="1" y2="1">
+              <stop stopColor="#c69cff" />
+              <stop offset="1" stopColor="#f48fc4" />
+            </linearGradient>
+          </defs>
+          <polygon points="50,18 68,43 50,80 32,43" fill="url(#rank-gem)" />
+          <polygon points="50,18 68,43 50,51 32,43" fill="#fff" opacity=".38" />
+          <polygon points="76,43 87,57 76,79 64,57" fill="#f4a0cc" />
+          <polygon
+            points="25,49 38,62 30,84 17,64"
+            fill="#b98bee"
+            opacity=".9"
+          />
         </svg>
       </div>
     </>
-  )
+  );
 }
 
-type Countdown = { days: string; hours: string; minutes: string; seconds: string }
-const pad = (value: number) => String(value).padStart(2, '0')
+type Countdown = {
+  days: string;
+  hours: string;
+  minutes: string;
+  seconds: string;
+};
+const pad = (value: number) => String(value).padStart(2, "0");
 
 function countdownTo(kind: VoteKind): Countdown {
-  const now = new Date()
-  const target = kind === 'daily'
-    ? new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
-    : new Date(now.getFullYear(), now.getMonth() + 1, 1)
-  let seconds = Math.max(0, Math.floor((target.getTime() - now.getTime()) / 1000))
-  const days = Math.floor(seconds / 86400)
-  seconds -= days * 86400
-  const hours = Math.floor(seconds / 3600)
-  seconds -= hours * 3600
-  const minutes = Math.floor(seconds / 60)
-  seconds -= minutes * 60
-  return { days: pad(days), hours: pad(hours), minutes: pad(minutes), seconds: pad(seconds) }
+  const now = new Date();
+  const target =
+    kind === "daily"
+      ? new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+      : new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  let seconds = Math.max(
+    0,
+    Math.floor((target.getTime() - now.getTime()) / 1000),
+  );
+  const days = Math.floor(seconds / 86400);
+  seconds -= days * 86400;
+  const hours = Math.floor(seconds / 3600);
+  seconds -= hours * 3600;
+  const minutes = Math.floor(seconds / 60);
+  seconds -= minutes * 60;
+  return {
+    days: pad(days),
+    hours: pad(hours),
+    minutes: pad(minutes),
+    seconds: pad(seconds),
+  };
 }
 
 function useCountdown(kind: VoteKind) {
-  const [value, setValue] = useState(() => countdownTo(kind))
+  const [value, setValue] = useState<Countdown>({
+    days: "–",
+    hours: "–",
+    minutes: "–",
+    seconds: "–",
+  });
   useEffect(() => {
-    const timer = window.setInterval(() => setValue(countdownTo(kind)), 1000)
-    return () => window.clearInterval(timer)
-  }, [kind])
-  return value
+    const update = () => setValue(countdownTo(kind));
+    const firstUpdate = window.setTimeout(update, 0);
+    const timer = window.setInterval(update, 1000);
+    return () => {
+      window.clearTimeout(firstUpdate);
+      window.clearInterval(timer);
+    };
+  }, [kind]);
+  return value;
 }
 
-function VoteSummaryCard({ kind, ledger }: { kind: VoteKind; ledger: VoteLedger }) {
-  const countdown = useCountdown(kind)
-  const daily = kind === 'daily'
-  const values = [countdown.days, countdown.hours, countdown.minutes, countdown.seconds]
+function VoteSummaryCard({
+  kind,
+  ledger,
+}: {
+  kind: VoteKind;
+  ledger: VoteLedger;
+}) {
+  const countdown = useCountdown(kind);
+  const daily = kind === "daily";
+  const values = [
+    countdown.days,
+    countdown.hours,
+    countdown.minutes,
+    countdown.seconds,
+  ];
   return (
-    <div className={cn(styles.voteCard, daily ? styles.voteDaily : styles.voteMonthly)}>
+    <div
+      className={cn(
+        styles.voteCard,
+        daily ? styles.voteDaily : styles.voteMonthly,
+      )}
+    >
       <div className={styles.voteHead}>
-        <span className={styles.ticketIcon}>{daily ? <Ticket /> : <Crown />}</span>
-        <div><b>{daily ? 'โหวตแนะนำ' : 'โหวตรายเดือน'}</b><p>{daily ? 'ตั๋วรีเซ็ตทุกวัน' : ledger.server ? 'ตั๋วสะสมไม่หมดอายุ' : 'รีเซ็ตทุกเดือน'}</p></div>
+        <span className={styles.ticketIcon}>
+          <Image
+            src={
+              daily
+                ? "/ranking/daily-ticket.png"
+                : "/ranking/monthly-ticket.png"
+            }
+            width={42}
+            height={34}
+            alt=""
+            unoptimized
+          />
+        </span>
+        <div>
+          <b>{daily ? "โหวตแนะนำ" : "โหวตรายเดือน"}</b>
+          <p>
+            {daily
+              ? "ตั๋วรีเซ็ตทุกวัน"
+              : ledger.server
+                ? "ตั๋วสะสมไม่หมดอายุ"
+                : "รีเซ็ตทุกเดือน"}
+          </p>
+        </div>
       </div>
       <div className={styles.voteCount}>
-        {ledger.server ? <><strong>{remainingTickets(ledger, kind)}{daily&&<small> / {ledger.dailyAllowance ?? DAILY_MAX}</small>}</strong><span>ตั๋วคงเหลือ</span></> : <><strong>{daily ? ledger.dailyUsed : ledger.monthlyUsed}<small> / {daily ? DAILY_MAX : MONTHLY_MAX}</small></strong><span>โหวตแล้ว</span></>}
+        {ledger.server ? (
+          <>
+            <strong>
+              {remainingTickets(ledger, kind)}
+              {daily && <small> / {ledger.dailyAllowance ?? DAILY_MAX}</small>}
+            </strong>
+            <span>ตั๋วคงเหลือ</span>
+          </>
+        ) : (
+          <>
+            <strong>
+              {daily ? ledger.dailyUsed : ledger.monthlyUsed}
+              <small> / {daily ? DAILY_MAX : MONTHLY_MAX}</small>
+            </strong>
+            <span>โหวตแล้ว</span>
+          </>
+        )}
       </div>
       <div>
         <span className={styles.countdownLabel}>เหลือเวลาอีก</span>
-        <div className={styles.countdown} aria-label={`เหลือเวลา ${values.join(':')}`}>
+        <div
+          className={styles.countdown}
+          aria-label={`เหลือเวลา ${values.join(":")}`}
+        >
           {values.map((value, index) => (
-            <span className={styles.countCell} key={index} aria-hidden="true"><b>{value}</b><span>{['วัน', 'ชม.', 'นาที', 'วินาที'][index]}</span></span>
+            <span className={styles.countCell} key={index} aria-hidden="true">
+              <b>{value}</b>
+              <span>{["วัน", "ชม.", "นาที", "วินาที"][index]}</span>
+            </span>
           ))}
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-function RankingHero({ state, ledger }: { state: RankingRouteState; ledger: VoteLedger }) {
-  const listMode = state.type !== null || state.view !== 'overview'
-  const year = new Date().getFullYear()
+function RankingHero({ ledger }: { ledger: VoteLedger }) {
+  const year = new Date().getFullYear();
   return (
     <section className={styles.heroBand}>
       <div className={styles.hero}>
-        <svg className={styles.heroScene} viewBox="0 0 800 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <g fill="#fff" opacity=".66"><ellipse cx="120" cy="65" rx="74" ry="22"/><ellipse cx="645" cy="48" rx="88" ry="25"/><ellipse cx="430" cy="37" rx="48" ry="14"/></g>
-          <g fill="#c5cdef" opacity=".9"><rect x="470" y="135" width="25" height="108"/><polygon points="470,135 482,105 495,135"/><rect x="504" y="110" width="32" height="133"/><polygon points="504,110 520,72 536,110"/><rect x="544" y="145" width="25" height="98"/><polygon points="544,145 556,116 569,145"/></g>
-          <path d="M0 240 Q400 215 800 243 L800 300H0Z" fill="#ecd9e9" opacity=".78"/><path d="M0 265 Q400 238 800 264V300H0Z" fill="#d8c2dc" opacity=".7"/>
-          <g fill="#263552"><ellipse cx="665" cy="124" rx="16" ry="18"/><path d="M632 158Q665 140 698 158L716 262Q665 244 614 262Z"/><path d="M697 155L719 245L703 250L678 167Z"/></g>
-          <g fill="#f3a4c2" opacity=".9"><rect x="330" y="108" width="6" height="9" rx="3" transform="rotate(22 333 112)"/><rect x="397" y="180" width="6" height="9" rx="3" transform="rotate(-18 400 184)"/><rect x="282" y="201" width="5" height="8" rx="2" transform="rotate(28 284 205)"/></g>
+        <svg
+          className={styles.heroScene}
+          aria-hidden="true"
+          viewBox="0 0 800 300"
+          preserveAspectRatio="xMidYMid slice"
+        >
+          <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#cbe6ff" />
+              <stop offset=".5" stopColor="#e1e4fb" />
+              <stop offset="1" stopColor="#f7dcec" />
+            </linearGradient>
+            <radialGradient id="sun" cx=".34" cy=".22" r=".55">
+              <stop offset="0" stopColor="#fff" stopOpacity=".9" />
+              <stop offset="1" stopColor="#fff" stopOpacity="0" />
+            </radialGradient>
+            <linearGradient id="cst" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#e3e8fb" />
+              <stop offset="1" stopColor="#bfc9ee" />
+            </linearGradient>
+            <linearGradient id="hr" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#41527a" />
+              <stop offset="1" stopColor="#1f2840" />
+            </linearGradient>
+          </defs>
+          <rect width="800" height="300" fill="url(#sky)" />
+          <rect width="800" height="300" fill="url(#sun)" />
+          <g fill="#fff" opacity=".72">
+            <ellipse cx="130" cy="64" rx="74" ry="22" />
+            <ellipse cx="215" cy="54" rx="48" ry="16" />
+            <ellipse cx="640" cy="46" rx="82" ry="24" />
+            <ellipse cx="720" cy="78" rx="56" ry="17" />
+            <ellipse cx="430" cy="40" rx="46" ry="14" />
+          </g>
+          <g fill="url(#cst)" opacity=".92">
+            <rect x="452" y="150" width="20" height="92" />
+            <polygon points="452,150 462,128 472,150" />
+            <rect x="476" y="120" width="26" height="122" />
+            <polygon points="476,120 489,92 502,120" />
+            <rect x="506" y="138" width="20" height="104" />
+            <polygon points="506,138 516,116 526,138" />
+            <rect x="540" y="160" width="30" height="82" />
+            <polygon points="540,160 555,138 570,160" />
+            <rect x="430" y="170" width="16" height="72" />
+            <polygon points="430,170 438,154 446,170" />
+          </g>
+          <path
+            d="M0,238 Q400,216 800,242 L800,300 L0,300 Z"
+            fill="#ecd9e9"
+            opacity=".75"
+          />
+          <path
+            d="M0,258 Q400,242 800,260 L800,300 L0,300 Z"
+            fill="#ddc6dd"
+            opacity=".7"
+          />
+          <g fill="url(#hr)">
+            <ellipse cx="652" cy="120" rx="16" ry="18" />
+            <path d="M620,152 Q652,138 684,152 L700,256 Q652,242 604,256 Z" />
+            <path d="M684,150 L706,240 L692,246 L668,162 Z" />
+            <path d="M618,150 L598,236 L612,242 L636,162 Z" />
+          </g>
+          <g fill="#f3a4c2" opacity=".85">
+            <rect
+              x="300"
+              y="120"
+              width="6"
+              height="9"
+              rx="3"
+              transform="rotate(22 303 124)"
+            />
+            <rect
+              x="356"
+              y="172"
+              width="5"
+              height="8"
+              rx="2"
+              transform="rotate(-16 358 176)"
+            />
+            <rect
+              x="404"
+              y="208"
+              width="6"
+              height="9"
+              rx="3"
+              transform="rotate(34 407 212)"
+            />
+            <rect
+              x="250"
+              y="196"
+              width="5"
+              height="8"
+              rx="2"
+              transform="rotate(12 252 200)"
+            />
+            <rect
+              x="338"
+              y="96"
+              width="5"
+              height="7"
+              rx="2"
+              transform="rotate(-8 340 99)"
+            />
+          </g>
         </svg>
         <div className={styles.heroText}>
-          {listMode && <div className={styles.heroEyebrow}>ศึกชิงบัลลังก์</div>}
-          <h1 className={styles.heroTitle}>{listMode ? 'นักเขียนแห่งปี' : 'กระดานอันดับปี'} <span>{year}</span></h1>
-          <p className={styles.heroDescription}>ร่วมโหวตผลงานที่คุณชื่นชอบ{listMode && <><br/>ให้ขึ้นแท่นอันดับ 1</>}</p>
+          <h1 className={styles.heroTitle}>
+            กระดานอันดับปี <span>{year}</span>
+          </h1>
+          <p className={styles.heroDescription}>ร่วมโหวตผลงานที่คุณชื่นชอบ</p>
         </div>
-        {listMode && <div className={styles.heroDots} aria-hidden="true"><i className={styles.heroDot}/><i className={styles.heroDot}/><i className={styles.heroDot}/><i className={styles.heroDot}/></div>}
       </div>
       <div className={styles.voteCards}>
-        <VoteSummaryCard kind="daily" ledger={ledger}/>
-        <VoteSummaryCard kind="monthly" ledger={ledger}/>
+        <VoteSummaryCard kind="daily" ledger={ledger} />
+        <VoteSummaryCard kind="monthly" ledger={ledger} />
       </div>
     </section>
-  )
+  );
 }
 
-function GenreFilters({ state }: { state: RankingRouteState }) {
+function GenreFilters({
+  state,
+  children,
+}: {
+  state: RankingRouteState;
+  children?: ReactNode;
+}) {
   return (
     <div className={styles.filters} aria-label="กรองหมวดหมู่">
-      <Link href={buildHref(state, { genre: null })} className={cn(styles.filterLink, !state.genre && styles.filterActive)}>ทุกหมวด</Link>
+      {children}
+      <Link
+        href={buildHref(state, { genre: null })}
+        className={cn(styles.filterLink, !state.genre && styles.filterActive)}
+      >
+        ทุกหมวด
+      </Link>
       {RANKING_GENRES.map((genre) => (
         <span key={genre.key} className="contents">
-          <span className={styles.filterDot} aria-hidden="true">·</span>
-          <Link href={buildHref(state, { genre: genre.key })} className={cn(styles.filterLink, state.genre === genre.key && styles.filterActive)}>{genre.label}</Link>
+          <span className={styles.filterDot} aria-hidden="true">
+            ·
+          </span>
+          <Link
+            href={buildHref(state, { genre: genre.key })}
+            className={cn(
+              styles.filterLink,
+              state.genre === genre.key && styles.filterActive,
+            )}
+          >
+            {genre.label}
+          </Link>
         </span>
       ))}
     </div>
-  )
+  );
 }
 
-function StatsStrip() {
-  const icons = [<UserRound key="users"/>, <BookOpen key="works"/>, <Eye key="views"/>, <Sparkles key="new"/>]
+function StatsStrip({ works }: { works: RankingWorkItem[] }) {
+  const count = (type: RankingContentType) =>
+    works.filter((work) => work.type === type).length;
+  const views = (type: RankingContentType) =>
+    works
+      .filter((work) => work.type === type)
+      .reduce((total, work) => total + work.views, 0);
+  const dateKey = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Bangkok",
+  });
+  const today = dateKey.format(new Date());
+  const newWorks = works.filter(
+    (work) =>
+      work.publishedAt && dateKey.format(new Date(work.publishedAt)) === today,
+  );
+  const values: Record<
+    (typeof RANKING_STATS)[number]["id"],
+    { value: string; parts: string[] }
+  > = {
+    creators: {
+      value: String(
+        new Set(works.map((work) => work.creatorId ?? work.author)).size,
+      ),
+      parts: ["นักเขียนและนักสร้างสรรค์ในรายการ"],
+    },
+    works: {
+      value: String(works.length),
+      parts: [
+        `นิยาย ${count("novel")}`,
+        `เว็บตูน ${count("manga")}`,
+        `หนังสือเสียง ${count("audiobook")}`,
+      ],
+    },
+    views: {
+      value: fmt(works.reduce((total, work) => total + work.views, 0)),
+      parts: [
+        `นิยาย ${fmt(views("novel"))}`,
+        `เว็บตูน ${fmt(views("manga"))}`,
+        `หนังสือเสียง ${fmt(views("audiobook"))}`,
+      ],
+    },
+    new: {
+      value: String(newWorks.length),
+      parts: (
+        ["novel", "manga", "audiobook"] satisfies RankingContentType[]
+      ).map(
+        (type) =>
+          `${RANKING_TYPE_LABELS[type]} ${newWorks.filter((work) => work.type === type).length}`,
+      ),
+    },
+  };
+  const statistics = RANKING_STATS.map((stat) => ({
+    ...stat,
+    ...values[stat.id],
+  }));
+  const icons = [
+    <UserRound key="users" />,
+    <BookOpen key="works" />,
+    <Eye key="views" />,
+    <Sparkles key="new" />,
+  ];
   return (
-    <section className={cn(styles.card, styles.stats)} aria-label="สถิติแพลตฟอร์ม">
-      {RANKING_STATS.map((stat, index) => (
+    <section
+      className={cn(styles.card, styles.stats)}
+      aria-label="สถิติแพลตฟอร์ม"
+    >
+      {statistics.map((stat, index) => (
         <div className={styles.stat} key={stat.id}>
-          <span className={styles.statIcon} style={{ background: stat.accent }}>{icons[index]}</span>
+          <span className={styles.statIcon} style={{ background: stat.accent }}>
+            {icons[index]}
+          </span>
           <div>
-            <div className={styles.statValue}>{stat.value} <span>{stat.unit}</span></div>
+            <div className={styles.statValue}>
+              {stat.value} <span>{stat.unit}</span>
+            </div>
             <div className={styles.statLabel}>{stat.label}</div>
-            <div className={styles.statParts}>{stat.parts.map((part) => <span key={part}>{part}</span>)}</div>
+            <div className={styles.statParts}>
+              {stat.parts.map((part) => (
+                <span key={part}>{part}</span>
+              ))}
+            </div>
           </div>
         </div>
       ))}
     </section>
-  )
+  );
 }
 
 function RankMark({ rank }: { rank: number }) {
-  if (rank > 3) return <>{rank}</>
-  const color = rank === 1 ? '#f4b528' : rank === 2 ? '#b6bcc8' : '#cf8a52'
-  return <span className={styles.crownStack} style={{ '--crown': color } as CSSProperties}><Crown/><span>{rank}</span></span>
+  if (rank > 3) return <>{rank}</>;
+  const color = rank === 1 ? "#f4b528" : rank === 2 ? "#b6bcc8" : "#cf8a52";
+  return (
+    <span
+      className={styles.crownStack}
+      style={{ "--crown": color } as CSSProperties}
+    >
+      <Crown />
+      <span>{rank}</span>
+    </span>
+  );
 }
 
-function WorkLink({ item, className, children }: { item: RankingWorkItem; className?: string; children: ReactNode }) {
-  return <Link className={className} href={`/detail?bookId=${encodeURIComponent(item.detailId)}`}>{children}</Link>
+function WorkLink({
+  item,
+  className,
+  children,
+}: {
+  item: RankingWorkItem;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      className={className}
+      href={`/detail?bookId=${encodeURIComponent(item.detailId)}`}
+    >
+      {children}
+    </Link>
+  );
 }
 
-function OverviewTable({ state, works, ledger }: Props & { ledger: VoteLedger }) {
-  const rows = useMemo(() => works
-    .filter((item) => !state.genre || item.genre === state.genre)
-    .sort((left, right) => {
-      const leftBonus = ledger.bonuses[left.id]?.daily ?? 0
-      const rightBonus = ledger.bonuses[right.id]?.daily ?? 0
-      return right.recommendedVotes + rightBonus - left.recommendedVotes - leftBonus
-    })
-    .slice(0, 100), [ledger.bonuses, state.genre, works])
+function OverviewTable({
+  state,
+  works,
+  ledger,
+}: Props & { ledger: VoteLedger }) {
+  const [contentType, setContentType] = useState<RankingContentType>("novel");
+  const showVotes = contentType !== "manga";
+  const rows = useMemo(
+    () =>
+      works
+        .filter(
+          (item) =>
+            item.type === contentType &&
+            (!state.genre || item.genre === state.genre),
+        )
+        .sort((left, right) => {
+          if (contentType === "manga") return right.views - left.views;
+          const leftBonus = ledger.bonuses[left.detailId]?.daily ?? 0;
+          const rightBonus = ledger.bonuses[right.detailId]?.daily ?? 0;
+          return (
+            right.recommendedVotes +
+            rightBonus -
+            left.recommendedVotes -
+            leftBonus
+          );
+        })
+        .slice(0, 100),
+    [contentType, ledger.bonuses, state.genre, works],
+  );
 
   return (
     <section className={cn(styles.card, styles.overviewCard)}>
-      <div className={styles.sectionHead}><h2>อันดับทั้งหมด</h2><small>(Top 100)</small></div>
-      <GenreFilters state={state}/>
+      <div className={styles.sectionHead}>
+        <h2>อันดับทั้งหมด</h2>
+        <small>(Top 100)</small>
+      </div>
+      <GenreFilters state={state}>
+        <span
+          className={styles.typeFilters}
+          role="group"
+          aria-label="ประเภทผลงาน"
+        >
+          {(["novel", "manga", "audiobook"] satisfies RankingContentType[]).map(
+            (type, index) => (
+              <span className="contents" key={type}>
+                {index > 0 && (
+                  <span className={styles.filterDot} aria-hidden="true">
+                    ·
+                  </span>
+                )}
+                <button
+                  type="button"
+                  aria-pressed={contentType === type}
+                  onClick={() => setContentType(type)}
+                  className={cn(
+                    styles.typeButton,
+                    contentType === type && styles.filterActive,
+                  )}
+                >
+                  {RANKING_TYPE_LABELS[type]}
+                </button>
+              </span>
+            ),
+          )}
+        </span>
+        <span className={styles.filterDivider} aria-hidden="true" />
+      </GenreFilters>
       <div className={styles.tableWrap}>
         <table className={styles.table}>
-          <thead><tr><th className={styles.center}>อันดับ</th><th>เรื่อง</th><th>ผู้เขียน</th><th className={styles.number}>โหวตรายวัน</th><th className={styles.number}>โหวตรายเดือน</th><th className={styles.number}>ยอดวิว</th><th className={styles.center}>เปลี่ยนแปลง</th><th className={styles.center}>เปิดตัว</th></tr></thead>
+          <colgroup>
+            <col style={{ width: 76 }} />
+            <col />
+            <col style={{ width: 170 }} />
+            {showVotes && (
+              <>
+                <col style={{ width: 110 }} />
+                <col style={{ width: 120 }} />
+              </>
+            )}
+            <col style={{ width: 110 }} />
+            <col style={{ width: 110 }} />
+            <col style={{ width: 120 }} />
+          </colgroup>
+          <thead>
+            <tr>
+              <th className={styles.center}>อันดับ</th>
+              <th>เรื่อง</th>
+              <th>เจ้าของผลงาน</th>
+              {showVotes && (
+                <>
+                  <th className={styles.center}>โหวตรายวัน</th>
+                  <th className={styles.center}>โหวตรายเดือน</th>
+                </>
+              )}
+              <th className={styles.number}>ยอดวิว</th>
+              <th className={styles.center}>เปลี่ยนแปลง</th>
+              <th className={styles.center}>เปิดตัว</th>
+            </tr>
+          </thead>
           <tbody>
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={showVotes ? 8 : 6} className={styles.empty}>
+                  ยังไม่มีรายการในหมวดนี้
+                </td>
+              </tr>
+            )}
             {rows.map((item, index) => {
-              const bonus = ledger.bonuses[item.detailId] ?? { daily: 0, monthly: 0 }
+              const bonus = ledger.bonuses[item.detailId] ?? {
+                daily: 0,
+                monthly: 0,
+              };
               return (
                 <tr key={item.id}>
-                  <td className={styles.rankCell}><RankMark rank={index + 1}/></td>
-                  <td><div className={styles.storyCell}><span className={styles.miniCover} style={coverStyle(item)}>{item.title.charAt(0)}</span><WorkLink item={item} className={styles.storyTitle}>{item.title}</WorkLink></div></td>
-                  <td>{item.author}</td>
-                  <td className={styles.number}>{fmt(item.recommendedVotes + bonus.daily)}</td>
-                  <td className={styles.number}>{fmt(item.monthlyVotes + bonus.monthly)}</td>
-                  <td className={styles.number}>{fmt(item.views)}</td>
-                  <td className={styles.center}>{item.change > 0 ? <span className={styles.up}>▲ {item.change}</span> : item.change < 0 ? <span className={styles.down}>▼ {Math.abs(item.change)}</span> : <span className={styles.flat}>–</span>}</td>
+                  <td className={styles.rankCell}>
+                    <RankMark rank={index + 1} />
+                  </td>
+                  <td>
+                    <div className={styles.storyCell}>
+                      <WorkLink item={item} className={styles.storyTitle}>
+                        {item.title}
+                      </WorkLink>
+                    </div>
+                  </td>
+                  <td className={styles.authorCell}>
+                    {item.creatorId ? (
+                      <Link
+                        href={`/profile/${encodeURIComponent(item.creatorId)}`}
+                      >
+                        {item.author}
+                      </Link>
+                    ) : (
+                      item.author
+                    )}
+                  </td>
+                  {showVotes && (
+                    <>
+                      <td className={styles.center}>
+                        {fmt(item.recommendedVotes + bonus.daily)}
+                      </td>
+                      <td className={styles.center}>
+                        {fmt(item.monthlyVotes + bonus.monthly)}
+                      </td>
+                    </>
+                  )}
+                  <td className={styles.center}>{fmt(item.views)}</td>
+                  <td className={styles.center}>
+                    {item.change > 0 ? (
+                      <span className={styles.up}>▲ {item.change}</span>
+                    ) : item.change < 0 ? (
+                      <span className={styles.down}>
+                        ▼ {Math.abs(item.change)}
+                      </span>
+                    ) : (
+                      <span className={styles.flat}>–</span>
+                    )}
+                  </td>
                   <td className={styles.center}>{item.launchedAt}</td>
                 </tr>
-              )
+              );
             })}
           </tbody>
         </table>
       </div>
     </section>
-  )
+  );
 }
 
-function metricFor(item: RankingWorkItem, state: RankingRouteState, bonus: VoteBonus) {
-  if (state.view === 'shelf') return { value: item.shelfCount, label: 'เพิ่มเข้าชั้น' }
-  if (state.view === 'favorites') return { value: item.favoriteCount, label: 'หัวใจ' }
-  if (state.view === 'reviews') return { value: item.reviewCount, label: `รีวิว · ${item.rating.toFixed(1)} ★` }
-  if (state.sort === 'monthly') return { value: item.monthlyVotes + bonus.monthly, label: 'คะแนนรายเดือน' }
-  if (state.sort === 'views') return { value: item.views, label: 'ยอดวิว' }
-  if (state.sort === 'new') return { value: new Date(item.updatedAt).getTime(), label: 'เปิดตัวใหม่' }
-  return { value: item.recommendedVotes + bonus.daily, label: 'คะแนนโหวต' }
+function metricFor(
+  item: RankingWorkItem,
+  state: RankingRouteState,
+  bonus: VoteBonus,
+) {
+  if (state.view === "completed") return { value: item.views, label: "ยอดวิว" };
+  if (state.view === "shelf")
+    return { value: item.shelfCount, label: "เพิ่มเข้าชั้น" };
+  if (state.view === "favorites")
+    return { value: item.favoriteCount, label: "หัวใจ" };
+  if (state.view === "reviews")
+    return {
+      value: item.reviewCount,
+      label: `รีวิว · ${item.rating.toFixed(1)} ★`,
+    };
+  if (state.sort === "monthly")
+    return { value: item.monthlyVotes + bonus.monthly, label: "คะแนนรายเดือน" };
+  if (state.sort === "views") return { value: item.views, label: "ยอดวิว" };
+  if (state.sort === "new")
+    return { value: new Date(item.updatedAt).getTime(), label: "เปิดตัวใหม่" };
+  return { value: item.recommendedVotes + bonus.daily, label: "คะแนนโหวต" };
 }
 
-function sortWorks(works: RankingWorkItem[], state: RankingRouteState, ledger: VoteLedger) {
+function sortWorks(
+  works: RankingWorkItem[],
+  state: RankingRouteState,
+  ledger: VoteLedger,
+) {
   return [...works].sort((left, right) => {
-    if (state.sort === 'new') return new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
-    const leftMetric = metricFor(left, state, ledger.bonuses[left.id] ?? { daily: 0, monthly: 0 }).value
-    const rightMetric = metricFor(right, state, ledger.bonuses[right.id] ?? { daily: 0, monthly: 0 }).value
-    return rightMetric - leftMetric
-  })
+    if (state.sort === "new")
+      return (
+        new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
+      );
+    const leftMetric = metricFor(
+      left,
+      state,
+      ledger.bonuses[left.id] ?? { daily: 0, monthly: 0 },
+    ).value;
+    const rightMetric = metricFor(
+      right,
+      state,
+      ledger.bonuses[right.id] ?? { daily: 0, monthly: 0 },
+    ).value;
+    return rightMetric - leftMetric;
+  });
 }
 
-function Pagination({ state, total }: { state: RankingRouteState; total: number }) {
-  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
-  const candidates = Array.from(new Set([1, state.page - 1, state.page, state.page + 1, pages])).filter((page) => page >= 1 && page <= pages).sort((a, b) => a - b)
-  if (pages <= 1) return null
+function Pagination({
+  state,
+  total,
+}: {
+  state: RankingRouteState;
+  total: number;
+}) {
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const candidates = Array.from(
+    new Set([1, state.page - 1, state.page, state.page + 1, pages]),
+  )
+    .filter((page) => page >= 1 && page <= pages)
+    .sort((a, b) => a - b);
+  if (pages <= 1) return null;
   return (
     <nav className={styles.pagination} aria-label="หน้ารายการอันดับ">
-      <Link aria-disabled={state.page === 1} href={buildHref(state, { page: state.page - 1 })} className={cn(styles.pageLink, state.page === 1 && styles.pageDisabled)}><ChevronLeft size={15}/><span className="sr-only">ก่อนหน้า</span></Link>
+      <Link
+        aria-disabled={state.page === 1}
+        href={buildHref(state, { page: state.page - 1 })}
+        className={cn(styles.pageLink, state.page === 1 && styles.pageDisabled)}
+      >
+        <ChevronLeft size={15} />
+        <span className="sr-only">ก่อนหน้า</span>
+      </Link>
       {candidates.map((page, index) => (
         <span key={page} className="contents">
-          {index > 0 && page - candidates[index - 1] > 1 && <span className={styles.pageLink} aria-hidden="true">…</span>}
-          <Link aria-current={page === state.page ? 'page' : undefined} href={buildHref(state, { page })} className={cn(styles.pageLink, page === state.page && styles.pageActive)}>{page}</Link>
+          {index > 0 && page - candidates[index - 1] > 1 && (
+            <span className={styles.pageLink} aria-hidden="true">
+              …
+            </span>
+          )}
+          <Link
+            aria-current={page === state.page ? "page" : undefined}
+            href={buildHref(state, { page })}
+            className={cn(
+              styles.pageLink,
+              page === state.page && styles.pageActive,
+            )}
+          >
+            {page}
+          </Link>
         </span>
       ))}
-      <Link aria-disabled={state.page === pages} href={buildHref(state, { page: state.page + 1 })} className={cn(styles.pageLink, state.page === pages && styles.pageDisabled)}><ChevronRight size={15}/><span className="sr-only">ถัดไป</span></Link>
+      <Link
+        aria-disabled={state.page === pages}
+        href={buildHref(state, { page: state.page + 1 })}
+        className={cn(
+          styles.pageLink,
+          state.page === pages && styles.pageDisabled,
+        )}
+      >
+        <ChevronRight size={15} />
+        <span className="sr-only">ถัดไป</span>
+      </Link>
     </nav>
-  )
+  );
 }
 
-function CreatorList({ state, creators }: { state: RankingRouteState; creators: RankingCreatorItem[] }) {
-  const start = (state.page - 1) * PAGE_SIZE
-  const pageItems = creators.slice(start, start + PAGE_SIZE)
+function CreatorList({
+  state,
+  creators,
+}: {
+  state: RankingRouteState;
+  creators: RankingCreatorItem[];
+}) {
+  const start = (state.page - 1) * PAGE_SIZE;
+  const pageItems = creators.slice(start, start + PAGE_SIZE);
   return (
     <>
       <div className={styles.list}>
@@ -441,202 +1009,503 @@ function CreatorList({ state, creators }: { state: RankingRouteState; creators: 
           <div className={styles.creatorRow} key={creator.id}>
             <div className={styles.creatorRank}>#{start + index + 1}</div>
             <div className={styles.creatorIdentity}>
-              <span className={styles.avatar} style={{ background: `linear-gradient(145deg,${creator.avatarFrom},${creator.avatarTo})` }}>{creator.name.charAt(0)}</span>
-              <div><h3 className={styles.creatorName}>{creator.name}</h3><p className={styles.creatorMeta}>{creator.genreLabel} · {creator.works} ผลงาน</p></div>
+              <span
+                className={styles.avatar}
+                style={{
+                  background: `linear-gradient(145deg,${creator.avatarFrom},${creator.avatarTo})`,
+                }}
+              >
+                {creator.name.charAt(0)}
+              </span>
+              <div>
+                <h3 className={styles.creatorName}>{creator.name}</h3>
+                <p className={styles.creatorMeta}>
+                  {creator.genreLabel} · {creator.works} ผลงาน
+                </p>
+              </div>
             </div>
             <div className={styles.creatorStats}>
-              <div><b>{fmt(creator.followers)}</b><span>ผู้ติดตาม</span></div>
-              <div><b>{fmt(creator.totalVotes)}</b><span>คะแนนโหวต</span></div>
-              <div><b>{fmt(creator.totalViews)}</b><span>ยอดวิว</span></div>
+              <div>
+                <b>{fmt(creator.followers)}</b>
+                <span>ผู้ติดตาม</span>
+              </div>
+              <div>
+                <b>{fmt(creator.totalVotes)}</b>
+                <span>คะแนนโหวต</span>
+              </div>
+              <div>
+                <b>{fmt(creator.totalViews)}</b>
+                <span>ยอดวิว</span>
+              </div>
             </div>
           </div>
         ))}
       </div>
-      <Pagination state={state} total={creators.length}/>
+      <Pagination state={state} total={creators.length} />
     </>
-  )
+  );
 }
 
-function ListView({ state, works, creators, ledger, onVote, savedIds, onToggleShelf }: Props & {
-  ledger: VoteLedger
-  onVote: (item: RankingWorkItem) => void
-  savedIds: Set<string>
-  onToggleShelf: (id: string) => void
+function ListView({
+  state,
+  works,
+  creators,
+  ledger,
+  onVote,
+  savedIds,
+  onToggleShelf,
+}: Props & {
+  ledger: VoteLedger;
+  onVote: (item: RankingWorkItem) => void;
+  savedIds: Set<string>;
+  onToggleShelf: (id: string) => void;
 }) {
-  const baseTitle = state.type && state.sort ? RANKING_SORT_LABELS[state.sort] : state.view !== 'overview' ? RANKING_VIEW_LABELS[state.view] : null
-  const title = state.type && state.sort === 'new'
-    ? {
-        ...baseTitle,
-        label: `อันดับ${state.type === 'novel' ? 'หนังสือ' : state.type === 'manga' ? 'เว็บตูน' : 'หนังสือเสียง'}ใหม่`,
-      }
-    : baseTitle
-  const sorted = useMemo(() => sortWorks(works, state, ledger), [ledger, state, works])
-  const start = (state.page - 1) * PAGE_SIZE
-  const pageItems = sorted.slice(start, start + PAGE_SIZE)
+  const baseTitle =
+    state.type && state.sort
+      ? RANKING_SORT_LABELS[state.sort]
+      : state.view !== "overview"
+        ? RANKING_VIEW_LABELS[state.view]
+        : null;
+  const title =
+    state.type && state.sort === "new"
+      ? {
+          ...baseTitle,
+          label: `อันดับ${state.type === "novel" ? "หนังสือ" : state.type === "manga" ? "เว็บตูน" : "หนังสือเสียง"}ใหม่`,
+        }
+      : baseTitle;
+  const sorted = useMemo(
+    () =>
+      sortWorks(
+        works.filter(
+          (item) =>
+            (!state.type || item.type === state.type) &&
+            (!state.genre || item.genre === state.genre) &&
+            (state.view !== "completed" || item.status === "completed"),
+        ),
+        state,
+        ledger,
+      ),
+    [ledger, state, works],
+  );
+  const currentPage = Math.min(
+    state.page,
+    Math.max(1, Math.ceil(sorted.length / PAGE_SIZE)),
+  );
+  const pageState = { ...state, page: currentPage };
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = sorted.slice(start, start + PAGE_SIZE);
 
   return (
     <section className={cn(styles.card, styles.listCard)}>
-      <div className={styles.sectionHead}><h2>{title?.label}</h2><small>{title?.subtitle}</small></div>
-      <GenreFilters state={state}/>
-      {state.view === 'creators' ? <CreatorList state={state} creators={creators}/> : (
+      <div className={styles.sectionHead}>
+        <h2>{title?.label}</h2>
+        <small>
+          {state.view === "creators" ? creators.length : sorted.length} ผลงาน ·{" "}
+          {title?.subtitle}
+        </small>
+      </div>
+      <GenreFilters state={state} />
+      {state.view === "creators" ? (
+        <CreatorList state={state} creators={creators} />
+      ) : (
         <>
           <div className={styles.list}>
-            {pageItems.length === 0 && <div className={styles.empty}>ยังไม่มีรายการในหมวดนี้</div>}
+            {pageItems.length === 0 && (
+              <div className={styles.empty}>ยังไม่มีรายการในหมวดนี้</div>
+            )}
             {pageItems.map((item, index) => {
-              const rank = start + index + 1
-              const bonus = ledger.bonuses[item.detailId] ?? { daily: 0, monthly: 0 }
-              const metric = metricFor(item, state, bonus)
+              const rank = start + index + 1;
+              const bonus = ledger.bonuses[item.detailId] ?? {
+                daily: 0,
+                monthly: 0,
+              };
+              const metric = metricFor(item, state, bonus);
               return (
                 <article className={styles.workRow} key={item.id}>
-                  <div className={styles.coverWrap}>
-                    <span className={styles.cover} style={coverStyle(item)}>{item.title.charAt(0)}</span>
-                    <span className={cn(styles.rankFlag, rank === 1 && styles.rankOne, rank === 2 && styles.rankTwo, rank === 3 && styles.rankThree)}>{rank}</span>
-                  </div>
+                  <WorkLink item={item} className={styles.coverWrap}>
+                    <span className={styles.cover} style={coverStyle(item)}>
+                      {item.title.charAt(0)}
+                    </span>
+                    {item.status === "completed" && (
+                      <span className={styles.completedBadge}>จบแล้ว</span>
+                    )}
+                  </WorkLink>
                   <div className={styles.workMain}>
-                    <h3 className={styles.workTitle}><span>#{rank}</span>{item.title}</h3>
+                    <h3 className={styles.workTitle}>
+                      <span>#{rank}</span>
+                      <WorkLink item={item}>{item.title}</WorkLink>
+                    </h3>
                     <div className={styles.meta}>
-                      <b>{item.author}</b><i className={styles.metaDivider}/><span>{item.genreLabel}</span><i className={styles.metaDivider}/><span className={styles.origin}>{item.origin}</span><i className={styles.metaDivider}/><span className={styles.status}>{item.status === 'completed' ? 'จบแล้ว' : 'กำลังเขียน'}</span>
+                      <b>{item.author}</b>
+                      <i className={styles.metaDivider} />
+                      <span>เปิดตัว {item.launchedAt}</span>
+                      <i className={styles.metaDivider} />
+                      <span>{item.genreLabel}</span>
+                      <i className={styles.metaDivider} />
+                      <span className={styles.origin}>{item.origin}</span>
+                      <i className={styles.metaDivider} />
+                      <span className={styles.status}>
+                        {item.status === "completed" ? "จบแล้ว" : "กำลังเขียน"}
+                      </span>
                     </div>
                     <p className={styles.description}>{item.synopsis}</p>
-                    <p className={styles.updated}><b>อัปเดตล่าสุด</b> {item.latestEpisode} · {new Date(item.updatedAt).toLocaleDateString('th-TH', { dateStyle: 'medium', timeZone: 'Asia/Bangkok' })}</p>
+                    <p className={styles.updated}>
+                      <b>อัปเดตล่าสุด</b>{" "}
+                      <WorkLink item={item}>{item.latestEpisode}</WorkLink> ·{" "}
+                      {new Date(item.updatedAt).toLocaleDateString("th-TH", {
+                        dateStyle: "medium",
+                        timeZone: "Asia/Bangkok",
+                      })}
+                    </p>
                   </div>
                   <div className={styles.workActions}>
-                    <div className={styles.metric}><b>{state.sort === 'new' ? item.launchedAt : fmt(metric.value)}</b>{metric.label}</div>
+                    <div className={styles.metric}>
+                      {state.view !== "completed" && (
+                        <>
+                          <b>
+                            {state.sort === "new"
+                              ? item.launchedAt
+                              : fmt(metric.value)}
+                          </b>
+                          {metric.label}
+                          <button
+                            type="button"
+                            className={styles.voteButton}
+                            onClick={() => onVote(item)}
+                          >
+                            โหวต
+                          </button>
+                        </>
+                      )}
+                    </div>
                     <div className={styles.actionButtons}>
-                      <WorkLink item={item} className={styles.primaryButton}>รายละเอียด</WorkLink>
-                      <button type="button" className={styles.voteButton} onClick={() => onVote(item)}>โหวต</button>
-                      <button type="button" className={styles.outlineButton} onClick={() => onToggleShelf(item.detailId)}>{savedIds.has(item.detailId) ? 'อยู่ในชั้นแล้ว' : 'เพิ่มในชั้น'}</button>
+                      <WorkLink item={item} className={styles.primaryButton}>
+                        รายละเอียด
+                      </WorkLink>
+                      <button
+                        type="button"
+                        className={styles.outlineButton}
+                        onClick={() => onToggleShelf(item.detailId)}
+                      >
+                        {savedIds.has(item.detailId)
+                          ? "อยู่ในชั้นแล้ว"
+                          : "เพิ่มในชั้น"}
+                      </button>
                     </div>
                   </div>
                 </article>
-              )
+              );
             })}
           </div>
-          <Pagination state={state} total={sorted.length}/>
+          <Pagination state={pageState} total={sorted.length} />
         </>
       )}
     </section>
-  )
+  );
 }
 
-function VoteDialog({ item, open, onOpenChange, ledger, onConfirm, message }: {
-  item: RankingWorkItem | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  ledger: VoteLedger
-  onConfirm: (kind: VoteKind) => void
-  message: string
+function VoteDialog({
+  item,
+  open,
+  onOpenChange,
+  ledger,
+  onConfirm,
+  message,
+}: {
+  item: RankingWorkItem | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  ledger: VoteLedger;
+  onConfirm: (kind: VoteKind) => void;
+  message: string;
 }) {
-  if (!item) return null
+  if (!item) return null;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={styles.dialog}>
-        <DialogHeader><DialogTitle className={styles.dialogTitle}>โหวตให้ “{item.title}”</DialogTitle><DialogDescription>เลือกตั๋วที่ต้องการใช้ 1 ใบ คะแนนจะอัปเดตบนกระดานทันที</DialogDescription></DialogHeader>
+        <DialogHeader>
+          <DialogTitle className={styles.dialogTitle}>
+            โหวตให้ “{item.title}”
+          </DialogTitle>
+          <DialogDescription>
+            เลือกตั๋วที่ต้องการใช้ 1 ใบ คะแนนจะอัปเดตบนกระดานทันที
+          </DialogDescription>
+        </DialogHeader>
         <div className={styles.dialogCover}>
-          <span className={styles.dialogMiniCover} style={coverStyle(item)}>{item.title.charAt(0)}</span>
-          <div><b>{item.title}</b><p className={styles.creatorMeta}>{item.author} · {item.genreLabel}</p></div>
+          <span className={styles.dialogMiniCover} style={coverStyle(item)}>
+            {item.title.charAt(0)}
+          </span>
+          <div>
+            <b>{item.title}</b>
+            <p className={styles.creatorMeta}>
+              {item.author} · {item.genreLabel}
+            </p>
+          </div>
         </div>
         <div className={styles.dialogOptions}>
-          <button type="button" className={styles.dialogOption} style={{ '--accent': '#cc4452', '--bg': '#fff5f8' } as CSSProperties} disabled={remainingTickets(ledger,'daily')<=0} onClick={() => onConfirm('daily')}><Ticket color="#cc4452"/><b>โหวตแนะนำ</b><span>เหลือ {remainingTickets(ledger,'daily')} ใบวันนี้</span></button>
-          <button type="button" className={styles.dialogOption} style={{ '--accent': '#f6921e', '--bg': '#fff9f1' } as CSSProperties} disabled={remainingTickets(ledger,'monthly')<=0} onClick={() => onConfirm('monthly')}><Crown color="#f6921e"/><b>โหวตรายเดือน</b><span>เหลือ {remainingTickets(ledger,'monthly')} ใบ</span></button>
+          <button
+            type="button"
+            className={styles.dialogOption}
+            style={
+              { "--accent": "#cc4452", "--bg": "#fff5f8" } as CSSProperties
+            }
+            disabled={remainingTickets(ledger, "daily") <= 0}
+            onClick={() => onConfirm("daily")}
+          >
+            <Ticket color="#cc4452" />
+            <b>โหวตแนะนำ</b>
+            <span>เหลือ {remainingTickets(ledger, "daily")} ใบวันนี้</span>
+          </button>
+          <button
+            type="button"
+            className={styles.dialogOption}
+            style={
+              { "--accent": "#f6921e", "--bg": "#fff9f1" } as CSSProperties
+            }
+            disabled={remainingTickets(ledger, "monthly") <= 0}
+            onClick={() => onConfirm("monthly")}
+          >
+            <Crown color="#f6921e" />
+            <b>โหวตรายเดือน</b>
+            <span>เหลือ {remainingTickets(ledger, "monthly")} ใบ</span>
+          </button>
         </div>
-        <p className={styles.dialogMessage} role="status">{message}</p>
+        <p className={styles.dialogMessage} role="status">
+          {message}
+        </p>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 export function RankingExperience({ state, works, creators }: Props) {
-  const router = useRouter()
-  const { isLoggedIn, user } = useRole()
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [ledger, setLedger] = useState<VoteLedger>(initialLedger)
-  const [ledgerReady, setLedgerReady] = useState(false)
-  const [selectedWork, setSelectedWork] = useState<RankingWorkItem | null>(null)
-  const [voteDialogOpen, setVoteDialogOpen] = useState(false)
-  const [voteMessage, setVoteMessage] = useState('')
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
-  const [serverWorks, setServerWorks] = useState<RankingWorkItem[] | null>(null)
+  const router = useRouter();
+  const { isLoggedIn, user } = useRole();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [ledger, setLedger] = useState<VoteLedger>(initialLedger);
+  const [ledgerReady, setLedgerReady] = useState(false);
+  const [selectedWork, setSelectedWork] = useState<RankingWorkItem | null>(
+    null,
+  );
+  const [voteDialogOpen, setVoteDialogOpen] = useState(false);
+  const [voteMessage, setVoteMessage] = useState("");
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [serverWorks, setServerWorks] = useState<RankingWorkItem[] | null>(
+    null,
+  );
 
   useEffect(() => {
-    const controller = new AbortController()
-    fetch('/api/catalog/works?pageSize=50', { cache: 'no-store', signal: controller.signal }).then((response) => response.ok ? response.json() : Promise.reject(new Error('catalog'))).then((data: { items?: Array<{ id: string; type: RankingContentType; title: string; category: string; tagline: string; seriesStatus: string; updatedAt: string; publishedAt: string | null; views: number; shelfCount: number; dailyVotes: number; monthlyVotes: number; reviewCount: number; creator: { name: string; writerApplication: { penName: string } | null }; _count: { episodes: number } }> }) => {
-      setServerWorks((data.items ?? []).map((item, index) => ({ id: item.id, detailId: item.id, type: item.type, title: item.title, author: item.creator.writerApplication?.penName || item.creator.name, genre: (RANKING_GENRES.some((genre) => genre.key === item.category) ? item.category : 'other') as RankingGenreKey, genreLabel: RANKING_GENRES.find((genre) => genre.key === item.category)?.label || item.category, synopsis: item.tagline, status: item.seriesStatus === 'completed' ? 'completed' : 'ongoing', origin: 'ไทย', latestEpisode: `${item._count.episodes} ตอน`, updatedAt: item.updatedAt, launchedAt: item.publishedAt ? new Date(item.publishedAt).toLocaleDateString('th-TH', { dateStyle: 'medium' }) : '—', recommendedVotes: item.dailyVotes, monthlyVotes: item.monthlyVotes, views: item.views, change: 0, shelfCount: item.shelfCount, favoriteCount: item.shelfCount, reviewCount: item.reviewCount, rating: 0, coverFrom: ['#7255a7', '#9a5f73', '#477c78'][index % 3], coverTo: ['#241b3a', '#39212b', '#193934'][index % 3] })))
-    }).catch(() => undefined)
-    return () => controller.abort()
-  }, [])
+    const controller = new AbortController();
+    fetch("/api/catalog/works?pageSize=50", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((response) =>
+        response.ok ? response.json() : Promise.reject(new Error("catalog")),
+      )
+      .then(
+        (data: {
+          items?: Array<{
+            id: string;
+            type: RankingContentType;
+            title: string;
+            category: string;
+            tagline: string;
+            seriesStatus: string;
+            updatedAt: string;
+            publishedAt: string | null;
+            views: number;
+            shelfCount: number;
+            dailyVotes: number;
+            monthlyVotes: number;
+            reviewCount: number;
+            creator: {
+              id: string;
+              name: string;
+              writerApplication: { penName: string } | null;
+            };
+            _count: { episodes: number };
+          }>;
+        }) => {
+          setServerWorks(
+            (data.items ?? []).map((item, index) => ({
+              id: item.id,
+              detailId: item.id,
+              publishedAt: item.publishedAt,
+              type: item.type,
+              title: item.title,
+              creatorId: item.creator.id,
+              author:
+                item.creator.writerApplication?.penName || item.creator.name,
+              genre: (RANKING_GENRES.some(
+                (genre) => genre.key === item.category,
+              )
+                ? item.category
+                : "other") as RankingGenreKey,
+              genreLabel:
+                RANKING_GENRES.find((genre) => genre.key === item.category)
+                  ?.label || item.category,
+              synopsis: item.tagline,
+              status:
+                item.seriesStatus === "completed" ? "completed" : "ongoing",
+              origin: "ไทย",
+              latestEpisode: `${item._count.episodes} ตอน`,
+              updatedAt: item.updatedAt,
+              launchedAt: item.publishedAt
+                ? new Date(item.publishedAt).toLocaleDateString("th-TH", {
+                    dateStyle: "medium",
+                  })
+                : "—",
+              recommendedVotes: item.dailyVotes,
+              monthlyVotes: item.monthlyVotes,
+              views: item.views,
+              change: 0,
+              shelfCount: item.shelfCount,
+              favoriteCount: item.shelfCount,
+              reviewCount: item.reviewCount,
+              rating: 0,
+              coverFrom: ["#7255a7", "#9a5f73", "#477c78"][index % 3],
+              coverTo: ["#241b3a", "#39212b", "#193934"][index % 3],
+            })),
+          );
+        },
+      )
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
-    if (serverWorks === null) return
-    const firstWork = serverWorks[0]
+    if (serverWorks === null) return;
+    const firstWork = serverWorks[0];
     if (!user || !firstWork) {
-      const timer = window.setTimeout(() => setLedger({ ...initialLedger(), server: true, dailyAllowance: DAILY_MAX, dailyBalance: 0, monthlyBalance: 0 }), 0)
-      return () => window.clearTimeout(timer)
+      const timer = window.setTimeout(
+        () =>
+          setLedger({
+            ...initialLedger(),
+            server: true,
+            dailyAllowance: DAILY_MAX,
+            dailyBalance: 0,
+            monthlyBalance: 0,
+          }),
+        0,
+      );
+      return () => window.clearTimeout(timer);
     }
-    const controller = new AbortController()
-    void fetch(`/api/interactions/state?workId=${encodeURIComponent(firstWork.detailId)}`, { cache: 'no-store', signal: controller.signal })
+    const controller = new AbortController();
+    void fetch(
+      `/api/interactions/state?workId=${encodeURIComponent(firstWork.detailId)}`,
+      { cache: "no-store", signal: controller.signal },
+    )
       .then(async (response) => {
-        const data = await response.json().catch(() => ({})) as { tickets?: { daily: { allowance: number; used: number; balance: number }; monthly: { balance: number } } }
-        if (!response.ok || !data.tickets) throw new Error('ticket state')
-        setLedger((current) => ({ ...current, server: true, dailyAllowance: data.tickets!.daily.allowance, dailyUsed: data.tickets!.daily.used, dailyBalance: data.tickets!.daily.balance, monthlyBalance: data.tickets!.monthly.balance }))
+        const data = (await response.json().catch(() => ({}))) as {
+          tickets?: {
+            daily: { allowance: number; used: number; balance: number };
+            monthly: { balance: number };
+          };
+        };
+        if (!response.ok || !data.tickets) throw new Error("ticket state");
+        setLedger((current) => ({
+          ...current,
+          server: true,
+          dailyAllowance: data.tickets!.daily.allowance,
+          dailyUsed: data.tickets!.daily.used,
+          dailyBalance: data.tickets!.daily.balance,
+          monthlyBalance: data.tickets!.monthly.balance,
+        }));
       })
-      .catch((error) => { if (error instanceof Error && error.name !== 'AbortError') setVoteMessage('ไม่สามารถโหลดยอดตั๋วล่าสุดได้') })
-    return () => controller.abort()
-  }, [serverWorks, user])
+      .catch((error) => {
+        if (error instanceof Error && error.name !== "AbortError")
+          setVoteMessage("ไม่สามารถโหลดยอดตั๋วล่าสุดได้");
+      });
+    return () => controller.abort();
+  }, [serverWorks, user]);
 
   useEffect(() => {
-    let next = initialLedger()
+    let next = initialLedger();
     try {
-      const stored = JSON.parse(localStorage.getItem(VOTE_STORAGE_KEY) ?? 'null') as VoteLedger | null
+      const stored = JSON.parse(
+        localStorage.getItem(VOTE_STORAGE_KEY) ?? "null",
+      ) as VoteLedger | null;
       if (stored) {
-        const resetDaily = stored.dailyKey !== todayKey()
-        const resetMonthly = stored.monthlyKey !== monthKey()
-        const bonuses = Object.fromEntries(Object.entries(stored.bonuses ?? {}).map(([id, bonus]) => [id, {
-          daily: resetDaily ? 0 : bonus.daily,
-          monthly: resetMonthly ? 0 : bonus.monthly,
-        }]))
+        const resetDaily = stored.dailyKey !== todayKey();
+        const resetMonthly = stored.monthlyKey !== monthKey();
+        const bonuses = Object.fromEntries(
+          Object.entries(stored.bonuses ?? {}).map(([id, bonus]) => [
+            id,
+            {
+              daily: resetDaily ? 0 : bonus.daily,
+              monthly: resetMonthly ? 0 : bonus.monthly,
+            },
+          ]),
+        );
         next = {
           dailyKey: todayKey(),
           monthlyKey: monthKey(),
           dailyUsed: resetDaily ? 0 : stored.dailyUsed,
           monthlyUsed: resetMonthly ? 0 : stored.monthlyUsed,
           bonuses,
-        }
+        };
       }
     } catch {}
     startTransition(() => {
-      setLedger(next)
-      setLedgerReady(true)
-    })
+      setLedger(next);
+      setLedgerReady(true);
+    });
 
-    if (user) void fetch('/api/member/activity', { cache: 'no-store' }).then((response) => response.ok ? response.json() : { shelves: [] }).then((data: { shelves?: Array<{ work: { id: string } }> }) => setSavedIds(new Set((data.shelves ?? []).map((item) => item.work.id))))
-  }, [user])
+    if (user)
+      void fetch("/api/member/activity", { cache: "no-store" })
+        .then((response) => (response.ok ? response.json() : { shelves: [] }))
+        .then((data: { shelves?: Array<{ work: { id: string } }> }) =>
+          setSavedIds(
+            new Set((data.shelves ?? []).map((item) => item.work.id)),
+          ),
+        );
+  }, [user]);
 
   useEffect(() => {
-    if (!ledgerReady || serverWorks !== null) return
-    localStorage.setItem(VOTE_STORAGE_KEY, JSON.stringify(ledger))
-  }, [ledger, ledgerReady, serverWorks])
+    if (!ledgerReady || serverWorks !== null) return;
+    localStorage.setItem(VOTE_STORAGE_KEY, JSON.stringify(ledger));
+  }, [ledger, ledgerReady, serverWorks]);
 
   const openVote = (item: RankingWorkItem) => {
     if (!isLoggedIn) {
-      router.push('/login')
-      return
+      router.push("/login");
+      return;
     }
-    setSelectedWork(item)
-    setVoteMessage('')
-    setVoteDialogOpen(true)
-  }
+    setSelectedWork(item);
+    setVoteMessage("");
+    setVoteDialogOpen(true);
+  };
 
   const confirmVote = async (kind: VoteKind) => {
-    if (!selectedWork) return
-    if (remainingTickets(ledger,kind) <= 0) {
-      setVoteMessage('ตั๋วประเภทนี้ถูกใช้ครบแล้ว')
-      return
+    if (!selectedWork) return;
+    if (remainingTickets(ledger, kind) <= 0) {
+      setVoteMessage("ตั๋วประเภทนี้ถูกใช้ครบแล้ว");
+      return;
     }
     if (serverWorks?.some((work) => work.detailId === selectedWork.detailId)) {
-      const response = await fetch('/api/interactions/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workId: selectedWork.detailId, kind, amount: 1, requestId: crypto.randomUUID() }) })
-      const data = await response.json().catch(() => ({})) as { tickets?: { daily: { allowance: number; used: number; balance: number }; monthly: { balance: number } }; totals?: { daily: number; monthly: number }; error?: string }
-      if (!response.ok || !data.tickets || !data.totals) { setVoteMessage(data.error || 'โหวตไม่สำเร็จ'); return }
+      const response = await fetch("/api/interactions/vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workId: selectedWork.detailId,
+          kind,
+          amount: 1,
+          requestId: crypto.randomUUID(),
+        }),
+      });
+      const data = (await response.json().catch(() => ({}))) as {
+        tickets?: {
+          daily: { allowance: number; used: number; balance: number };
+          monthly: { balance: number };
+        };
+        totals?: { daily: number; monthly: number };
+        error?: string;
+      };
+      if (!response.ok || !data.tickets || !data.totals) {
+        setVoteMessage(data.error || "โหวตไม่สำเร็จ");
+        return;
+      }
       setLedger((current) => ({
         ...current,
         server: true,
@@ -644,76 +1513,157 @@ export function RankingExperience({ state, works, creators }: Props) {
         dailyUsed: data.tickets!.daily.used,
         dailyBalance: data.tickets!.daily.balance,
         monthlyBalance: data.tickets!.monthly.balance,
-        bonuses: { ...current.bonuses, [selectedWork.detailId]: { daily: Math.max(0,data.totals!.daily-selectedWork.recommendedVotes), monthly: Math.max(0,data.totals!.monthly-selectedWork.monthlyVotes) } },
-      }))
-      setVoteMessage('บันทึกคะแนนโหวตเรียบร้อยแล้ว')
-      return
-    }
-    setLedger((current) => {
-      const currentBonus = current.bonuses[selectedWork.detailId] ?? { daily: 0, monthly: 0 }
-      return {
-        ...current,
-        dailyUsed: current.dailyUsed + (kind === 'daily' ? 1 : 0),
-        monthlyUsed: current.monthlyUsed + (kind === 'monthly' ? 1 : 0),
         bonuses: {
           ...current.bonuses,
-          [selectedWork.detailId]: { ...currentBonus, [kind]: currentBonus[kind] + 1 },
+          [selectedWork.detailId]: {
+            daily: Math.max(
+              0,
+              data.totals!.daily - selectedWork.recommendedVotes,
+            ),
+            monthly: Math.max(
+              0,
+              data.totals!.monthly - selectedWork.monthlyVotes,
+            ),
+          },
         },
-      }
-    })
-    setVoteMessage('บันทึกคะแนนโหวตเรียบร้อยแล้ว')
-  }
+      }));
+      setVoteMessage("บันทึกคะแนนโหวตเรียบร้อยแล้ว");
+      return;
+    }
+    setLedger((current) => {
+      const currentBonus = current.bonuses[selectedWork.detailId] ?? {
+        daily: 0,
+        monthly: 0,
+      };
+      return {
+        ...current,
+        dailyUsed: current.dailyUsed + (kind === "daily" ? 1 : 0),
+        monthlyUsed: current.monthlyUsed + (kind === "monthly" ? 1 : 0),
+        bonuses: {
+          ...current.bonuses,
+          [selectedWork.detailId]: {
+            ...currentBonus,
+            [kind]: currentBonus[kind] + 1,
+          },
+        },
+      };
+    });
+    setVoteMessage("บันทึกคะแนนโหวตเรียบร้อยแล้ว");
+  };
 
   const toggleShelf = (id: string) => {
-    if (!isLoggedIn) { router.push('/login'); return }
+    if (!isLoggedIn) {
+      router.push("/login");
+      return;
+    }
     if (serverWorks?.some((work) => work.detailId === id)) {
-      void fetch('/api/interactions/shelf', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workId: id }) }).then(async (response) => {
-        const data = await response.json().catch(() => ({})) as { active?: boolean }
-        if (response.ok) setSavedIds((current) => { const next = new Set(current); if (data.active) next.add(id); else next.delete(id); return next })
-      })
-      return
+      void fetch("/api/interactions/shelf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workId: id }),
+      }).then(async (response) => {
+        const data = (await response.json().catch(() => ({}))) as {
+          active?: boolean;
+        };
+        if (response.ok)
+          setSavedIds((current) => {
+            const next = new Set(current);
+            if (data.active) next.add(id);
+            else next.delete(id);
+            return next;
+          });
+      });
+      return;
     }
     setSavedIds((current) => {
-      const next = new Set(current)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      if (user) localStorage.setItem(shelfStorageKey(user.id), JSON.stringify([...next]))
-      return next
-    })
-  }
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      if (user)
+        localStorage.setItem(
+          shelfStorageKey(user.id),
+          JSON.stringify([...next]),
+        );
+      return next;
+    });
+  };
 
-  const displayWorks = serverWorks ?? works
+  const displayWorks = serverWorks ?? works;
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} data-ranking-page>
       <div className={styles.shell}>
         <aside className={styles.sidebar}>
           <h2 className={styles.sideTitle}>อันดับความนิยม</h2>
-          <SideMenu state={state}/>
+          <SideMenu state={state} />
         </aside>
 
-        <main className={styles.content}>
+        <div className={styles.content}>
           <div className={styles.mobileNav}>
-            <button type="button" className={styles.mobileNavButton} onClick={() => setMobileOpen(true)} aria-expanded={mobileOpen}><span className="flex items-center"><Menu size={18}/><span className="ml-2">{currentLabel(state)}</span></span><ChevronRight size={18}/></button>
+            <button
+              type="button"
+              className={styles.mobileNavButton}
+              onClick={() => setMobileOpen(true)}
+              aria-expanded={mobileOpen}
+            >
+              <span className="flex items-center">
+                <Menu size={18} />
+                <span className="ml-2">{currentLabel(state)}</span>
+              </span>
+              <ChevronRight size={18} />
+            </button>
           </div>
 
-          <RankingHero state={state} ledger={ledger}/>
-          {state.view === 'overview' && !state.type ? (
-            <><StatsStrip/><OverviewTable state={state} works={displayWorks} creators={creators} ledger={ledger}/></>
+          <RankingHero ledger={ledger} />
+          {state.view === "overview" && !state.type ? (
+            <>
+              <StatsStrip works={displayWorks} />
+              <OverviewTable
+                state={state}
+                works={displayWorks}
+                creators={creators}
+                ledger={ledger}
+              />
+            </>
           ) : (
-            <ListView state={state} works={displayWorks} creators={creators} ledger={ledger} onVote={openVote} savedIds={savedIds} onToggleShelf={toggleShelf}/>
+            <ListView
+              state={state}
+              works={displayWorks}
+              creators={creators}
+              ledger={ledger}
+              onVote={openVote}
+              savedIds={savedIds}
+              onToggleShelf={toggleShelf}
+            />
           )}
-        </main>
+        </div>
       </div>
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-[min(88vw,360px)] gap-0 bg-white p-0">
-          <SheetHeader className="border-b px-5 py-5"><SheetTitle className="text-lg font-bold">อันดับความนิยม</SheetTitle><SheetDescription>เลือกหมวดและประเภทอันดับ</SheetDescription></SheetHeader>
-          <div className={styles.sheetBody}><SideMenu state={state} onNavigate={() => setMobileOpen(false)}/></div>
+        <SheetContent
+          side="left"
+          className="w-[min(88vw,360px)] gap-0 bg-white p-0"
+        >
+          <SheetHeader className="border-b px-5 py-5">
+            <SheetTitle className="text-lg font-bold">
+              อันดับความนิยม
+            </SheetTitle>
+            <SheetDescription>เลือกหมวดและประเภทอันดับ</SheetDescription>
+          </SheetHeader>
+          <div className={styles.sheetBody}>
+            <SideMenu state={state} onNavigate={() => setMobileOpen(false)} />
+          </div>
         </SheetContent>
       </Sheet>
 
-      <VoteDialog item={selectedWork} open={voteDialogOpen} onOpenChange={setVoteDialogOpen} ledger={ledger} onConfirm={confirmVote} message={voteMessage}/>
+      <VoteDialog
+        item={selectedWork}
+        open={voteDialogOpen}
+        onOpenChange={setVoteDialogOpen}
+        ledger={ledger}
+        onConfirm={confirmVote}
+        message={voteMessage}
+      />
     </div>
-  )
+  );
 }

@@ -2,6 +2,14 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+@font-face {
+  font-family: 'ReadLead Navigation Thai';
+  src: url('./fonts/NotoSansThai.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+}
+
 body:has([data-auth-page]) [data-site-header],
 body:has([data-auth-page]) [data-site-footer] {
   display: none;
@@ -15,14 +23,17 @@ body:has([data-auth-page]) [data-site-footer] {
 
   body:has([data-home-desktop]) [data-site-header] {
     position: relative;
+  }
+
+  [data-site-header] {
     width: 100vw;
     height: auto;
     border: 0;
     border-bottom: 1px solid #e9edf2;
-    font-family: 'ReadLead Home Thai', sans-serif;
+    font-family: 'ReadLead Navigation Thai', sans-serif;
   }
 
-  body:has([data-home-desktop]) [data-site-header] > div:first-child {
+  [data-site-header] > div:first-child {
     width: 100%;
     min-width: 0;
     height: 55px;
@@ -32,34 +43,34 @@ body:has([data-auth-page]) [data-site-footer] {
     zoom: .82;
   }
 
-  body:has([data-home-desktop]) [data-site-header] nav[aria-label="เมนูหลัก"] {
+  [data-site-header] nav[aria-label="เมนูหลัก"] {
     display: flex;
     align-self: center;
     min-width: 0;
   }
 
-  body:has([data-home-desktop]) [data-site-header] > div:first-child > div:last-child {
+  [data-site-header] > div:first-child > div:last-child {
     gap: 20px;
   }
 
-  body:has([data-home-desktop]) [data-site-header] [data-desktop-account] {
+  [data-site-header] [data-desktop-account] {
     display: block;
     white-space: nowrap;
   }
 
-  body:has([data-home-desktop]) [data-site-header] a[aria-label="ค้นหา"] {
+  [data-site-header] a[aria-label="ค้นหา"] {
     width: 22px;
     height: 22px;
   }
 
-  body:has([data-home-desktop]) [data-site-header] button[aria-label="เปิดเมนู"] {
+  [data-site-header] button[aria-label="เปิดเมนู"] {
     display: none;
   }
 
 }
 
 @media (min-width: 640px) and (max-width: 1023px) {
-  body:has([data-home-desktop]) [data-site-header] nav[aria-label="เมนูหลัก"] {
+  [data-site-header] nav[aria-label="เมนูหลัก"] {
     overflow-x: auto;
   }
 }

@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 import { LEGAL_DOC_IDS, LEGAL_DOC_LABELS, legalDocHref } from "@/lib/legal-content";
+import { useRole } from "@/contexts/RoleContext";
 
 const EXPLORE_LINKS = [
   { href: "/", label: "หน้าหลัก" },
@@ -18,9 +21,12 @@ const ACCOUNT_LINKS = [
   { href: "/dashboard", label: "แดชบอร์ดของฉัน" },
 ];
 
-const CREATOR_LINKS = [{ href: "/profile/cmvv7xw9n000t01mmay8izmja?tab=writer-application", label: "สมัครเป็นนักเขียน" }];
-
 export function SiteFooter() {
+  const { user } = useRole();
+  const creatorLinks = [{
+    href: user ? `/profile/${encodeURIComponent(user.id)}?tab=writer-application` : "/login",
+    label: "สมัครเป็นนักเขียน",
+  }];
   const currentYear = new Date().getFullYear();
 
   return (
@@ -42,7 +48,7 @@ export function SiteFooter() {
 
         <FooterColumn heading="สำรวจ" links={EXPLORE_LINKS} />
         <FooterColumn heading="บัญชี" links={ACCOUNT_LINKS} />
-        <FooterColumn heading="นักเขียน" links={CREATOR_LINKS} />
+        <FooterColumn heading="นักเขียน" links={creatorLinks} />
       </div>
 
       <div data-footer-divider className="h-px bg-[#e9edf2]" />

@@ -1,12 +1,12 @@
 .accountPage{--pink:#cc4452;--pinkDark:#b23a48;--pinkSoft:#fae8ea;--ink:#2b2d3a;--muted:#6b7080;--softMuted:#8b91a0;--soft:#f2f3f6;--line:#e7e8ee;min-height:calc(100vh - 55px);padding:21px 30px 44px;background:#f4f5f8;color:var(--ink)}
 .accountGrid{display:grid;grid-template-columns:206px minmax(0,1fr);gap:30px;width:100%;max-width:1500px;margin:0 auto}
 .sidebar{position:sticky;top:82px;align-self:start}
-.sideNav{display:flex;min-height:560px;flex-direction:column;gap:1px}
+.sideNav{display:flex;flex-direction:column;gap:1px}
 .sideButton{display:flex;width:100%;align-items:center;gap:13px;border:0;border-radius:11px;background:transparent;padding:10px 12px;color:var(--muted);font-family:inherit;font-size:14px;font-weight:500;line-height:1.5;text-align:left;cursor:pointer}
 .sideButton:hover{background:var(--soft);color:var(--ink)}
 .sideButtonActive,.sideButtonActive:hover{background:#fdf0f4;color:var(--pink);font-weight:600}
 .sideButton svg{width:19px;height:19px;flex:0 0 19px;stroke-width:1.7}
-.sideLogout{margin-top:auto;color:var(--muted)}
+.sideLogout{margin-top:12px;color:var(--muted)}
 .mobileSelect{display:none;width:100%;height:46px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:0 13px;color:var(--ink);font:600 14px inherit}
 .main{min-width:0}
 .stack{display:flex;flex-direction:column;gap:20px}
@@ -729,4 +729,82 @@
   .reportModal{width:100%;max-height:92vh;border-radius:18px 18px 0 0;padding:21px 17px}
   .reportMessageMember p,.reportMessageStaff p{font-size:13.5px}
   .reportMessageImages a{width:78px;height:78px}
+}
+
+@font-face {
+  font-family: 'Profile Thai';
+  src: url('../../app/fonts/NotoSansThai.ttf') format('truetype');
+  font-weight: 300 800;
+  font-display: swap;
+}
+
+@media (min-width: 1152px) {
+  .accountPage {
+    padding: 0;
+    background: #fff;
+    font-family: 'Profile Thai', sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .accountGrid {
+    box-sizing: border-box;
+    width: 1500px;
+    max-width: 1500px;
+    grid-template-columns: 206px minmax(0, 1fr);
+    gap: 30px;
+    padding: 21px 30px 44px;
+    zoom: .768;
+  }
+
+  .sidebar { position: relative; top: 0; }
+  .statsGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ownerBookGrid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .ownerHero { min-height: 294px; padding: 28px 36px; }
+  .avatarWrap { flex-basis: 190px; }
+  .avatarLarge { width: 178px; height: 178px; }
+  .coinCard, .voteCard { padding: 15px 22px; }
+  .voteCard { gap: 16px; }
+  .coinImage { box-sizing: border-box; padding: 8.32px; }
+  .countdownCell { box-sizing: content-box; width: 30px; flex-basis: 30px; }
+  .helpCategoryGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .paymentGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .packageGrid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1152px) {
+  .activityDialog, .walletDialog, .reportModal { font-family: 'Profile Thai', sans-serif; }
+  .accountPage .mediaTab { font-weight: 600; font-size: 15.5px; }
+  .accountPage .categoryFilter select { font-weight: 600; font-size: 13.5px; }
+  .accountPage .filterButton { font-weight: 600; font-size: 12px; }
+  .accountPage .primaryButton { font-weight: 800; font-size: 13px; }
+  .accountPage .input, .accountPage .select, .accountPage .textarea { font-weight: 400; font-size: 13px; }
+  .accountPage .secondaryButton { font-weight: 700; font-size: 13px; }
+  .accountPage .myPostsTab { font-weight: 800; font-size: 21px; line-height: 1.1; }
+  .accountPage .myPostsFilterItem button { font-weight: 600; font-size: 13.5px; }
+  .activityEditTextarea { font-weight: 400; font-size: 13.5px; line-height: 1.65; }
+  .activityPrimaryAction, .activitySecondaryAction, .activityDangerAction { font-weight: 700; font-size: 12.5px; }
+  .activityDangerText { font-weight: 700; font-size: 12.5px; }
+  .accountPage .helpSearch input { font-weight: 400; font-size: 15px; }
+  .accountPage .helpSearch button { font-weight: 700; font-size: 14px; }
+  .accountPage .helpAccordion>button { font-weight: 600; font-size: 15px; }
+  .accountPage .helpArticleAccordion>button { font-size: 13.5px; }
+  .accountPage .helpCta>button { font-weight: 600; font-size: 14px; }
+  .accountPage .settingButton { font-weight: 600; font-size: 13px; }
+  .accountPage .editorSave, .accountPage .editorCancel { font-weight: 700; font-size: 12.5px; }
+  .accountPage .deleteButton { font-weight: 600; font-size: 14px; }
+  .accountPage .walletHeroButton { font-weight: 700; font-size: 14px; }
+  .accountPage .walletLoadError button { font-weight: 700; font-size: 12.5px; }
+  .accountPage .walletTopUpButton { font-weight: 700; font-size: 15px; }
+  .accountPage .addCardButton { font-weight: 600; font-size: 13.5px; }
+  .accountPage .promoForm input { font-weight: 400; font-size: 14px; }
+  .accountPage .promoForm button { font-weight: 700; font-size: 13.5px; }
+  .accountPage .historyTabs button { font-weight: 600; font-size: 14.5px; }
+  .walletDialogActions button, .walletResult button { font-weight: 700; font-size: 13px; }
+  .gatewayCardForm input { font-weight: 600; font-size: 13px; }
+  .accountPage .reportField input, .accountPage .reportField textarea, .accountPage .reportField select { font-weight: 400; font-size: 14px; }
+  .accountPage .reportGhostButton, .accountPage .reportPrimaryButton { font-weight: 600; font-size: 14px; }
+  .accountPage .reportTabs button { font-weight: 600; font-size: 14.5px; }
+  .accountPage .reportEmpty button, .reportModalState button { font-weight: 600; font-size: 12.5px; }
+  .reportReplyRow input { font-weight: 400; font-size: 14px; }
 }

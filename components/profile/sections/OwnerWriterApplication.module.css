@@ -14,3 +14,22 @@
 @media(max-width:1050px){.addressColumns{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:800px){.applicationPage{max-width:none}.pageHeader h1{font-size:24px}.sectionCard{padding:21px}.nameColumns{grid-template-columns:120px minmax(0,1fr) minmax(0,1fr)}}
 @media(max-width:640px){.form{gap:16px}.sectionCard{padding:18px;border-radius:15px}.typeGrid,.twoColumns,.nameColumns,.addressColumns{grid-template-columns:1fr}.typeCard{padding:14px}.sectionDescription{margin-bottom:16px}.legalDialog>[data-slot="dialog-title"]{padding:20px 20px 12px}.legalBody{padding:4px 20px 20px}.preview img{width:60px;height:60px;flex-basis:60px}}
+
+@font-face {
+  font-family: 'Writer Application Sarabun';
+  src: url('../../../app/fonts/Sarabun-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@media (min-width: 1152px) {
+  .applicationPage .input {
+    font-family: 'Writer Application Sarabun', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  .terms button { font-weight: 700; }
+  .submitButton { font-size: 16px; font-weight: 700; }
+  .legalClose { font-size: 14px; font-weight: 800; }
+}

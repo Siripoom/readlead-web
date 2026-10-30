@@ -18,7 +18,7 @@ const ACCOUNT_LINKS = [
   { href: "/dashboard", label: "แดชบอร์ดของฉัน" },
 ];
 
-const CREATOR_LINKS = [{ href: "/writer", label: "สมัครเป็นนักเขียน" }];
+const CREATOR_LINKS = [{ href: "/profile/cmvv7xw9n000t01mmay8izmja?tab=writer-application", label: "สมัครเป็นนักเขียน" }];
 
 export function SiteFooter() {
   const currentYear = new Date().getFullYear();

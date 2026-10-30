@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   ChevronDown, ChevronLeft, ChevronRight, Eye, Grid2X2,
-  Headphones, List as ListIcon, ListTree, Search, SlidersHorizontal, X,
+  List as ListIcon, ListTree, Search, SlidersHorizontal, X,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react'
 import { useRole } from '@/contexts/RoleContext'
@@ -227,7 +227,7 @@ function SearchHero({ data, value, onChange, onSubmit }: {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
 }) {
   return (
-    <section className={styles.hero} style={{ background: data.background || '#edf2fa' }}>
+    <section className={`${styles.hero} ${data.id === 'discover-fallback-hero' ? styles.heroFallback : ''}`} style={{ background: data.background || '#edf2fa' }}>
       {data.imageUrl && (
         <picture className={styles.heroMedia}>
           {data.mobileImageUrl && <source media="(max-width: 639px)" srcSet={data.mobileImageUrl} />}
@@ -283,7 +283,6 @@ function GridCard({ work, priority }: { work: DiscoverWork; priority: boolean })
         <p className={styles.cardSynopsis}>{work.synopsis}</p>
         <div className={styles.cardStats}>
           <span><Eye />{compactNumber(work.views)}</span>
-          {work.type === 'audiobook' && <span><Headphones />{compactNumber(Math.round(work.views * .72))}</span>}
           <span><ListTree />{thaiNumber(work.episodes)}</span>
         </div>
       </div>
@@ -304,7 +303,6 @@ function ListCard({ work, saved, onToggleShelf }: { work: DiscoverWork; saved: b
         <p className={styles.listSynopsis}>{work.synopsis}</p>
         <div className={styles.listStats}>
           <span><Eye />{compactNumber(work.views)}</span>
-          {work.type === 'audiobook' && <span><Headphones />{compactNumber(Math.round(work.views * .72))}</span>}
           <span className={styles.latest}><b>อัปเดตล่าสุด</b> {work.type === 'manga' ? 'ตอนที่' : 'บทที่'} {thaiNumber(work.episodes)} · {updated}</span>
         </div>
       </div>
@@ -506,13 +504,19 @@ export function DiscoverExperience({ data, initialGenre, initialType = null }: {
     const next = queryInput.trim()
     if (!next) return
     setQuery(next)
+    setFilters({ ...filters, category: 'all' })
+    setDraft({ ...filters, category: 'all' })
     setTouched(true)
     setPage(1)
     window.setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
   }
 
   const selectQuickCategory = (category: QuickCategory) => {
-    const next = { ...filters, category }
+    const next: Filters = category === 'all'
+      ? { ...filters, category, type: 'all', origin: 'all', sort: 'newest' }
+      : { ...filters, category }
+    setQuery('')
+    setQueryInput('')
     setFilters(next)
     setDraft(next)
     setTouched(true)
@@ -556,7 +560,7 @@ export function DiscoverExperience({ data, initialGenre, initialType = null }: {
   return (
     <div className={styles.root}>
       <MobileSearchBar value={queryInput} onChange={setQueryInput} onSubmit={commitSearch} onBack={goBack} />
-      <main className={styles.container}>
+      <div className={styles.container}>
         <SearchHero data={data.cms.hero} value={queryInput} onChange={setQueryInput} onSubmit={commitSearch} />
 
         <div className={styles.tabsRow}>
@@ -620,7 +624,7 @@ export function DiscoverExperience({ data, initialGenre, initialType = null }: {
             <button type="button" disabled={currentPage === totalPages} onClick={() => goToPage(currentPage + 1)} aria-label="หน้าถัดไป"><ChevronRight /></button>
           </nav>}
         </section>
-      </main>
+      </div>
 
       <FilterDrawer
         open={drawerOpen}

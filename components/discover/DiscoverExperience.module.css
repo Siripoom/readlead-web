@@ -1,3 +1,38 @@
+@font-face {
+  font-family: 'Discover Thai';
+  src: url('../../app/fonts/NotoSansThai.ttf') format('truetype');
+  font-weight: 300 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Discover Kanit';
+  src: url('../../app/fonts/Kanit-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Discover Kanit';
+  src: url('../../app/fonts/Kanit-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Discover Kanit';
+  src: url('../../app/fonts/Kanit-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Discover Sarabun';
+  src: url('../../app/fonts/Sarabun-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+
 .root {
   --discover-red: #cc4452;
   --discover-red-dark: #b53a48;
@@ -1215,6 +1250,128 @@
   .latest { font-size: 10.5px; }
   .drawer { width: min(92vw, 340px); }
   .drawerFoot { width: min(92vw, 340px); }
+}
+
+@media (min-width: 1152px) {
+  .root {
+    font-family: 'Discover Thai', sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    width: 1536px;
+    padding: 24px 40px 56px;
+    zoom: .75;
+  }
+
+  .hero {
+    min-height: 0;
+    aspect-ratio: 2972 / 552;
+  }
+
+  .heroSearch { bottom: 19.5%; }
+  .categoryGrid { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 24px; }
+  .resultGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  .heroElement_title {
+    max-width: 64%;
+    font-size: 3.7cqw;
+    line-height: 1.12;
+    white-space: normal;
+  }
+
+  .heroElement_text {
+    max-width: 60%;
+    font-size: 1.95cqw;
+    line-height: 1.45;
+    white-space: normal;
+  }
+
+  .heroElement_badge { font-size: 1.75cqw; }
+  .heroElement_button { font-size: 2cqw; }
+
+  .heroFallback {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    padding-left: 54px;
+  }
+
+  .heroFallback .heroElements {
+    position: static;
+    height: auto;
+  }
+
+  .heroFallback .heroElement {
+    position: static;
+    max-width: 100%;
+    font-family: 'Discover Kanit', sans-serif;
+    white-space: nowrap;
+  }
+
+  .heroFallback .heroElement_title {
+    height: 1.35em;
+    margin-bottom: 10px;
+    font-size: 40px;
+    font-weight: 700 !important;
+    line-height: 1.35;
+  }
+
+  .heroFallback .heroElement_text {
+    height: 1.5em;
+    margin-bottom: 20px;
+    font-size: 18px;
+    line-height: 1.5;
+  }
+
+  .heroFallback .heroSearch {
+    position: relative;
+    bottom: auto;
+    left: auto;
+  }
+
+  .heroSearch input { font-family: 'Discover Kanit', sans-serif; }
+
+  .filterButton, .typeTab, .typeTabActive {
+    min-height: 0;
+    padding: 11px 6px;
+  }
+
+  .category, .categoryActive {
+    background-image: linear-gradient(160deg, #e9e6f2, #ddd9ec);
+  }
+
+  .category:hover, .categoryActive { transform: none; }
+
+  .initialState {
+    min-height: 0;
+    padding: 70px 0;
+  }
+
+  .emptyState {
+    min-height: 0;
+    padding: 60px;
+    color: #9aa0af;
+  }
+
+  .gridCard:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+    transform: none;
+  }
+
+  .cardTitle { font-size: 15.5px; }
+  .cardMeta { margin-bottom: 8px; font-size: 12px; }
+  .cardSynopsis, .listSynopsis { font-family: 'Discover Sarabun', sans-serif; line-height: 1.6; }
+  .cardStats { gap: 10px; }
+  .cardStats > span { font-size: 11px; }
+  .cardStats svg, .listStats svg { transform: translateY(-1px); }
+  .listCard { padding: 22px 4px; }
+  .listSynopsis { max-width: none; }
+
+  .drawer { font-family: 'Discover Thai', sans-serif; }
 }
 
 @media (prefers-reduced-motion: reduce) {

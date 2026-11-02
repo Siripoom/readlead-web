@@ -57,9 +57,9 @@ function BannerElement({ element, elapsedSeconds, desktop, active }: { element: 
     ? countdownLabel((element.offsetSeconds ?? 0) - elapsedSeconds)
     : element.text
   if (element.type === 'button' && element.link) {
-    return <Link href={element.link} tabIndex={active ? 0 : -1} className={className} style={elementStyle(element, desktop)}>{content}</Link>
+    return <Link href={element.link} data-cms-element={element.type} tabIndex={active ? 0 : -1} className={className} style={elementStyle(element, desktop)}>{content}</Link>
   }
-  return <span className={className} style={elementStyle(element, desktop)}>{content}</span>
+  return <span data-cms-element={element.type} className={className} style={elementStyle(element, desktop)}>{content}</span>
 }
 
 export function CmsBannerCarousel({ items, aspect, mobileAspect, slideSeconds, label, fullWidth = false, priority = false, desktop = false }: Props) {
@@ -161,7 +161,7 @@ export function CmsBannerCarousel({ items, aspect, mobileAspect, slideSeconds, l
         ))}
       </div>
       {items.length > 1 && (
-        <div className={styles.cmsBannerDots} role="group" aria-label={`เลือก${label}`}>
+        <div className={styles.cmsBannerDots} data-cms-pagination role="group" aria-label={`เลือก${label}`}>
           {items.map((item, index) => (
             <button
               key={item.id}

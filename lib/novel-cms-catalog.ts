@@ -19,7 +19,13 @@ export type NovelCmsCoverflow = {
   covers: CmsCoverflowCover[]
 }
 
+export type NovelRankingArtwork = {
+  wide: Record<string, CmsBanner>
+  compact: Record<string, CmsBanner>
+}
+
 export type NovelCmsCatalog = {
+  rankingArtwork: NovelRankingArtwork
   slideSeconds: number
   hero: CmsBanner[]
   activity: CmsBanner[][]
@@ -66,6 +72,7 @@ function sectionState(payload: unknown): Record<NovelCmsSectionKey, NovelCmsSect
 }
 
 const EMPTY_CMS: NovelCmsCatalog = {
+  rankingArtwork: { wide: {}, compact: {} },
   slideSeconds: 5,
   hero: [],
   activity: [[], []],
@@ -85,6 +92,16 @@ function bannersFor(section: CmsSection | null, baseUrl: string) {
     const banner = parseCmsBanner(item, baseUrl)
     return banner ? [banner] : []
   })
+}
+
+function artworkByWork(section: CmsSection | null, baseUrl: string): Record<string, CmsBanner> {
+  const result: Record<string, CmsBanner> = {}
+  for (const item of section?.items ?? []) {
+    if (!isRecord(item) || !isRecord(item.book) || typeof item.book.id !== 'string') continue
+    const banner = parseCmsBanner(item, baseUrl)
+    if (banner?.imageUrl) result[item.book.id] = banner
+  }
+  return result
 }
 
 function bannerColumns(section: CmsSection | null, columns: number, baseUrl: string) {
@@ -146,6 +163,10 @@ export async function getNovelCmsCatalog(): Promise<NovelCmsCatalog> {
     })
 
     return {
+      rankingArtwork: {
+        wide: artworkByWork(enabledCmsSection(payload, 'ranking-wide'), baseUrl),
+        compact: artworkByWork(enabledCmsSection(payload, 'ranking-compact'), baseUrl),
+      },
       slideSeconds,
       hero: bannersFor(hero, baseUrl),
       activity: bannerColumns(activity, 2, baseUrl),
@@ -156,7 +177,7 @@ export async function getNovelCmsCatalog(): Promise<NovelCmsCatalog> {
       webBooks,
       categoryBanners: bannersFor(category, baseUrl),
       webRecommend: bannerColumns(webRecommend, 2, baseUrl),
-      launch: bannerColumns(launch, 2, baseUrl),
+      launch: bannerColumns(launch, 1, baseUrl),
       sectionState: sectionState(payload),
     }
   } catch (error) {

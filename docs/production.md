@@ -49,3 +49,20 @@ node /app/scripts/seed-home-design.mjs --production --web-origin https://readlea
 ```
 
 The script prints the backup path under `/app/.seed-backups`. Copy required backups outside the container before replacing it. Check the public CMS response at https://readlead-readlead-backoffice.cqejbz.easypanel.host/api/public/cms/home and the rendered homepage after applying the seed.
+
+## Novel preview seed
+
+Deploy both services first. The web image includes 12 images extracted from the supplied novel design. The backoffice image includes `/app/scripts/seed-novel-design.mjs`.
+
+Open the public `/api/public/cms/novel` endpoint to initialize the current sections. The seed requires published `home-design-*` novels with published episodes. It adds dedicated `novel-design-preview-*` CMS items and preserves existing items and section switches. Repeated runs update the same preview items.
+
+Run in the backoffice Terminal:
+
+```sh
+node /app/scripts/seed-novel-design.mjs --production --web-origin https://readlead.co.th
+node /app/scripts/seed-novel-design.mjs --production --web-origin https://readlead.co.th --apply
+```
+
+Inspect the dry-run counts before applying. The script checks all image URLs before writing and saves the previous novel CMS data under `/app/.seed-backups/novel-*/cms-before.json`. Preserve that backup outside the container before its next deployment. Check the public CMS response and https://readlead.co.th/novel after applying. Existing sample works without uploaded covers keep their cover placeholders.
+
+For local preview, run `node scripts/seed-novel-design.mjs --apply` from the web repository. This wrapper uses the sibling backoffice checkout and the ReadLead database on port 5434. Local images use `http://localhost:3100` by default.

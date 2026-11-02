@@ -1,8 +1,12 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
+import { useState } from 'react'
 import { BookOpen, ChevronRight, Eye, Info, List, Trophy, Users } from 'lucide-react'
 import type { HomeBookStripItem } from '@/lib/home-landing-data'
+import type { CmsBanner } from '@/lib/cms-catalog'
+import type { NovelRankingArtwork } from '@/lib/novel-cms-catalog'
 import { NovelCoverArt } from './NovelCoverArt'
 import styles from './NovelLanding.module.css'
 
@@ -13,8 +17,10 @@ function itemHref(item: HomeBookStripItem) {
 function CoverImage({ item, className }: { item: HomeBookStripItem; className: string }) {
   if (!item.coverUrl) return null
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- cover URLs can be local API routes or CMS URLs.
-    <img
+    <Image
+      fill
+      unoptimized
+      sizes="(max-width: 767px) 160px, 600px"
       src={item.coverUrl}
       alt=""
       className={className}
@@ -23,13 +29,28 @@ function CoverImage({ item, className }: { item: HomeBookStripItem; className: s
   )
 }
 
-function PopularHero({ item, rank, compact = false }: { item: HomeBookStripItem; rank: number; compact?: boolean }) {
+function PopularHero({ item, rank, compact = false, banner }: { item: HomeBookStripItem; rank: number; compact?: boolean; banner?: CmsBanner }) {
+  const [failedArtwork, setFailedArtwork] = useState<string | null>(null)
   return (
     <Link
       href={itemHref(item)}
       className={compact ? styles.popularMini : styles.popularChampion}
       style={{ background: item.gradient }}
+      aria-label={`อันดับ ${rank}: ${item.title}`}
     >
+      {banner?.imageUrl && failedArtwork !== banner.imageUrl && (
+        <span className={styles.popularBillboard}>
+          <Image
+            fill
+            unoptimized
+            sizes="(min-width: 1152px) 1037px, 100vw"
+            src={banner.imageUrl}
+            alt=""
+            onError={() => setFailedArtwork(banner.imageUrl ?? null)}
+            style={{ objectPosition: `${banner.focal.x}% ${banner.focal.y}%`, transform: `scale(${banner.focal.zoom / 100})` }}
+          />
+        </span>
+      )}
       <span className={styles.popularBackdrop} aria-hidden="true">
         <NovelCoverArt index={rank - 1} />
       </span>
@@ -67,9 +88,8 @@ function PopularCard({ item, rank }: { item: HomeBookStripItem; rank: number }) 
         <CoverImage item={item} className={styles.cardCoverImage} />
       </span>
       <span className={styles.cardTitleRow}>
-        <strong>{rank}</strong>
         <span>
-          <b>{item.title}</b>
+          <b><strong className={styles.inlineRank}>#{rank}</strong> {item.title}</b>
           <small>{item.author}</small>
           <small>{item.genreLabel} · {item.originLabel}</small>
         </span>
@@ -79,7 +99,7 @@ function PopularCard({ item, rank }: { item: HomeBookStripItem; rank: number }) 
   )
 }
 
-export function NovelPopularityShowcase({ items }: { items: HomeBookStripItem[] }) {
+export function NovelPopularityShowcase({ items, artwork }: { items: HomeBookStripItem[]; artwork: NovelRankingArtwork }) {
   const [champion, second, third, ...rest] = items
   if (!champion) return null
 
@@ -99,11 +119,11 @@ export function NovelPopularityShowcase({ items }: { items: HomeBookStripItem[] 
       </div>
 
       <div className={styles.popularTop}>
-        <PopularHero item={champion} rank={1} />
+        <PopularHero item={champion} rank={1} banner={artwork.wide[champion.detailId]} />
         {(second || third) && (
           <div className={styles.popularSecondRow}>
-            {second && <PopularHero item={second} rank={2} compact />}
-            {third && <PopularHero item={third} rank={3} compact />}
+            {second && <PopularHero item={second} rank={2} compact banner={artwork.compact[second.detailId] ?? artwork.wide[second.detailId]} />}
+            {third && <PopularHero item={third} rank={3} compact banner={artwork.compact[third.detailId] ?? artwork.wide[third.detailId]} />}
           </div>
         )}
       </div>

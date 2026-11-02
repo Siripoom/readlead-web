@@ -1,4 +1,9 @@
+'use client'
+
 import Link from 'next/link'
+import Image from 'next/image'
+import { useState } from 'react'
+import type { CmsBanner } from '@/lib/cms-catalog'
 import { BookOpen, Headphones, Info, Users } from 'lucide-react'
 import type { AudioBookItem } from '@/lib/audiobook-landing-data'
 import { AudioBookCard } from './AudioBookCarousel'
@@ -9,7 +14,24 @@ function itemHref(item: AudioBookItem) {
   return item.href ?? `/detail?bookId=${encodeURIComponent(item.detailId)}`
 }
 
-export function AudioPopularityShowcase({ items }: { items: AudioBookItem[] }) {
+function RankingImage({ item, index, banner }: { item: AudioBookItem; index: number; banner?: CmsBanner }) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null)
+  const artworkUrl = banner?.imageUrl && failedUrl !== banner.imageUrl ? banner.imageUrl : null
+  return (
+    <Link href={itemHref(item)} className={`${styles.topBanner} group`} aria-label={`อันดับ ${index + 1} ${item.title}`} style={{ background: item.gradient }}>
+      {item.coverUrl && <AudioCover index={index} coverUrl={item.coverUrl} title={item.title} sizes="(min-width: 1152px) 397px, 72vw" />}
+      {!item.coverUrl && !artworkUrl && <span className={styles.topBannerLabel}>พื้นที่ภาพ อันดับ {index + 1} (441×229)</span>}
+      {artworkUrl && banner && (
+        <Image fill unoptimized src={artworkUrl} alt="" sizes="(min-width: 1152px) 397px, 72vw"
+          className={styles.rankingArtwork}
+          style={{ objectPosition: `${banner.focal.x}% ${banner.focal.y}%`, transform: `scale(${banner.focal.zoom / 100})` }}
+          onError={() => setFailedUrl(artworkUrl)} />
+      )}
+    </Link>
+  )
+}
+
+export function AudioPopularityShowcase({ items, artwork }: { items: AudioBookItem[]; artwork: Record<string, CmsBanner> }) {
   const top = items.slice(0, 3)
   const rest = items.slice(3, 10)
   return (
@@ -29,10 +51,7 @@ export function AudioPopularityShowcase({ items }: { items: AudioBookItem[] }) {
 
       <div className={styles.topThree}>
         {top.map((item, index) => (
-          <Link key={item.id} href={itemHref(item)} className={`${styles.topBanner} group`} aria-label={`อันดับ ${index + 1} ${item.title}`} style={{ background: item.gradient }}>
-            <AudioCover index={index} coverUrl={item.coverUrl} title={item.title} sizes="(max-width: 767px) 100vw, 390px" />
-            {!item.coverUrl && <span className={styles.topBannerLabel}>พื้นที่ภาพ อันดับ {index + 1} (441×229)</span>}
-          </Link>
+          <RankingImage key={item.id} item={item} index={index} banner={item.workId ? artwork[item.workId] : undefined} />
         ))}
       </div>
 

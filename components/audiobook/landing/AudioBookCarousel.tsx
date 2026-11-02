@@ -16,9 +16,8 @@ export function AudioBookCard({ item, index, rank }: { item: AudioBookItem; inde
     <Link href={hrefFor(item)} className={`${styles.bookCard} group`}>
       <div className={styles.bookCover} style={{ background: item.gradient }}>
         <AudioCover index={index} coverUrl={item.coverUrl} title={item.title} sizes="160px" />
-        {rank && <span className={styles.bookRank}>#{rank}</span>}
       </div>
-      <h3>{item.title}</h3>
+      <h3>{rank && <strong className={styles.inlineRank}>#{rank} </strong>}{item.title}</h3>
       <p className={styles.bookAuthor}>{item.author}</p>
       <p className={styles.bookGenre}>{item.genreLabel} · {item.originLabel}</p>
       <div className={styles.bookMeta}>

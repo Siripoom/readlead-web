@@ -15,6 +15,7 @@ import type { AudioBookItem } from '@/lib/audiobook-landing-data'
 import { audioFilterKeys } from '@/lib/audio-landing-catalog'
 
 export type AudioCmsCatalog = {
+  rankingArtwork: Record<string, CmsBanner>
   slideSeconds: number
   hero: CmsBanner[]
   activity: CmsBanner[][]
@@ -66,6 +67,7 @@ function cmsSectionState(payload: unknown) {
 }
 
 const EMPTY_CMS: AudioCmsCatalog = {
+  rankingArtwork: {},
   slideSeconds: 5,
   hero: [], activity: [[], []], limitedOffers: [], row3: [], narrator: [], webSides: [[], []], webBooks: [],
   webBooksEnabled: true, categoryBanners: [], bottomCta: [[], [], [], []], webRecommend: [[], []],
@@ -90,6 +92,16 @@ function bannersFor(section: CmsSection | null, baseUrl: string) {
     const banner = parseCmsBanner(item, baseUrl)
     return banner && meaningfulBanner(banner) ? [banner] : []
   })
+}
+
+function artworkByWork(section: CmsSection | null, baseUrl: string): Record<string, CmsBanner> {
+  const artwork: Record<string, CmsBanner> = {}
+  for (const item of section?.items ?? []) {
+    if (!isRecord(item) || !isRecord(item.book) || typeof item.book.id !== 'string') continue
+    const banner = parseCmsBanner(item, baseUrl)
+    if (banner?.imageUrl) artwork[item.book.id] = banner
+  }
+  return artwork
 }
 
 function bannerColumns(section: CmsSection | null, columns: number, baseUrl: string, useSlots = false) {
@@ -165,6 +177,7 @@ export async function getAudioCmsCatalog(): Promise<AudioCmsCatalog> {
     })
 
     return {
+      rankingArtwork: artworkByWork(enabledCmsSection(payload, 'ranking-artwork'), baseUrl),
       slideSeconds,
       hero: bannersFor(hero, baseUrl),
       activity: bannerColumns(activity, 2, baseUrl),

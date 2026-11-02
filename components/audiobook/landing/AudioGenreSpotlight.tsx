@@ -36,7 +36,7 @@ export function AudioGenreSpotlight({ items, primaryOptions, allOptions, activeG
     <div>
       {banners.length > 0 && (
         <div className={styles.categoryBanner}>
-          <AudioBannerCarousel items={banners} aspect="1152 / 228" slideSeconds={slideSeconds} label="เติมเต็มทุกอารมณ์" />
+          <AudioBannerCarousel items={banners} aspect="1152 / 228" slideSeconds={slideSeconds} label="เติมเต็มทุกอารมณ์" categoryArt />
         </div>
       )}
       <div className={`${styles.genrePanel} ${expanded ? styles.genrePanelExpanded : ''}`}>

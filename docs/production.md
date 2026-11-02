@@ -66,3 +66,18 @@ node /app/scripts/seed-novel-design.mjs --production --web-origin https://readle
 Inspect the dry-run counts before applying. The script checks all image URLs before writing and saves the previous novel CMS data under `/app/.seed-backups/novel-*/cms-before.json`. Preserve that backup outside the container before its next deployment. Check the public CMS response and https://readlead.co.th/novel after applying. Existing sample works without uploaded covers keep their cover placeholders.
 
 For local preview, run `node scripts/seed-novel-design.mjs --apply` from the web repository. This wrapper uses the sibling backoffice checkout and the ReadLead database on port 5434. Local images use `http://localhost:3100` by default.
+
+## Audiobook preview seed
+
+Deploy both services, then open `/api/public/cms/audio` on the Backoffice domain to initialize the sections. The web image includes one image from the supplied audiobook reference and seven headphone illustrations. The seed links existing published `home-design-*` audiobooks with published episodes. It preserves existing CMS rows, section switches, and CTA slot switches.
+
+Run in the Backoffice Terminal:
+
+```sh
+node /app/scripts/seed-audio-design.mjs --production --web-origin https://readlead.co.th
+node /app/scripts/seed-audio-design.mjs --production --web-origin https://readlead.co.th --apply
+```
+
+With eight sample audiobooks, the dry-run reports 37 CMS items across the ten visible sections. Repeated runs update the same `audio-design-preview-*` items. The script verifies all eight image URLs before writing and saves the original CMS data under `/app/.seed-backups/audio-*/cms-before.json`. Preserve required backups outside the container before replacing it. Existing works without uploaded covers keep their cover placeholders.
+
+For local preview, run `node scripts/seed-audio-design.mjs --apply` from the web repository. It uses the sibling Backoffice checkout, the local database on port 5434, and images at `http://localhost:3100`. Check the rendered `/audiobook` page and the public audio CMS response after seeding.

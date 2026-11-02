@@ -167,12 +167,23 @@ export function prepareAudioLandingCatalog(catalog: AudioLandingCatalog, genre: 
   }
 }
 
+type BannerLayout = Record<'badge' | 'title' | 'text' | 'button', { x: number; y: number; scale: number }>
+const BANNER_LAYOUTS = {
+  hero: { badge: { x: 4, y: 15, scale: 1.5 }, title: { x: 4, y: 33, scale: .8 }, text: { x: 4, y: 58, scale: 1 }, button: { x: 4, y: 73, scale: 1 } },
+  ribbon: { badge: { x: 4, y: 10, scale: .55 }, title: { x: 4, y: 34, scale: .55 }, text: { x: 4, y: 61, scale: .55 }, button: { x: 4, y: 80, scale: .5 } },
+  card: { badge: { x: 4, y: 15, scale: 1 }, title: { x: 4, y: 34, scale: 1 }, text: { x: 4, y: 58, scale: 1 }, button: { x: 4, y: 74, scale: 1 } },
+  category: { badge: { x: 3.3, y: 13, scale: .78 }, title: { x: 3.3, y: 31, scale: 1.08 }, text: { x: 3.3, y: 64, scale: .76 }, button: { x: 3.3, y: 80, scale: .6 } },
+  cta: { badge: { x: 4, y: 10, scale: 1 }, title: { x: 4, y: 20, scale: 1.9 }, text: { x: 4, y: 52, scale: 2.1 }, button: { x: 4, y: 75, scale: 2 } },
+} satisfies Record<string, BannerLayout>
+
 function banner(
   id: string,
   title: string,
   background: string,
   copy: { badge?: string; title: string; text?: string; button?: string; link?: string },
+  layout: keyof typeof BANNER_LAYOUTS = 'card',
 ): CmsBanner {
+  const positions = BANNER_LAYOUTS[layout]
   return {
     id: `audio-mock-banner-${id}`,
     title,
@@ -180,10 +191,10 @@ function banner(
     linkUrl: copy.link,
     focal: { x: 50, y: 50, zoom: 100 },
     elements: [
-      copy.badge ? { id: `${id}-badge`, type: 'badge' as const, text: copy.badge, x: 4, y: 15, scale: 1, color: '#3a3f47', backgroundColor: '#fff', bold: true } : null,
-      { id: `${id}-title`, type: 'title' as const, text: copy.title, x: 4, y: copy.badge ? 34 : 25, scale: 1, color: '#2b2f36', bold: true },
-      copy.text ? { id: `${id}-text`, type: 'text' as const, text: copy.text, x: 4, y: copy.badge ? 58 : 54, scale: 1, color: '#5b6068' } : null,
-      copy.button ? { id: `${id}-button`, type: 'button' as const, text: copy.button, x: 4, y: 74, scale: 1, color: '#fff', backgroundColor: '#3a3f47', bold: true, link: copy.link ?? '/discover', width: 16, height: 12 } : null,
+      copy.badge ? { id: `${id}-badge`, type: 'badge' as const, text: copy.badge, ...positions.badge, color: '#3a3f47', backgroundColor: '#fff', bold: true } : null,
+      { id: `${id}-title`, type: 'title' as const, text: copy.title, ...positions.title, color: '#2b2f36', bold: true },
+      copy.text ? { id: `${id}-text`, type: 'text' as const, text: copy.text, ...positions.text, color: '#5b6068' } : null,
+      copy.button ? { id: `${id}-button`, type: 'button' as const, text: copy.button, ...positions.button, color: '#fff', backgroundColor: '#3a3f47', bold: true, link: copy.link ?? '/discover' } : null,
     ].filter((element): element is NonNullable<typeof element> => element !== null),
   }
 }
@@ -193,6 +204,7 @@ const MOCK_HERO = AUDIO_HERO_SLIDES.map((slide) => banner(
   slide.title,
   slide.background ?? '#eceef1',
   { badge: slide.badge, title: slide.title, text: slide.description, button: slide.ctaLabel, link: slide.href },
+  'hero',
 ))
 
 const MOCK_ACTIVITY = [
@@ -200,18 +212,18 @@ const MOCK_ACTIVITY = [
   banner('activity-vote', 'โหวตเสียงที่คุณชอบ', 'linear-gradient(120deg,#ece8fa,#f8e9f1)', { badge: 'โหวตประจำเดือน', title: 'ส่งเรื่องโปรดขึ้นอันดับ', text: 'ทุกคะแนนของคุณมีความหมาย', button: 'ดูอันดับ', link: '/ranking' }),
 ]
 
-const MOCK_ROW3 = [banner('row3', 'เรื่องเด่นประจำเดือน', 'linear-gradient(110deg,#e9ecf2,#f2e9f5)', { badge: 'หนังสือเสียงยอดนิยม', title: 'เรื่องดัง เสียงดี ที่ผู้ฟังเลือกแล้ว', text: 'เริ่มฟังเรื่องฮิตได้ทุกที่ทุกเวลา', button: 'ฟังเลย', link: '/discover' })]
-const MOCK_NARRATOR = [banner('narrator', 'มาเป็นนักพากย์กับเรา', 'linear-gradient(110deg,#f7e8ee,#efe8fb)', { badge: 'เปิดรับนักพากย์', title: 'เปลี่ยนเสียงของคุณให้เป็นเรื่องราว', text: 'ร่วมสร้างประสบการณ์การฟังกับ ReadLead', button: 'สมัครนักพากย์', link: '/creator' })]
+const MOCK_ROW3 = [banner('row3', 'เรื่องเด่นประจำเดือน', 'linear-gradient(110deg,#e9ecf2,#f2e9f5)', { badge: 'หนังสือเสียงยอดนิยม', title: 'เรื่องดัง เสียงดี ที่ผู้ฟังเลือกแล้ว', text: 'เริ่มฟังเรื่องฮิตได้ทุกที่ทุกเวลา', button: 'ฟังเลย', link: '/discover' }, 'ribbon')]
+const MOCK_NARRATOR = [banner('narrator', 'มาเป็นนักพากย์กับเรา', 'linear-gradient(110deg,#f7e8ee,#efe8fb)', { badge: 'เปิดรับนักพากย์', title: 'เปลี่ยนเสียงของคุณให้เป็นเรื่องราว', text: 'ร่วมสร้างประสบการณ์การฟังกับ ReadLead', button: 'สมัครนักพากย์', link: '/creator' }, 'ribbon')]
 const MOCK_WEB_SIDES = [
   banner('web-left', 'คัดสรรโดยทีมงาน', 'linear-gradient(120deg,#eee9f8,#e9edf4)', { title: 'เสียงพากย์คุณภาพประจำสัปดาห์', text: 'รวมเรื่องเด่นที่ทีมงานอยากแนะนำ', button: 'ฟังเลย', link: '/discover' }),
   banner('web-right', 'เรื่องใหม่ที่น่าจับตา', 'linear-gradient(120deg,#f7e9ef,#eee9f8)', { title: 'เปิดโลกเรื่องเล่าผ่านเสียง', text: 'ค้นพบหนังสือเสียงเรื่องใหม่ก่อนใคร', button: 'ดูทั้งหมด', link: '/discover' }),
 ]
-const MOCK_CATEGORY = [banner('category', 'เติมเต็มทุกอารมณ์', 'radial-gradient(130% 150% at 88% 8%,#f6ecff 0%,transparent 46%),linear-gradient(110deg,#ece1ff,#f1e8ff 30%,#f9ebf4 64%,#ffeef5)', { badge: '✦ หนังสือเสียงดี ๆ ที่รอให้คุณค้นพบ', title: 'เติมเต็มทุกอารมณ์', text: 'คัดสรรหนังสือเสียงคุณภาพ หลากหลายแนว ครบทุกอารมณ์ ให้คุณสนุกได้ไม่รู้จบ' })]
+const MOCK_CATEGORY = [banner('category', 'เติมเต็มทุกอารมณ์', 'radial-gradient(130% 150% at 88% 8%,#f6ecff 0%,transparent 46%),linear-gradient(110deg,#ece1ff,#f1e8ff 30%,#f9ebf4 64%,#ffeef5)', { badge: '✦ หนังสือเสียงดี ๆ ที่รอให้คุณค้นพบ', title: 'เติมเต็มทุกอารมณ์', text: 'คัดสรรหนังสือเสียงคุณภาพ หลากหลายแนว ครบทุกอารมณ์ ให้คุณสนุกได้ไม่รู้จบ' }, 'category')]
 const MOCK_BOTTOM_CTA = [
-  banner('cta-1', 'เริ่มฟังหนังสือเสียง', 'linear-gradient(125deg,#f6e8ee,#eadff7)', { title: 'เริ่มฟังเรื่องโปรด', text: 'ค้นหาเรื่องที่ใช่สำหรับคุณ', button: 'ค้นหา', link: '/discover' }),
-  banner('cta-2', 'สร้างผลงาน', 'linear-gradient(125deg,#e9edf7,#ece5fa)', { title: 'มีเรื่องอยากเล่าไหม', text: 'เริ่มสร้างผลงานของคุณ', button: 'เริ่มเลย', link: '/creator' }),
-  banner('cta-3', 'อันดับยอดนิยม', 'linear-gradient(125deg,#f7eee2,#f6e7ec)', { title: 'เรื่องฮิตติดอันดับ', text: 'ดูเรื่องที่ผู้ฟังเลือก', button: 'ดูอันดับ', link: '/ranking' }),
-  banner('cta-4', 'ชั้นหนังสือ', 'linear-gradient(125deg,#e7f1ef,#ece8f8)', { title: 'เก็บเรื่องโปรดไว้ฟัง', text: 'กลับมาฟังต่อได้ทุกเวลา', button: 'เข้าชั้น', link: '/dashboard' }),
+  banner('cta-1', 'เริ่มฟังหนังสือเสียง', 'linear-gradient(125deg,#f6e8ee,#eadff7)', { title: 'เริ่มฟังเรื่องโปรด', text: 'ค้นหาเรื่องที่ใช่สำหรับคุณ', button: 'ค้นหา', link: '/discover' }, 'cta'),
+  banner('cta-2', 'สร้างผลงาน', 'linear-gradient(125deg,#e9edf7,#ece5fa)', { title: 'มีเรื่องอยากเล่าไหม', text: 'เริ่มสร้างผลงานของคุณ', button: 'เริ่มเลย', link: '/creator' }, 'cta'),
+  banner('cta-3', 'อันดับยอดนิยม', 'linear-gradient(125deg,#f7eee2,#f6e7ec)', { title: 'เรื่องฮิตติดอันดับ', text: 'ดูเรื่องที่ผู้ฟังเลือก', button: 'ดูอันดับ', link: '/ranking' }, 'cta'),
+  banner('cta-4', 'ชั้นหนังสือ', 'linear-gradient(125deg,#e7f1ef,#ece8f8)', { title: 'เก็บเรื่องโปรดไว้ฟัง', text: 'กลับมาฟังต่อได้ทุกเวลา', button: 'เข้าชั้น', link: '/dashboard' }, 'cta'),
 ]
 
 function sectionEnabled(cms: AudioCmsCatalog, key: AudioCmsSectionKey) {

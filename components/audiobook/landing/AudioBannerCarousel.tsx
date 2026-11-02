@@ -11,6 +11,7 @@ type Props = {
   slideSeconds: number
   label: string
   hero?: boolean
+  categoryArt?: boolean
 }
 
 type BannerStyle = CSSProperties & { '--audio-banner-aspect': string }
@@ -25,20 +26,23 @@ function countdownLabel(totalSeconds: number) {
   return `${days} วัน : ${pad(hours)} : ${pad(minutes)} : ${pad(rest)}`
 }
 
-function elementStyle(element: CmsBannerElement): CSSProperties {
-  const style: CSSProperties = {
+type ElementStyle = CSSProperties & { '--audio-element-scale': number }
+
+function elementStyle(element: CmsBannerElement): ElementStyle {
+  const style: ElementStyle = {
+    '--audio-element-scale': element.scale,
     left: `${element.x}%`,
     top: `${element.y}%`,
     color: element.color,
     fontWeight: element.bold ? 800 : 500,
     textShadow: element.shadow ? '0 1px 7px rgba(0,0,0,.48)' : 'none',
-    transform: `scale(${element.scale})`,
     transformOrigin: 'top left',
   }
   if (element.type === 'badge') style.background = element.backgroundColor
   if (element.type === 'button') {
-    style.width = `${element.width ?? 18}%`
-    style.height = `${element.height ?? 12}%`
+    if (element.width !== undefined) style.width = `${element.width}%`
+    if (element.height !== undefined) style.height = `${element.height}%`
+    if (element.width !== undefined || element.height !== undefined) style.padding = '0'
     style.background = element.backgroundColor
     style.transform = 'none'
   }
@@ -56,7 +60,7 @@ function BannerElement({ element, elapsed }: { element: CmsBannerElement; elapse
   return <span className={className} style={elementStyle(element)}>{content}</span>
 }
 
-export function AudioBannerCarousel({ items, aspect, slideSeconds, label, hero = false }: Props) {
+export function AudioBannerCarousel({ items, aspect, slideSeconds, label, hero = false, categoryArt = false }: Props) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [elapsed, setElapsed] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -143,6 +147,19 @@ export function AudioBannerCarousel({ items, aspect, slideSeconds, label, hero =
                   style={{ objectPosition: `${item.focal.x}% ${item.focal.y}%`, transform: `scale(${item.focal.zoom / 100})` }}
                 />
               </picture>
+            )}
+            {categoryArt && !item.imageUrl && (
+              <span className={styles.categoryArtwork} aria-hidden="true">
+                <svg viewBox="0 0 360 300" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+                  <g transform="translate(60,80)">
+                    <path d="M120 20 C90 4 40 4 8 22 L8 150 C40 132 90 132 120 148 Z" fill="#cdb8f5" />
+                    <path d="M120 20 C150 4 200 4 232 22 L232 150 C200 132 150 132 120 148 Z" fill="#bfa6f2" />
+                    <path d="M120 24 C92 10 48 10 18 26 L18 142 C48 128 92 128 120 142 Z" fill="#f3edff" />
+                    <path d="M120 24 C148 10 192 10 222 26 L222 142 C192 128 148 128 120 142 Z" fill="#ece2ff" />
+                    <g stroke="#cdbdf0" strokeWidth="2" opacity=".7"><path d="M34 44 104 40M34 62 104 58M34 80 104 76M136 40 206 44M136 58 206 62M136 76 206 80" /></g>
+                  </g>
+                </svg>
+              </span>
             )}
             {item.imageUrl && <span className={styles.bannerScrim} aria-hidden="true" />}
             {item.linkUrl && !item.elements.some((element) => element.type === 'button' && element.link) && (

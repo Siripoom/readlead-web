@@ -20,6 +20,7 @@ export interface RankingRouteState {
   sort: RankingSort | null
   genre: RankingGenreKey | null
   page: number
+  origin?: RankingWorkItem['origin']
 }
 
 export interface RankingWorkItem {
@@ -34,6 +35,7 @@ export interface RankingWorkItem {
   synopsis: string
   status: 'ongoing' | 'completed'
   origin: 'ไทย' | 'แปล'
+  country?: string
   latestEpisode: string
   updatedAt: string
   launchedAt: string
@@ -212,6 +214,7 @@ export function rankingMetric(item: RankingWorkItem, state: RankingRouteState) {
 
 export function getRankingWorks(state: RankingRouteState) {
   let items = RANKING_WORKS
+  if (state.origin) items = items.filter((item) => item.origin === state.origin)
   if (state.type) items = items.filter((item) => item.type === state.type)
   if (state.view === 'completed') items = items.filter((item) => item.status === 'completed')
   if (state.genre) items = items.filter((item) => item.genre === state.genre)
@@ -220,5 +223,6 @@ export function getRankingWorks(state: RankingRouteState) {
 
 export function getRankingCreators(state: RankingRouteState) {
   const creators = state.genre ? RANKING_CREATORS.filter((creator) => creator.genre === state.genre) : RANKING_CREATORS
-  return [...creators].sort((left, right) => right.followers - left.followers)
+  const authors = state.origin ? new Set(RANKING_WORKS.filter((work) => work.origin === state.origin).map((work) => work.author)) : null
+  return creators.filter((creator) => !authors || authors.has(creator.name)).sort((left, right) => right.followers - left.followers)
 }

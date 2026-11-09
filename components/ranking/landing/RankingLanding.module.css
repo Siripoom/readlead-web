@@ -1,5 +1,5 @@
 .page {
-  --rank-bg: #fbfbfd;
+  --rank-bg: #fff;
   --rank-card: #fff;
   --rank-soft: #f6f7f9;
   --rank-line: #eef0f4;
@@ -215,10 +215,12 @@
 
 .heroBand {
   display: grid;
-  grid-template-columns: minmax(0, 2.35fr) minmax(270px, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
 }
 .hero {
+  display: flex;
+  align-items: center;
   position: relative;
   min-height: 184px;
   overflow: hidden;
@@ -290,113 +292,6 @@
 .heroDot:first-child {
   width: 22px;
   background: var(--rank-pink);
-}
-
-.voteCards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  height: 100%;
-}
-.voteCard {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  justify-content: space-between;
-  border: 1px solid var(--rank-line);
-  border-radius: 14px;
-  padding: 13px 14px;
-  box-shadow: 0 2px 10px rgba(30, 34, 52, 0.05);
-}
-.voteDaily {
-  background: #fff5f8;
-  color: var(--rank-pink);
-}
-.voteMonthly {
-  background: #fff9f1;
-  color: var(--rank-orange);
-}
-.voteHead {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.ticketIcon {
-  display: grid;
-  width: 38px;
-  height: 34px;
-  place-items: center;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.75);
-}
-.ticketIcon svg {
-  width: 21px;
-  height: 21px;
-}
-.voteHead b {
-  display: block;
-  color: var(--rank-ink);
-  font-size: 13px;
-  white-space: nowrap;
-}
-.voteHead p {
-  margin: 1px 0 0;
-  color: var(--rank-faint);
-  font-size: 9.5px;
-  white-space: nowrap;
-}
-.voteCount {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin: 9px 0 8px;
-}
-.voteCount strong {
-  font-size: 23px;
-  font-weight: 800;
-  line-height: 1;
-}
-.voteCount small {
-  color: var(--rank-faint);
-  font-size: 12px;
-  font-weight: 650;
-}
-.voteCount span {
-  color: var(--rank-faint);
-  font-size: 10px;
-}
-.countdownLabel {
-  display: block;
-  margin-bottom: 5px;
-  color: var(--rank-faint);
-  font-size: 9.5px;
-}
-.countdown {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 3px;
-}
-.countCell {
-  display: flex;
-  min-width: 0;
-  aspect-ratio: 4/5;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  border: 1px solid var(--rank-line);
-  border-radius: 8px;
-  background: #fff;
-}
-.countCell b {
-  font-size: 12px;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-.countCell span {
-  color: var(--rank-faint);
-  font-size: 6.5px;
-  white-space: nowrap;
 }
 
 .stats {
@@ -545,22 +440,6 @@
   font-weight: 750;
   text-align: center;
 }
-.crownStack {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  color: var(--crown);
-  line-height: 0.9;
-}
-.crownStack svg {
-  width: 21px;
-  height: 21px;
-  fill: currentColor;
-}
-.crownStack span {
-  color: var(--rank-ink);
-  font-size: 11px;
-}
 .storyCell {
   display: flex;
   min-width: 245px;
@@ -628,7 +507,7 @@
 .cover {
   display: grid;
   width: 138px;
-  height: 183px;
+  height: 207px;
   place-items: center;
   overflow: hidden;
   border-radius: 10px;
@@ -988,13 +867,6 @@
   .heroText {
     width: 67%;
   }
-  .voteCards {
-    min-height: 170px;
-  }
-  .countCell {
-    aspect-ratio: auto;
-    min-height: 47px;
-  }
   .workRow {
     grid-template-columns: 105px minmax(0, 1fr);
     gap: 14px;
@@ -1044,33 +916,6 @@
   }
   .heroDescription {
     font-size: 12.5px;
-  }
-  .voteCards {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    min-height: 172px;
-  }
-  .voteCard {
-    padding: 10px;
-  }
-  .ticketIcon {
-    width: 29px;
-    height: 29px;
-  }
-  .voteHead b {
-    font-size: 11px;
-  }
-  .voteHead p {
-    font-size: 8px;
-  }
-  .voteCount strong {
-    font-size: 19px;
-  }
-  .voteCount span {
-    display: none;
-  }
-  .countCell {
-    min-height: 42px;
   }
   .stats {
     grid-template-columns: 1fr;
@@ -1257,14 +1102,14 @@
     max-width: none;
     margin-inline: auto;
     padding: 20px 26px 40px;
-    zoom: 0.8;
+    zoom: 0.96;
   }
   .content {
     gap: 20px;
   }
   .sidebar {
-    position: relative;
-    top: auto;
+    position: sticky;
+    top: 80px;
     display: flex;
     gap: 16px;
     max-height: none;
@@ -1319,10 +1164,12 @@
     display: none;
   }
   .heroBand {
-    grid-template-columns: 2.4fr 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 18px;
   }
   .hero {
+    display: flex;
+    align-items: center;
     min-height: 184px;
   }
   .hero::after {
@@ -1346,68 +1193,6 @@
   .heroDescription {
     margin: 0 0 18px;
     font-size: 14.5px;
-  }
-  .voteCards {
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    min-height: 0;
-  }
-  .voteCard {
-    padding: 13px 15px;
-  }
-  .voteHead {
-    gap: 9px;
-    margin-bottom: 9px;
-  }
-  .ticketIcon {
-    width: 42px;
-    height: 34px;
-    flex: 0 0 42px;
-    background: transparent;
-  }
-  .ticketIcon img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-  .voteHead b {
-    font-size: 13px;
-  }
-  .voteHead p {
-    font-size: 10px;
-  }
-  .voteCount {
-    gap: 8px;
-    margin: 0 0 10px;
-  }
-  .voteCount small {
-    font-size: 13px;
-  }
-  .voteCount span {
-    display: inline;
-    font-size: 11px;
-  }
-  .countdownLabel {
-    margin-bottom: 6px;
-    font-size: 10.5px;
-  }
-  .countCell {
-    aspect-ratio: 4/5;
-    min-height: 0;
-    border-radius: 9px;
-  }
-  .countCell b {
-    font-size: 13px;
-  }
-  .countCell span {
-    font-size: 7px;
-    letter-spacing: -0.2px;
-  }
-  .voteDaily .countCell b {
-    color: var(--rank-pink);
-  }
-  .voteMonthly .countCell b {
-    color: var(--rank-orange);
   }
   .stats {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1492,18 +1277,6 @@
     width: 76px;
     color: var(--rank-muted);
   }
-  .crownStack {
-    line-height: 1;
-  }
-  .crownStack svg {
-    width: 20px;
-    height: 20px;
-  }
-  .crownStack span {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--rank-muted);
-  }
   .storyCell {
     min-width: 0;
   }
@@ -1540,7 +1313,7 @@
     width: 138px;
   }
   .cover {
-    height: 183px;
+    height: 207px;
   }
   .workTitle {
     margin-bottom: 8px;
@@ -1606,4 +1379,181 @@
     padding: 4px 0;
     font-size: 12px;
   }
+}
+
+.overviewFilters .filters {
+  margin: 0;
+  padding: 16px 18px;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+}
+.overviewGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+.countryFilters {
+  min-height: 28px;
+  padding: 10px 18px 0;
+}
+.countryFilters > div {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.countryFilters .typeButton {
+  font-size: 12.5px;
+}
+.overviewCard .table {
+  min-width: 0;
+  table-layout: fixed;
+  line-height: 1.45;
+}
+.overviewCard .tableWrap {
+  margin-top: 0;
+}
+.overviewCard .table th,
+.overviewCard .table td {
+  padding: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.overviewCard .table th {
+  padding-block: 13px;
+}
+.overviewCard .rankCell {
+  overflow: visible;
+  color: var(--rank-muted);
+}
+.rankNumber {
+  position: relative;
+  display: inline-block;
+}
+.rankNumber[data-rank="1"] {
+  color: #bf2c24;
+}
+.rankNumber[data-rank="2"] {
+  color: #e67225;
+}
+.rankNumber[data-rank="3"] {
+  color: #e6bf25;
+}
+.rankChange {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.overviewCard .table .titleCell {
+  padding-left: 30px;
+}
+.overviewCard .storyTitle {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.workPreview {
+  display: none;
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 50;
+  width: min(400px, calc(100vw - 32px));
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid #e3e5ea;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 6px 18px #00000010;
+  white-space: normal;
+  pointer-events: none;
+}
+.storyTitle:hover + .workPreview,
+.storyTitle:focus-visible + .workPreview {
+  display: flex;
+}
+.previewCover {
+  display: grid;
+  place-items: center;
+  flex: 0 0 96px;
+  height: 144px;
+  border-radius: 9px;
+  color: #fff;
+  font-size: 30px;
+}
+.workPreview > span:last-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 6px;
+  color: var(--rank-muted);
+  font-size: 12px;
+}
+.workPreview strong {
+  color: var(--rank-ink);
+  font-size: 15px;
+}
+.previewSynopsis {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: "ReadLead Ranking Sarabun", sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+}
+@media (min-width: 1152px) and (max-width: 1382px) {
+  .shell {
+    width: 100%;
+    zoom: 1;
+  }
+}
+@media (max-width: 1100px) {
+  .overviewGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 560px) {
+  .overviewCard .table col:nth-child(1) {
+    width: 46px !important;
+  }
+  .overviewCard .table col:nth-child(3) {
+    width: 86px !important;
+  }
+  .overviewCard .table col:nth-child(4) {
+    width: 70px !important;
+  }
+  .overviewCard .table th,
+  .overviewCard .table td {
+    padding-inline: 7px;
+    font-size: 10px;
+  }
+  .overviewCard .table .titleCell {
+    padding-left: 14px;
+  }
+  .overviewCard .storyTitle {
+    font-size: 11px;
+  }
+  .rankChange {
+    display: none;
+  }
+}
+
+.sideGroup > summary {
+  list-style: none;
+}
+.sideGroup > summary::-webkit-details-marker {
+  display: none;
+}
+.sideGroup[open] > summary .chevron {
+  transform: rotate(180deg);
 }

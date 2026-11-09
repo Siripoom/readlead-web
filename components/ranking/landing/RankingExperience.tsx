@@ -8,7 +8,6 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -25,7 +24,6 @@ import {
   History,
   Library,
   Menu,
-  MessageSquareText,
   Sparkles,
   Ticket,
   UserRound,
@@ -137,6 +135,7 @@ function buildHref(
   }
   const genre = options.genre === undefined ? state.genre : options.genre;
   if (genre) params.set("genre", genre);
+  if (state.origin) params.set("origin", state.origin);
   if (options.page && options.page > 1)
     params.set("page", String(options.page));
   const query = params.toString();
@@ -156,15 +155,13 @@ const TYPE_ICONS: Record<RankingContentType, ReactNode> = {
   audiobook: <Headphones />,
 };
 
-const SORTS: RankingSort[] = ["recommended", "monthly", "views", "new"];
+const SORTS: RankingSort[] = ["recommended", "monthly", "views"];
 const OTHER_VIEWS: Array<{
   view: Exclude<RankingView, "overview">;
   icon: ReactNode;
 }> = [
   { view: "completed", icon: <History /> },
-  { view: "creators", icon: <UserRound /> },
   { view: "shelf", icon: <BookMarked /> },
-  { view: "reviews", icon: <MessageSquareText /> },
   { view: "favorites", icon: <Heart /> },
 ];
 
@@ -226,10 +223,7 @@ function SideMenu({
                 </button>
                 {isOpen && (
                   <div className={styles.subNav}>
-                    {SORTS.filter(
-                      (sort) =>
-                        type !== "manga" || sort === "views" || sort === "new",
-                    ).map((sort) => {
+                    {SORTS.map((sort) => {
                       const active = state.type === type && state.sort === sort;
                       const label =
                         sort === "new"
@@ -257,8 +251,78 @@ function SideMenu({
           },
         )}
 
+        <details
+          className={styles.sideGroup}
+          open={state.sort === "new" || undefined}
+        >
+          <summary className={styles.groupButton}>
+            <span className={styles.groupLabel}>ผลงานเปิดตัว</span>
+            <ChevronDown className={styles.chevron} />
+          </summary>
+          <div className={styles.subNav}>
+            {(["ไทย", "แปล"] satisfies RankingWorkItem["origin"][]).map(
+              (origin) => (
+                <Link
+                  className={cn(
+                    styles.subLink,
+                    state.sort === "new" &&
+                      state.origin === origin &&
+                      styles.subLinkActive,
+                  )}
+                  key={origin}
+                  onClick={onNavigate}
+                  href={buildHref({
+                    ...state,
+                    view: "overview",
+                    type: "novel",
+                    sort: "new",
+                    origin,
+                    genre: null,
+                  })}
+                >
+                  ผลงาน{origin}
+                </Link>
+              ),
+            )}
+          </div>
+        </details>
         <div className={styles.separator} />
         <div className={styles.sideSectionTitle}>อันดับอื่นๆ</div>
+        <details
+          className={styles.sideGroup}
+          open={state.view === "creators" || undefined}
+        >
+          <summary className={styles.groupButton}>
+            <span className={styles.groupLabel}>เจ้าของผลงาน</span>
+            <ChevronDown className={styles.chevron} />
+          </summary>
+          <div className={styles.subNav}>
+            {(["ไทย", "แปล"] satisfies RankingWorkItem["origin"][]).map(
+              (origin) => (
+                <Link
+                  className={cn(
+                    styles.subLink,
+                    state.view === "creators" &&
+                      state.origin === origin &&
+                      styles.subLinkActive,
+                  )}
+                  key={origin}
+                  onClick={onNavigate}
+                  href={buildHref({
+                    ...state,
+                    view: "creators",
+                    type: null,
+                    sort: null,
+                    origin,
+                    genre: null,
+                  })}
+                >
+                  ผลงาน{origin}
+                </Link>
+              ),
+            )}
+          </div>
+        </details>
         {OTHER_VIEWS.filter((item) => item.view !== "favorites").map(
           ({ view, icon }) => {
             const active = state.view === view;
@@ -303,142 +367,7 @@ function SideMenu({
   );
 }
 
-type Countdown = {
-  days: string;
-  hours: string;
-  minutes: string;
-  seconds: string;
-};
-const pad = (value: number) => String(value).padStart(2, "0");
-
-function countdownTo(kind: VoteKind): Countdown {
-  const now = new Date();
-  const target =
-    kind === "daily"
-      ? new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
-      : new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  let seconds = Math.max(
-    0,
-    Math.floor((target.getTime() - now.getTime()) / 1000),
-  );
-  const days = Math.floor(seconds / 86400);
-  seconds -= days * 86400;
-  const hours = Math.floor(seconds / 3600);
-  seconds -= hours * 3600;
-  const minutes = Math.floor(seconds / 60);
-  seconds -= minutes * 60;
-  return {
-    days: pad(days),
-    hours: pad(hours),
-    minutes: pad(minutes),
-    seconds: pad(seconds),
-  };
-}
-
-function useCountdown(kind: VoteKind) {
-  const [value, setValue] = useState<Countdown>({
-    days: "–",
-    hours: "–",
-    minutes: "–",
-    seconds: "–",
-  });
-  useEffect(() => {
-    const update = () => setValue(countdownTo(kind));
-    const firstUpdate = window.setTimeout(update, 0);
-    const timer = window.setInterval(update, 1000);
-    return () => {
-      window.clearTimeout(firstUpdate);
-      window.clearInterval(timer);
-    };
-  }, [kind]);
-  return value;
-}
-
-function VoteSummaryCard({
-  kind,
-  ledger,
-}: {
-  kind: VoteKind;
-  ledger: VoteLedger;
-}) {
-  const countdown = useCountdown(kind);
-  const daily = kind === "daily";
-  const values = [
-    countdown.days,
-    countdown.hours,
-    countdown.minutes,
-    countdown.seconds,
-  ];
-  return (
-    <div
-      className={cn(
-        styles.voteCard,
-        daily ? styles.voteDaily : styles.voteMonthly,
-      )}
-    >
-      <div className={styles.voteHead}>
-        <span className={styles.ticketIcon}>
-          <Image
-            src={
-              daily
-                ? "/ranking/daily-ticket.png"
-                : "/ranking/monthly-ticket.png"
-            }
-            width={42}
-            height={34}
-            alt=""
-            unoptimized
-          />
-        </span>
-        <div>
-          <b>{daily ? "โหวตแนะนำ" : "โหวตรายเดือน"}</b>
-          <p>
-            {daily
-              ? "ตั๋วรีเซ็ตทุกวัน"
-              : ledger.server
-                ? "ตั๋วสะสมไม่หมดอายุ"
-                : "รีเซ็ตทุกเดือน"}
-          </p>
-        </div>
-      </div>
-      <div className={styles.voteCount}>
-        {ledger.server ? (
-          <>
-            <strong>
-              {remainingTickets(ledger, kind)}
-              {daily && <small> / {ledger.dailyAllowance ?? DAILY_MAX}</small>}
-            </strong>
-            <span>ตั๋วคงเหลือ</span>
-          </>
-        ) : (
-          <>
-            <strong>
-              {daily ? ledger.dailyUsed : ledger.monthlyUsed}
-              <small> / {daily ? DAILY_MAX : MONTHLY_MAX}</small>
-            </strong>
-            <span>โหวตแล้ว</span>
-          </>
-        )}
-      </div>
-      <div>
-        <span className={styles.countdownLabel}>เหลือเวลาอีก</span>
-        <div
-          className={styles.countdown}
-          aria-label={`เหลือเวลา ${values.join(":")}`}
-        >
-          {values.map((value, index) => (
-            <span className={styles.countCell} key={index} aria-hidden="true">
-              <b>{value}</b>
-              <span>{["วัน", "ชม.", "นาที", "วินาที"][index]}</span>
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function RankingHero({ ledger }: { ledger: VoteLedger }) {
+function RankingHero() {
   const year = new Date().getFullYear();
   return (
     <section className={styles.heroBand}>
@@ -554,10 +483,6 @@ function RankingHero({ ledger }: { ledger: VoteLedger }) {
           </h1>
           <p className={styles.heroDescription}>ร่วมโหวตผลงานที่คุณชื่นชอบ</p>
         </div>
-      </div>
-      <div className={styles.voteCards}>
-        <VoteSummaryCard kind="daily" ledger={ledger} />
-        <VoteSummaryCard kind="monthly" ledger={ledger} />
       </div>
     </section>
   );
@@ -687,20 +612,6 @@ function StatsStrip({ works }: { works: RankingWorkItem[] }) {
   );
 }
 
-function RankMark({ rank }: { rank: number }) {
-  if (rank > 3) return <>{rank}</>;
-  const color = rank === 1 ? "#f4b528" : rank === 2 ? "#b6bcc8" : "#cf8a52";
-  return (
-    <span
-      className={styles.crownStack}
-      style={{ "--crown": color } as CSSProperties}
-    >
-      <Crown />
-      <span>{rank}</span>
-    </span>
-  );
-}
-
 function WorkLink({
   item,
   className,
@@ -726,7 +637,7 @@ function OverviewTable({
   ledger,
 }: Props & { ledger: VoteLedger }) {
   const [contentType, setContentType] = useState<RankingContentType>("novel");
-  const showVotes = contentType !== "manga";
+  const [country, setCountry] = useState("");
   const rows = useMemo(
     () =>
       works
@@ -735,35 +646,28 @@ function OverviewTable({
             item.type === contentType &&
             (!state.genre || item.genre === state.genre),
         )
-        .sort((left, right) => {
-          if (contentType === "manga") return right.views - left.views;
-          const leftBonus = ledger.bonuses[left.detailId]?.daily ?? 0;
-          const rightBonus = ledger.bonuses[right.detailId]?.daily ?? 0;
-          return (
+        .sort(
+          (left, right) =>
             right.recommendedVotes +
-            rightBonus -
+            (ledger.bonuses[right.detailId]?.daily ?? 0) -
             left.recommendedVotes -
-            leftBonus
-          );
-        })
-        .slice(0, 100),
+            (ledger.bonuses[left.detailId]?.daily ?? 0),
+        ),
     [contentType, ledger.bonuses, state.genre, works],
   );
 
   return (
-    <section className={cn(styles.card, styles.overviewCard)}>
-      <div className={styles.sectionHead}>
-        <h2>อันดับทั้งหมด</h2>
-        <small>(Top 100)</small>
-      </div>
-      <GenreFilters state={state}>
-        <span
-          className={styles.typeFilters}
-          role="group"
-          aria-label="ประเภทผลงาน"
-        >
-          {(["novel", "manga", "audiobook"] satisfies RankingContentType[]).map(
-            (type, index) => (
+    <>
+      <section className={cn(styles.card, styles.overviewFilters)}>
+        <GenreFilters state={state}>
+          <span
+            className={styles.typeFilters}
+            role="group"
+            aria-label="ประเภทผลงาน"
+          >
+            {(
+              ["novel", "manga", "audiobook"] satisfies RankingContentType[]
+            ).map((type, index) => (
               <span className="contents" key={type}>
                 {index > 0 && (
                   <span className={styles.filterDot} aria-hidden="true">
@@ -782,109 +686,155 @@ function OverviewTable({
                   {RANKING_TYPE_LABELS[type]}
                 </button>
               </span>
-            ),
-          )}
-        </span>
-        <span className={styles.filterDivider} aria-hidden="true" />
-      </GenreFilters>
-      <div className={styles.tableWrap}>
-        <table className={styles.table}>
-          <colgroup>
-            <col style={{ width: 76 }} />
-            <col />
-            <col style={{ width: 170 }} />
-            {showVotes && (
-              <>
-                <col style={{ width: 110 }} />
-                <col style={{ width: 120 }} />
-              </>
-            )}
-            <col style={{ width: 110 }} />
-            <col style={{ width: 110 }} />
-            <col style={{ width: 120 }} />
-          </colgroup>
-          <thead>
-            <tr>
-              <th className={styles.center}>อันดับ</th>
-              <th>เรื่อง</th>
-              <th>เจ้าของผลงาน</th>
-              {showVotes && (
-                <>
-                  <th className={styles.center}>โหวตรายวัน</th>
-                  <th className={styles.center}>โหวตรายเดือน</th>
-                </>
-              )}
-              <th className={styles.number}>ยอดวิว</th>
-              <th className={styles.center}>เปลี่ยนแปลง</th>
-              <th className={styles.center}>เปิดตัว</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={showVotes ? 8 : 6} className={styles.empty}>
-                  ยังไม่มีรายการในหมวดนี้
-                </td>
-              </tr>
-            )}
-            {rows.map((item, index) => {
-              const bonus = ledger.bonuses[item.detailId] ?? {
-                daily: 0,
-                monthly: 0,
-              };
-              return (
-                <tr key={item.id}>
-                  <td className={styles.rankCell}>
-                    <RankMark rank={index + 1} />
-                  </td>
-                  <td>
-                    <div className={styles.storyCell}>
-                      <WorkLink item={item} className={styles.storyTitle}>
-                        {item.title}
-                      </WorkLink>
+            ))}
+          </span>
+          <span className={styles.filterDivider} aria-hidden="true" />
+        </GenreFilters>
+      </section>
+      <div className={styles.overviewGrid}>
+        {(["แปล", "ไทย"] satisfies RankingWorkItem["origin"][]).map(
+          (origin) => {
+            const originRows = rows
+              .filter(
+                (item) =>
+                  item.origin === origin &&
+                  (origin === "ไทย" || !country || item.country === country),
+              )
+              .slice(0, 100);
+            return (
+              <section
+                className={cn(styles.card, styles.overviewCard)}
+                key={origin}
+                aria-label={`อันดับผลงาน${origin}`}
+              >
+                <div className={styles.sectionHead}>
+                  <h2>
+                    ผลงาน{origin} <small>(Top 100)</small>
+                  </h2>
+                </div>
+                <div className={styles.countryFilters}>
+                  {origin === "แปล" && (
+                    <div role="group" aria-label="ประเทศต้นฉบับ">
+                      {["", "จีน", "เกาหลี", "ญี่ปุ่น", "อังกฤษ", "อื่นๆ"].map(
+                        (value, index) => (
+                          <span className="contents" key={value}>
+                            {index > 0 && (
+                              <span
+                                className={styles.filterDot}
+                                aria-hidden="true"
+                              >
+                                ·
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              aria-pressed={country === value}
+                              onClick={() => setCountry(value)}
+                              className={cn(
+                                styles.typeButton,
+                                country === value && styles.filterActive,
+                              )}
+                            >
+                              {value || "ทุกประเทศ"}
+                            </button>
+                          </span>
+                        ),
+                      )}
                     </div>
-                  </td>
-                  <td className={styles.authorCell}>
-                    {item.creatorId ? (
-                      <Link
-                        href={`/profile/${encodeURIComponent(item.creatorId)}`}
-                      >
-                        {item.author}
-                      </Link>
-                    ) : (
-                      item.author
-                    )}
-                  </td>
-                  {showVotes && (
-                    <>
-                      <td className={styles.center}>
-                        {fmt(item.recommendedVotes + bonus.daily)}
-                      </td>
-                      <td className={styles.center}>
-                        {fmt(item.monthlyVotes + bonus.monthly)}
-                      </td>
-                    </>
                   )}
-                  <td className={styles.center}>{fmt(item.views)}</td>
-                  <td className={styles.center}>
-                    {item.change > 0 ? (
-                      <span className={styles.up}>▲ {item.change}</span>
-                    ) : item.change < 0 ? (
-                      <span className={styles.down}>
-                        ▼ {Math.abs(item.change)}
-                      </span>
-                    ) : (
-                      <span className={styles.flat}>–</span>
-                    )}
-                  </td>
-                  <td className={styles.center}>{item.launchedAt}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                </div>
+                <div className={styles.tableWrap}>
+                  <table className={styles.table}>
+                    <colgroup>
+                      <col style={{ width: 60 }} />
+                      <col />
+                      <col style={{ width: 130 }} />
+                      <col style={{ width: 96 }} />
+                    </colgroup>
+                    <thead>
+                      <tr>
+                        <th className={styles.center}>อันดับ</th>
+                        <th>เรื่อง</th>
+                        <th>เจ้าของผลงาน</th>
+                        <th className={styles.center}>คะแนน</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {originRows.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className={styles.empty}>
+                            ยังไม่มีผลงาน
+                          </td>
+                        </tr>
+                      )}
+                      {originRows.map((item, index) => (
+                        <tr key={item.id}>
+                          <td className={styles.rankCell}>
+                            <span
+                              className={styles.rankNumber}
+                              data-rank={index + 1}
+                            >
+                              {index + 1}
+                              <span className={styles.rankChange}>
+                                {item.change > 0
+                                  ? `▲${item.change}`
+                                  : item.change < 0
+                                    ? `▼${Math.abs(item.change)}`
+                                    : ""}
+                              </span>
+                            </span>
+                          </td>
+                          <td className={styles.titleCell}>
+                            <WorkLink item={item} className={styles.storyTitle}>
+                              {item.title}
+                            </WorkLink>
+                            <span className={styles.workPreview} role="tooltip">
+                              <span
+                                className={styles.previewCover}
+                                style={coverStyle(item)}
+                              >
+                                {item.title.slice(0, 2)}
+                              </span>
+                              <span>
+                                <strong>{item.title}</strong>
+                                <span>
+                                  {item.author} · {item.genreLabel}
+                                </span>
+                                <span className={styles.previewSynopsis}>
+                                  {item.synopsis}
+                                </span>
+                                <span>{item.latestEpisode}</span>
+                              </span>
+                            </span>
+                          </td>
+                          <td className={styles.authorCell} title={item.author}>
+                            {item.creatorId ? (
+                              <Link
+                                href={`/profile/${encodeURIComponent(item.creatorId)}`}
+                              >
+                                {item.author}
+                              </Link>
+                            ) : (
+                              item.author
+                            )}
+                          </td>
+                          <td className={styles.center}>
+                            {fmt(
+                              item.recommendedVotes +
+                                (ledger.bonuses[item.detailId]?.daily ?? 0),
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            );
+          },
+        )}
       </div>
-    </section>
+    </>
   );
 }
 
@@ -1070,7 +1020,7 @@ function ListView({
     state.type && state.sort === "new"
       ? {
           ...baseTitle,
-          label: `อันดับ${state.type === "novel" ? "หนังสือ" : state.type === "manga" ? "เว็บตูน" : "หนังสือเสียง"}ใหม่`,
+          label: `ผลงานเปิดตัว${state.origin ? ` · ผลงาน${state.origin}` : ""}`,
         }
       : baseTitle;
   const sorted = useMemo(
@@ -1079,6 +1029,7 @@ function ListView({
         works.filter(
           (item) =>
             (!state.type || item.type === state.type) &&
+            (!state.origin || item.origin === state.origin) &&
             (!state.genre || item.genre === state.genre) &&
             (state.view !== "completed" || item.status === "completed"),
         ),
@@ -1104,7 +1055,48 @@ function ListView({
           {title?.subtitle}
         </small>
       </div>
-      <GenreFilters state={state} />
+      {state.view !== "creators" && (
+        <GenreFilters state={state}>
+          {state.sort === "new" ? (
+            <>
+              {(
+                ["novel", "manga", "audiobook"] satisfies RankingContentType[]
+              ).map((type) => (
+                <Link
+                  key={type}
+                  href={buildHref({ ...state, type })}
+                  className={cn(
+                    styles.filterLink,
+                    state.type === type && styles.filterActive,
+                  )}
+                >
+                  {RANKING_TYPE_LABELS[type]}
+                </Link>
+              ))}
+            </>
+          ) : (
+            <>
+              {(
+                [undefined, "ไทย", "แปล"] satisfies Array<
+                  RankingRouteState["origin"]
+                >
+              ).map((origin) => (
+                <Link
+                  key={origin ?? "all"}
+                  href={buildHref({ ...state, origin })}
+                  className={cn(
+                    styles.filterLink,
+                    state.origin === origin && styles.filterActive,
+                  )}
+                >
+                  {origin ? `ผลงาน${origin}` : "ทั้งหมด"}
+                </Link>
+              ))}
+            </>
+          )}
+          <span className={styles.filterDivider} aria-hidden="true" />
+        </GenreFilters>
+      )}
       {state.view === "creators" ? (
         <CreatorList state={state} creators={creators} />
       ) : (
@@ -1614,7 +1606,7 @@ export function RankingExperience({ state, works, creators }: Props) {
             </button>
           </div>
 
-          <RankingHero ledger={ledger} />
+          <RankingHero />
           {state.view === "overview" && !state.type ? (
             <>
               <StatsStrip works={displayWorks} />

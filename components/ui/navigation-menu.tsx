@@ -105,7 +105,7 @@ export function Navbar() {
   }, [isMobileAccountOpen])
 
   return (
-    <header data-site-header className="sticky top-0 z-50 w-full border-b border-[#e9edf2] bg-white max-sm:mx-auto max-sm:h-[52px] max-sm:max-w-[480px] xl:h-[55px]">
+    <header data-site-header className="sticky top-0 z-50 w-full border-b border-[#ece8f4] bg-white max-sm:mx-auto max-sm:h-[52px] max-sm:max-w-[480px] xl:h-[55px]">
       <div className="flex min-h-[55px] w-full items-center gap-4 px-4 max-sm:h-[51px] max-sm:min-h-[51px] max-sm:gap-2 max-sm:px-3 sm:px-6 xl:h-[54px] xl:min-h-0 xl:gap-10 xl:px-10 xl:py-[9px]">
         <Link
           href="/"
@@ -124,13 +124,13 @@ export function Navbar() {
             return (
               <div key={item.href} className="contents">
                 {item.separated && (
-                  <span className="mx-[7px] h-[18px] w-px bg-[#e9edf2]" aria-hidden="true" />
+                  <span className="mx-[7px] h-[18px] w-px bg-[#ece8f4]" aria-hidden="true" />
                 )}
                 <Link
                   href={item.href}
                   aria-current={isActive ? 'page' : undefined}
                   className={cn(
-                    'relative whitespace-nowrap rounded-[9px] px-[15px] py-2 text-[14.5px] font-medium text-[#64748b] transition-colors hover:text-[#1e293b] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#cc4452]',
+                    'relative whitespace-nowrap rounded-[9px] px-[15px] py-2 text-[14.5px] font-medium text-[#6b6580] transition-colors hover:text-[#2e2a3d] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#cc4452]',
                     isActive &&
                       'font-semibold text-[#cc4452] after:absolute after:inset-x-[15px] after:-bottom-[9px] after:h-[3px] after:rounded-full after:bg-[#cc4452]',
                   )}
@@ -147,12 +147,16 @@ export function Navbar() {
             href="/discover"
             onClick={() => setIsMobileAccountOpen(false)}
             aria-label="ค้นหา"
-            className="grid h-10 w-10 place-items-center rounded-full text-[#475569] transition-colors hover:bg-[#f5f6f8] hover:text-[#1e293b] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452] max-sm:h-[38px] max-sm:w-[38px] xl:h-[22px] xl:w-[22px]"
+            aria-current={pathname === '/discover' ? 'page' : undefined}
+            className={cn(
+              "relative grid h-10 w-10 place-items-center rounded-full text-[#6b6580] transition-colors hover:text-[#cc4452] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452] max-sm:h-[38px] max-sm:w-[38px] xl:h-[22px] xl:w-[22px]",
+              pathname === '/discover' && 'text-[#cc4452] sm:after:absolute sm:after:inset-x-0 sm:after:-bottom-[9px] sm:after:h-[3px] sm:after:rounded-full sm:after:bg-[#cc4452]',
+            )}
           >
             <Search className="h-[22px] w-[22px]" />
           </Link>
 
-          <NotificationDropdown triggerClassName="max-sm:h-[38px] max-sm:w-[38px]" />
+          <NotificationDropdown triggerClassName="text-[#6b6580] max-sm:h-[38px] max-sm:w-[38px]" />
 
           <div className="sm:hidden">
             {isLoading ? (
@@ -188,7 +192,7 @@ export function Navbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger
                   aria-label="เปิดเมนูผู้ใช้"
-                  className="flex items-center gap-2.5 rounded-lg p-1 text-[#334155] transition-colors hover:bg-[#f5f6f8] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452] xl:p-0"
+                  className="flex items-center gap-2.5 rounded-lg p-1 text-[#2e2a3d] transition-colors hover:bg-[#f5f6f8] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#cc4452] xl:p-0"
                 >
                   <Avatar className="size-9">
                     <AvatarImage src={profile.avatarUrl} alt="" />
@@ -199,7 +203,7 @@ export function Navbar() {
                   <span className="max-w-32 truncate text-[14.5px] font-semibold">
                     {profile.displayName}
                   </span>
-                  <ChevronDown className="h-4 w-4 text-[#94a3b8]" />
+                  <ChevronDown className="h-4 w-4 text-[#a8a2bd]" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" sideOffset={8} className="w-72 p-2">
                   <DropdownMenuGroup>

@@ -19,11 +19,13 @@ type SearchParams = Promise<{
   sort?: string | string[]
   genre?: string | string[]
   page?: string | string[]
+  origin?: string | string[]
 }>
 
 const first = (value?: string | string[]) => Array.isArray(value) ? value[0] : value
 
 function normalizeState(query: Awaited<SearchParams>): RankingRouteState {
+  const rawOrigin = first(query.origin)
   const rawView = first(query.view)
   const rawType = first(query.type)
   const rawSort = first(query.sort)
@@ -35,6 +37,7 @@ function normalizeState(query: Awaited<SearchParams>): RankingRouteState {
 
   let state: RankingRouteState = {
     view: 'overview',
+    origin: rawOrigin === 'ไทย' || rawOrigin === 'แปล' ? rawOrigin : undefined,
     type: null,
     sort: null,
     genre,

@@ -1,0 +1,234 @@
+[
+  {
+    "name": "desktop-1440-hero",
+    "passed": true,
+    "details": {
+      "design": {
+        "x": 272.609375,
+        "y": 19.1875,
+        "w": 1113.625,
+        "h": 176.625,
+        "pad": "0px"
+      },
+      "project": {
+        "x": 272.609375,
+        "y": 19.1875,
+        "w": 1113.625,
+        "h": 176.625,
+        "pad": "0px"
+      }
+    }
+  },
+  {
+    "name": "desktop-1440-title",
+    "passed": true,
+    "details": {
+      "design": {
+        "x": 305.234375,
+        "y": 19.1875,
+        "w": 635.546875,
+        "h": 40.3125,
+        "pad": "0px"
+      },
+      "project": {
+        "x": 305.234375,
+        "y": 19.1875,
+        "w": 635.546875,
+        "h": 40.3125,
+        "pad": "0px"
+      }
+    }
+  },
+  {
+    "name": "desktop-1440-table-row",
+    "passed": true,
+    "details": {
+      "design": 45.03125,
+      "project": 45.03125
+    }
+  },
+  {
+    "name": "desktop-1440-title-padding",
+    "passed": true,
+    "details": {
+      "design": [
+        "26px",
+        "26px"
+      ],
+      "project": [
+        "26px",
+        "26px"
+      ]
+    }
+  },
+  {
+    "name": "desktop-1280-hero",
+    "passed": true,
+    "details": {
+      "design": {
+        "x": 243.8125,
+        "y": 19.1875,
+        "w": 1113.625,
+        "h": 176.625,
+        "pad": "0px"
+      },
+      "project": {
+        "x": 243.8125,
+        "y": 19.1875,
+        "w": 1113.625,
+        "h": 176.625,
+        "pad": "0px"
+      }
+    }
+  },
+  {
+    "name": "desktop-1280-title",
+    "passed": true,
+    "details": {
+      "design": {
+        "x": 276.4375,
+        "y": 19.1875,
+        "w": 635.546875,
+        "h": 40.3125,
+        "pad": "0px"
+      },
+      "project": {
+        "x": 276.4375,
+        "y": 19.1875,
+        "w": 635.546875,
+        "h": 40.3125,
+        "pad": "0px"
+      }
+    }
+  },
+  {
+    "name": "desktop-1280-table-row",
+    "passed": true,
+    "details": {
+      "design": 45.03125,
+      "project": 45.03125
+    }
+  },
+  {
+    "name": "desktop-1280-title-padding",
+    "passed": true,
+    "details": {
+      "design": [
+        "26px",
+        "26px"
+      ],
+      "project": [
+        "26px",
+        "26px"
+      ]
+    }
+  },
+  {
+    "name": "keyboard-preview",
+    "passed": true,
+    "details": {
+      "visible": true,
+      "linked": true,
+      "x": 604.359375,
+      "y": 560.96875,
+      "w": 400,
+      "h": 174
+    }
+  },
+  {
+    "name": "preview-escape",
+    "passed": true,
+    "details": {}
+  },
+  {
+    "name": "overview-type-filter",
+    "passed": true,
+    "details": {
+      "selected": "เว็บตูน",
+      "rows": 32
+    }
+  },
+  {
+    "name": "country-filter-empty-state",
+    "passed": true,
+    "details": {
+      "selected": "จีน",
+      "empty": true
+    }
+  },
+  {
+    "name": "list-structure",
+    "passed": true,
+    "details": {
+      "rows": 20,
+      "tags": 60,
+      "score": "13.7Kคะแนนโหวต",
+      "pager": true,
+      "detail": "/detail?bookId=ranking%3Aranking-work-13"
+    }
+  },
+  {
+    "name": "vote-logged-out",
+    "passed": true,
+    "details": {}
+  },
+  {
+    "name": "shelf-logged-out",
+    "passed": true,
+    "details": {}
+  },
+  {
+    "name": "new-days-empty",
+    "passed": true,
+    "details": {
+      "selected": "7 วัน",
+      "empty": "ยังไม่มีรายการในหมวดนี้",
+      "pager": true
+    }
+  },
+  {
+    "name": "mobile-overview",
+    "passed": true,
+    "details": {
+      "viewport": 390,
+      "width": 390,
+      "menu": true
+    }
+  },
+  {
+    "name": "mobile-list",
+    "passed": true,
+    "details": {
+      "viewport": 390,
+      "width": 390,
+      "menu": true
+    }
+  },
+  {
+    "name": "mobile-creators",
+    "passed": true,
+    "details": {
+      "viewport": 390,
+      "width": 390,
+      "menu": true
+    }
+  },
+  {
+    "name": "creator-profile-identity",
+    "passed": true,
+    "details": {
+      "rows": 3,
+      "links": [],
+      "disabled": 6
+    }
+  },
+  {
+    "name": "creator-missing-id-state",
+    "passed": true,
+    "details": {
+      "rows": 3,
+      "links": [],
+      "disabled": 6
+    }
+  }
+]

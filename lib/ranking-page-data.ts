@@ -33,6 +33,7 @@ export interface RankingWorkItem {
   genre: RankingGenreKey
   genreLabel: string
   synopsis: string
+  tags?: readonly string[]
   status: 'ongoing' | 'completed'
   origin: 'ไทย' | 'แปล'
   country?: string
@@ -76,7 +77,7 @@ export const RANKING_TYPE_LABELS: Record<RankingContentType, string> = {
 export const RANKING_SORT_LABELS: Record<RankingSort, { label: string; subtitle: string }> = {
   recommended: { label: 'อันดับแนะนำ', subtitle: 'จัดอันดับรายอาทิตย์ยอดนิยม' },
   monthly: { label: 'อันดับรายเดือน', subtitle: 'ผลงานที่ได้รับโหวตรายเดือนสูงสุด' },
-  views: { label: 'ยอดวิว', subtitle: 'ผลงานที่มีผู้เข้าชมมากที่สุด' },
+  views: { label: 'ยอดเข้าชม', subtitle: 'ผลงานที่มีผู้เข้าชมมากที่สุด' },
   new: { label: 'อันดับเรื่องใหม่', subtitle: 'ผลงานเปิดตัวใหม่ที่กำลังมาแรง' },
 }
 
@@ -103,7 +104,7 @@ export const RANKING_GENRES: ReadonlyArray<{ key: RankingGenreKey; label: string
 export const RANKING_STATS = [
   { id: 'creators', value: '24,876', unit: 'คน', label: 'ครีเอเตอร์ทั้งหมด', accent: '#cc4452', parts: ['นักเขียน 18,420', 'นักวาด 4,860', 'ผู้แปล 1,596'] },
   { id: 'works', value: '6,231', unit: 'ผลงาน', label: 'ผลงานทั้งหมด', accent: '#8b5cf6', parts: ['นิยาย 4,180', 'เว็บตูน 1,420', 'เสียง 631'] },
-  { id: 'views', value: '245.8M', unit: 'วิว', label: 'ยอดวิวทั้งหมด', accent: '#3b9af0', parts: ['นิยาย 180.4M', 'เว็บตูน 52.1M', 'เสียง 13.3M'] },
+  { id: 'views', value: '245.8M', unit: 'ครั้ง', label: 'ยอดเข้าชมทั้งหมด', accent: '#3b9af0', parts: ['นิยาย 180.4M', 'เว็บตูน 52.1M', 'เสียง 13.3M'] },
   { id: 'new', value: '36', unit: 'ผลงาน', label: 'เปิดตัวผลงานใหม่วันนี้', accent: '#f06aa0', parts: ['นิยาย 22', 'เว็บตูน 10', 'เสียง 4'] },
 ] as const
 
@@ -159,11 +160,13 @@ function buildWork(index: number): RankingWorkItem {
     genre,
     genreLabel: source ? source.genres.map((key) => GENRE_LABELS[key]).join(' · ') : genreLabel(genre),
     synopsis: source?.synopsis ?? 'เรื่องราวการเดินทางที่เต็มไปด้วยความลับ มิตรภาพ และการตัดสินใจซึ่งอาจเปลี่ยนชะตาของโลกทั้งใบ',
+    tags: source?.tags,
     status: source?.status === 'completed' || index % 5 === 0 ? 'completed' : 'ongoing',
     origin: source?.origin === 'translated' || index % 3 === 1 ? 'แปล' : 'ไทย',
     latestEpisode: source?.latestEpisode ?? `ตอนที่ ${Math.max(24, 740 - index * 7)} บททดสอบครั้งใหม่`,
     updatedAt: source?.updatedAt ?? `2026-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T12:00:00Z`,
     launchedAt: `${day} ${['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.'][month - 1]} 69`,
+    publishedAt: `2026-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T00:00:00+07:00`,
     recommendedVotes,
     monthlyVotes,
     views,

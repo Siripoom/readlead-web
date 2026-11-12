@@ -3,15 +3,18 @@
 import {
   startTransition,
   useEffect,
+  useId,
   useMemo,
   useState,
   type CSSProperties,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   BarChart3,
+  Book,
   BookMarked,
   BookOpen,
   ChevronDown,
@@ -24,9 +27,9 @@ import {
   History,
   Library,
   Menu,
-  Sparkles,
+  Sun,
   Ticket,
-  UserRound,
+  UsersRound,
 } from "lucide-react";
 import {
   Dialog,
@@ -64,6 +67,7 @@ import styles from "./RankingLanding.module.css";
 const PAGE_SIZE = 20;
 const DAILY_MAX = 15;
 const MONTHLY_MAX = 30;
+const COUNTRIES = ["", "จีน", "เกาหลี", "ญี่ปุ่น", "อังกฤษ", "อื่นๆ"];
 const VOTE_STORAGE_KEY = "rl_ranking_votes_v1";
 
 type VoteKind = "daily" | "monthly";
@@ -110,10 +114,9 @@ const remainingTickets = (ledger: VoteLedger, kind: VoteKind) => {
 };
 
 const fmt = (value: number) => {
-  if (value >= 1_000_000)
-    return `${(value / 1_000_000).toFixed(value >= 10_000_000 ? 1 : 2)}M`;
-  if (value >= 1_000) return value.toLocaleString("en-US");
-  return String(value);
+  if (value >= 1_000_000) return `${Number((value / 1_000_000).toFixed(1))}M`;
+  if (value >= 10_000) return `${Number((value / 1_000).toFixed(1))}K`;
+  return value.toLocaleString("en-US");
 };
 
 const coverStyle = (
@@ -353,14 +356,16 @@ function SideMenu({
               <stop offset="1" stopColor="#f48fc4" />
             </linearGradient>
           </defs>
-          <polygon points="50,18 68,43 50,80 32,43" fill="url(#rank-gem)" />
-          <polygon points="50,18 68,43 50,51 32,43" fill="#fff" opacity=".38" />
-          <polygon points="76,43 87,57 76,79 64,57" fill="#f4a0cc" />
+          <polygon points="50,30 64,46 50,78 36,46" fill="url(#rank-gem)" />
+          <polygon points="50,30 64,46 50,52 36,46" fill="#fff" opacity=".35" />
+          <polygon points="70,44 80,54 72,76 60,58" fill="#f4a0cc" />
           <polygon
-            points="25,49 38,62 30,84 17,64"
+            points="30,50 40,60 34,80 22,62"
             fill="#b98bee"
             opacity=".9"
           />
+          <circle cx="78" cy="34" r="3" fill="#f7a8d4" />
+          <circle cx="24" cy="40" r="2.5" fill="#c69cff" />
         </svg>
       </div>
     </>
@@ -524,7 +529,38 @@ function GenreFilters({
   );
 }
 
+function CountryOptions({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (country: string) => void;
+}) {
+  return COUNTRIES.map((country, index) => (
+    <span className="contents" key={country}>
+      {index > 0 && (
+        <span className={styles.filterDot} aria-hidden="true">
+          ·
+        </span>
+      )}
+      <button
+        type="button"
+        className={cn(
+          styles.typeButton,
+          country === value && styles.filterActive,
+        )}
+        aria-pressed={country === value}
+        onClick={() => onChange(country)}
+      >
+        {country || "ทุกประเทศ"}
+      </button>
+    </span>
+  ));
+}
+
 function StatsStrip({ works }: { works: RankingWorkItem[] }) {
+  const creatorCount = (items: RankingWorkItem[]) =>
+    new Set(items.map((work) => work.creatorId ?? work.author)).size;
   const count = (type: RankingContentType) =>
     works.filter((work) => work.type === type).length;
   const views = (type: RankingContentType) =>
@@ -541,38 +577,75 @@ function StatsStrip({ works }: { works: RankingWorkItem[] }) {
   );
   const values: Record<
     (typeof RANKING_STATS)[number]["id"],
-    { value: string; parts: string[] }
+    { value: string; parts: Array<{ label: string; value: string }> }
   > = {
     creators: {
-      value: String(
-        new Set(works.map((work) => work.creatorId ?? work.author)).size,
-      ),
-      parts: ["นักเขียนและนักสร้างสรรค์ในรายการ"],
+      value: creatorCount(works).toLocaleString("en-US"),
+      parts: [
+        {
+          label: "นักเขียน",
+          value: String(
+            creatorCount(
+              works.filter(
+                (work) => work.type === "novel" && work.origin === "ไทย",
+              ),
+            ),
+          ),
+        },
+        {
+          label: "นักวาด",
+          value: String(
+            creatorCount(
+              works.filter(
+                (work) => work.type === "manga" && work.origin === "ไทย",
+              ),
+            ),
+          ),
+        },
+        {
+          label: "นักแปล",
+          value: String(
+            creatorCount(works.filter((work) => work.origin === "แปล")),
+          ),
+        },
+        {
+          label: "นักพากย์",
+          value: String(
+            creatorCount(
+              works.filter(
+                (work) => work.type === "audiobook" && work.origin === "ไทย",
+              ),
+            ),
+          ),
+        },
+      ],
     },
     works: {
       value: String(works.length),
       parts: [
-        `นิยาย ${count("novel")}`,
-        `เว็บตูน ${count("manga")}`,
-        `หนังสือเสียง ${count("audiobook")}`,
+        { label: "นิยาย", value: String(count("novel")) },
+        { label: "เว็บตูน", value: String(count("manga")) },
+        { label: "หนังสือเสียง", value: String(count("audiobook")) },
       ],
     },
     views: {
-      value: fmt(works.reduce((total, work) => total + work.views, 0)),
+      value: works
+        .reduce((total, work) => total + work.views, 0)
+        .toLocaleString("en-US"),
       parts: [
-        `นิยาย ${fmt(views("novel"))}`,
-        `เว็บตูน ${fmt(views("manga"))}`,
-        `หนังสือเสียง ${fmt(views("audiobook"))}`,
+        { label: "นิยาย", value: fmt(views("novel")) },
+        { label: "เว็บตูน", value: fmt(views("manga")) },
+        { label: "หนังสือเสียง", value: fmt(views("audiobook")) },
       ],
     },
     new: {
       value: String(newWorks.length),
       parts: (
         ["novel", "manga", "audiobook"] satisfies RankingContentType[]
-      ).map(
-        (type) =>
-          `${RANKING_TYPE_LABELS[type]} ${newWorks.filter((work) => work.type === type).length}`,
-      ),
+      ).map((type) => ({
+        label: RANKING_TYPE_LABELS[type],
+        value: String(newWorks.filter((work) => work.type === type).length),
+      })),
     },
   };
   const statistics = RANKING_STATS.map((stat) => ({
@@ -580,10 +653,10 @@ function StatsStrip({ works }: { works: RankingWorkItem[] }) {
     ...values[stat.id],
   }));
   const icons = [
-    <UserRound key="users" />,
-    <BookOpen key="works" />,
+    <UsersRound key="users" />,
+    <Book key="works" />,
     <Eye key="views" />,
-    <Sparkles key="new" />,
+    <Sun key="new" />,
   ];
   return (
     <section
@@ -602,7 +675,9 @@ function StatsStrip({ works }: { works: RankingWorkItem[] }) {
             <div className={styles.statLabel}>{stat.label}</div>
             <div className={styles.statParts}>
               {stat.parts.map((part) => (
-                <span key={part}>{part}</span>
+                <span key={part.label}>
+                  {part.label} <b>{part.value}</b>
+                </span>
               ))}
             </div>
           </div>
@@ -628,6 +703,81 @@ function WorkLink({
     >
       {children}
     </Link>
+  );
+}
+
+function OverviewWorkTitle({ item }: { item: RankingWorkItem }) {
+  const tooltipId = useId();
+  const [position, setPosition] = useState<{
+    left: number;
+    top: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!position) return;
+    const hide = () => setPosition(null);
+    window.addEventListener("scroll", hide, true);
+    window.addEventListener("resize", hide);
+    return () => {
+      window.removeEventListener("scroll", hide, true);
+      window.removeEventListener("resize", hide);
+    };
+  }, [position]);
+
+  const show = (anchor: HTMLAnchorElement) => {
+    const rect = anchor.getBoundingClientRect();
+    const width = Math.min(400, window.innerWidth - 32);
+    setPosition({
+      left: Math.max(
+        16,
+        Math.min(rect.right + 14, window.innerWidth - width - 16),
+      ),
+      top: Math.max(16, Math.min(rect.top - 14, window.innerHeight - 190)),
+    });
+  };
+
+  return (
+    <>
+      <Link
+        href={`/detail?bookId=${encodeURIComponent(item.detailId)}`}
+        className={styles.storyTitle}
+        aria-describedby={position ? tooltipId : undefined}
+        onMouseEnter={(event) => show(event.currentTarget)}
+        onMouseLeave={() => setPosition(null)}
+        onFocus={(event) => show(event.currentTarget)}
+        onBlur={() => setPosition(null)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") setPosition(null);
+        }}
+      >
+        {item.title}
+      </Link>
+      {position &&
+        createPortal(
+          <div
+            id={tooltipId}
+            className={styles.workPreview}
+            role="tooltip"
+            style={position}
+          >
+            <span className={styles.previewCover} style={coverStyle(item)}>
+              {item.title.slice(0, 2)}
+            </span>
+            <span>
+              <strong>{item.title}</strong>
+              <span>
+                {item.author} · {item.genreLabel}
+                {item.country ? ` · ต้นฉบับ${item.country}` : ""}
+              </span>
+              <span className={styles.previewSynopsis}>{item.synopsis}</span>
+              <span className={styles.previewEpisode}>
+                {item.latestEpisode}
+              </span>
+            </span>
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }
 
@@ -715,31 +865,7 @@ function OverviewTable({
                 <div className={styles.countryFilters}>
                   {origin === "แปล" && (
                     <div role="group" aria-label="ประเทศต้นฉบับ">
-                      {["", "จีน", "เกาหลี", "ญี่ปุ่น", "อังกฤษ", "อื่นๆ"].map(
-                        (value, index) => (
-                          <span className="contents" key={value}>
-                            {index > 0 && (
-                              <span
-                                className={styles.filterDot}
-                                aria-hidden="true"
-                              >
-                                ·
-                              </span>
-                            )}
-                            <button
-                              type="button"
-                              aria-pressed={country === value}
-                              onClick={() => setCountry(value)}
-                              className={cn(
-                                styles.typeButton,
-                                country === value && styles.filterActive,
-                              )}
-                            >
-                              {value || "ทุกประเทศ"}
-                            </button>
-                          </span>
-                        ),
-                      )}
+                      <CountryOptions value={country} onChange={setCountry} />
                     </div>
                   )}
                 </div>
@@ -754,7 +880,7 @@ function OverviewTable({
                     <thead>
                       <tr>
                         <th className={styles.center}>อันดับ</th>
-                        <th>เรื่อง</th>
+                        <th className={styles.titleCell}>เรื่อง</th>
                         <th>เจ้าของผลงาน</th>
                         <th className={styles.center}>คะแนน</th>
                       </tr>
@@ -785,27 +911,7 @@ function OverviewTable({
                             </span>
                           </td>
                           <td className={styles.titleCell}>
-                            <WorkLink item={item} className={styles.storyTitle}>
-                              {item.title}
-                            </WorkLink>
-                            <span className={styles.workPreview} role="tooltip">
-                              <span
-                                className={styles.previewCover}
-                                style={coverStyle(item)}
-                              >
-                                {item.title.slice(0, 2)}
-                              </span>
-                              <span>
-                                <strong>{item.title}</strong>
-                                <span>
-                                  {item.author} · {item.genreLabel}
-                                </span>
-                                <span className={styles.previewSynopsis}>
-                                  {item.synopsis}
-                                </span>
-                                <span>{item.latestEpisode}</span>
-                              </span>
-                            </span>
+                            <OverviewWorkTitle item={item} />
                           </td>
                           <td className={styles.authorCell} title={item.author}>
                             {item.creatorId ? (
@@ -854,8 +960,8 @@ function metricFor(
       label: `รีวิว · ${item.rating.toFixed(1)} ★`,
     };
   if (state.sort === "monthly")
-    return { value: item.monthlyVotes + bonus.monthly, label: "คะแนนรายเดือน" };
-  if (state.sort === "views") return { value: item.views, label: "ยอดวิว" };
+    return { value: item.monthlyVotes + bonus.monthly, label: "คะแนนโหวต" };
+  if (state.sort === "views") return { value: item.views, label: "ยอดเข้าชม" };
   if (state.sort === "new")
     return { value: new Date(item.updatedAt).getTime(), label: "เปิดตัวใหม่" };
   return { value: item.recommendedVotes + bonus.daily, label: "คะแนนโหวต" };
@@ -898,7 +1004,6 @@ function Pagination({
   )
     .filter((page) => page >= 1 && page <= pages)
     .sort((a, b) => a - b);
-  if (pages <= 1) return null;
   return (
     <nav className={styles.pagination} aria-label="หน้ารายการอันดับ">
       <Link
@@ -946,19 +1051,30 @@ function Pagination({
 function CreatorList({
   state,
   creators,
+  roleLabel,
 }: {
   state: RankingRouteState;
-  creators: RankingCreatorItem[];
+  creators: Array<RankingCreatorItem & { profileId: string | null }>;
+  roleLabel: string;
 }) {
-  const start = (state.page - 1) * PAGE_SIZE;
+  const pageState = {
+    ...state,
+    page: Math.min(
+      state.page,
+      Math.max(1, Math.ceil(creators.length / PAGE_SIZE)),
+    ),
+  };
+  const start = (pageState.page - 1) * PAGE_SIZE;
   const pageItems = creators.slice(start, start + PAGE_SIZE);
   return (
     <>
       <div className={styles.list}>
+        {pageItems.length === 0 && (
+          <div className={styles.empty}>ยังไม่มีเจ้าของผลงานในหมวดนี้</div>
+        )}
         {pageItems.map((creator, index) => (
           <div className={styles.creatorRow} key={creator.id}>
-            <div className={styles.creatorRank}>#{start + index + 1}</div>
-            <div className={styles.creatorIdentity}>
+            <div className={styles.creatorAvatarWrap}>
               <span
                 className={styles.avatar}
                 style={{
@@ -967,31 +1083,73 @@ function CreatorList({
               >
                 {creator.name.charAt(0)}
               </span>
-              <div>
-                <h3 className={styles.creatorName}>{creator.name}</h3>
-                <p className={styles.creatorMeta}>
-                  {creator.genreLabel} · {creator.works} ผลงาน
-                </p>
-              </div>
             </div>
-            <div className={styles.creatorStats}>
-              <div>
+            <div className={styles.workMain}>
+              <h3 className={styles.workTitle}>
+                <span>#{start + index + 1}</span>
+                {creator.profileId ? (
+                  <Link
+                    href={`/profile/${encodeURIComponent(creator.profileId)}`}
+                  >
+                    {creator.name}
+                  </Link>
+                ) : (
+                  creator.name
+                )}
+              </h3>
+              <p className={styles.creatorMeta}>{roleLabel}</p>
+              <p className={styles.creatorWorks}>
+                ผลงาน {creator.works} เรื่อง
+              </p>
+            </div>
+            <div className={styles.workActions}>
+              <div className={styles.metric}>
                 <b>{fmt(creator.followers)}</b>
                 <span>ผู้ติดตาม</span>
               </div>
-              <div>
-                <b>{fmt(creator.totalVotes)}</b>
-                <span>คะแนนโหวต</span>
-              </div>
-              <div>
-                <b>{fmt(creator.totalViews)}</b>
-                <span>ยอดวิว</span>
+              <div className={styles.creatorButtons}>
+                {creator.profileId ? (
+                  <>
+                    <Link
+                      className={styles.primaryButton}
+                      href={`/profile/${encodeURIComponent(creator.profileId)}`}
+                    >
+                      ดูโปรไฟล์
+                    </Link>
+                    <Link
+                      className={styles.outlineButton}
+                      href={`/profile/${encodeURIComponent(creator.profileId)}`}
+                      title="ติดตามที่หน้าโปรไฟล์"
+                    >
+                      + ติดตาม
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className={styles.primaryButton}
+                      disabled
+                      title="ยังไม่มี ID โปรไฟล์สาธารณะ"
+                    >
+                      ดูโปรไฟล์
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.outlineButton}
+                      disabled
+                      title="ยังไม่มี ID โปรไฟล์สาธารณะ"
+                    >
+                      + ติดตาม
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
         ))}
       </div>
-      <Pagination state={state} total={creators.length} />
+      <Pagination state={pageState} total={creators.length} />
     </>
   );
 }
@@ -1010,6 +1168,30 @@ function ListView({
   savedIds: Set<string>;
   onToggleShelf: (id: string) => void;
 }) {
+  const [country, setCountry] = useState("");
+  const [newDays, setNewDays] = useState(90);
+  const [referenceTime] = useState(() => Date.now());
+  const [creatorType, setCreatorType] = useState<RankingContentType>("novel");
+  const origin = state.origin ?? "ไทย";
+  const displayedCreators = creators.flatMap((creator) => {
+    const matching = works.filter(
+      (work) =>
+        work.author === creator.name &&
+        work.type === creatorType &&
+        work.origin === origin &&
+        (!country || origin === "ไทย" || work.country === country),
+    );
+    return matching.length
+      ? [
+          {
+            ...creator,
+            works: matching.length,
+            profileId:
+              matching.find((work) => work.creatorId)?.creatorId ?? null,
+          },
+        ]
+      : [];
+  });
   const baseTitle =
     state.type && state.sort
       ? RANKING_SORT_LABELS[state.sort]
@@ -1029,14 +1211,21 @@ function ListView({
         works.filter(
           (item) =>
             (!state.type || item.type === state.type) &&
-            (!state.origin || item.origin === state.origin) &&
+            item.origin === origin &&
+            (origin === "ไทย" || !country || item.country === country) &&
+            (state.sort !== "new" ||
+              Boolean(
+                item.publishedAt &&
+                new Date(item.publishedAt).getTime() >=
+                  referenceTime - newDays * 86_400_000,
+              )) &&
             (!state.genre || item.genre === state.genre) &&
             (state.view !== "completed" || item.status === "completed"),
         ),
         state,
         ledger,
       ),
-    [ledger, state, works],
+    [country, ledger, newDays, origin, referenceTime, state, works],
   );
   const currentPage = Math.min(
     state.page,
@@ -1049,56 +1238,149 @@ function ListView({
   return (
     <section className={cn(styles.card, styles.listCard)}>
       <div className={styles.sectionHead}>
-        <h2>{title?.label}</h2>
+        <h2>
+          {title?.label}
+          {state.view === "creators" ? ` · ผลงาน${origin}` : ""}
+        </h2>
         <small>
-          {state.view === "creators" ? creators.length : sorted.length} ผลงาน ·{" "}
-          {title?.subtitle}
+          {state.view === "creators"
+            ? `${displayedCreators.length} รายการ`
+            : `${sorted.length} ${state.sort === "new" ? "ผลงาน" : "เรื่อง"}`}
         </small>
+        {state.sort === "new" && (
+          <div
+            className={styles.newDays}
+            role="group"
+            aria-label="ระยะเวลาเปิดตัวผลงาน"
+          >
+            <span>เปิดตัวภายใน</span>
+            {[90, 60, 30, 15, 7].map((days) => (
+              <button
+                key={days}
+                type="button"
+                aria-pressed={newDays === days}
+                className={cn(
+                  styles.typeButton,
+                  newDays === days && styles.filterActive,
+                )}
+                onClick={() => setNewDays(days)}
+              >
+                {days} วัน
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-      {state.view !== "creators" && (
-        <GenreFilters state={state}>
-          {state.sort === "new" ? (
-            <>
-              {(
-                ["novel", "manga", "audiobook"] satisfies RankingContentType[]
-              ).map((type) => (
-                <Link
-                  key={type}
-                  href={buildHref({ ...state, type })}
+      {state.view === "creators" && (
+        <div
+          className={styles.listFilters}
+          role="group"
+          aria-label="ประเภทผลงานของครีเอเตอร์"
+        >
+          {(["novel", "manga", "audiobook"] satisfies RankingContentType[]).map(
+            (type, index) => (
+              <span className="contents" key={type}>
+                {index > 0 && (
+                  <span className={styles.filterDot} aria-hidden="true">
+                    ·
+                  </span>
+                )}
+                <button
+                  type="button"
                   className={cn(
-                    styles.filterLink,
-                    state.type === type && styles.filterActive,
+                    styles.typeButton,
+                    creatorType === type && styles.filterActive,
                   )}
+                  aria-pressed={creatorType === type}
+                  onClick={() => setCreatorType(type)}
                 >
                   {RANKING_TYPE_LABELS[type]}
-                </Link>
-              ))}
-            </>
-          ) : (
+                </button>
+              </span>
+            ),
+          )}
+          {origin === "แปล" && (
             <>
-              {(
-                [undefined, "ไทย", "แปล"] satisfies Array<
-                  RankingRouteState["origin"]
-                >
-              ).map((origin) => (
-                <Link
-                  key={origin ?? "all"}
-                  href={buildHref({ ...state, origin })}
-                  className={cn(
-                    styles.filterLink,
-                    state.origin === origin && styles.filterActive,
-                  )}
-                >
-                  {origin ? `ผลงาน${origin}` : "ทั้งหมด"}
-                </Link>
-              ))}
+              <span className={styles.filterDivider} aria-hidden="true" />
+              <CountryOptions value={country} onChange={setCountry} />
             </>
           )}
-          <span className={styles.filterDivider} aria-hidden="true" />
-        </GenreFilters>
+        </div>
+      )}
+      {state.view !== "creators" && (
+        <div className={styles.listFilters}>
+          <div
+            className={styles.listFilterControls}
+            role="group"
+            aria-label="กรองประเภทและต้นฉบับ"
+          >
+            {state.sort === "new" ? (
+              <>
+                {(
+                  ["novel", "manga", "audiobook"] satisfies RankingContentType[]
+                ).map((type) => (
+                  <Link
+                    key={type}
+                    href={buildHref({ ...state, type })}
+                    className={cn(
+                      styles.filterLink,
+                      state.type === type && styles.filterActive,
+                    )}
+                  >
+                    {RANKING_TYPE_LABELS[type]}
+                  </Link>
+                ))}
+              </>
+            ) : (
+              <>
+                {(["ไทย", "แปล"] satisfies RankingWorkItem["origin"][]).map(
+                  (value, index) => (
+                    <span className="contents" key={value}>
+                      {index > 0 && (
+                        <span className={styles.filterDot} aria-hidden="true">
+                          ·
+                        </span>
+                      )}
+                      <Link
+                        href={buildHref({ ...state, origin: value })}
+                        className={cn(
+                          styles.filterLink,
+                          origin === value && styles.filterActive,
+                        )}
+                        aria-current={origin === value ? "true" : undefined}
+                      >
+                        {value}
+                      </Link>
+                    </span>
+                  ),
+                )}
+              </>
+            )}
+            <span className={styles.filterDivider} aria-hidden="true" />
+            {origin === "แปล" && (
+              <>
+                <CountryOptions value={country} onChange={setCountry} />
+                <span className={styles.filterDivider} aria-hidden="true" />
+              </>
+            )}
+          </div>
+          <GenreFilters state={state} />
+        </div>
       )}
       {state.view === "creators" ? (
-        <CreatorList state={state} creators={creators} />
+        <CreatorList
+          state={state}
+          creators={displayedCreators}
+          roleLabel={
+            origin === "แปล"
+              ? "นักแปล"
+              : creatorType === "manga"
+                ? "นักวาด"
+                : creatorType === "audiobook"
+                  ? "นักพากย์"
+                  : "นักเขียน"
+          }
+        />
       ) : (
         <>
           <div className={styles.list}>
@@ -1116,10 +1398,10 @@ function ListView({
                 <article className={styles.workRow} key={item.id}>
                   <WorkLink item={item} className={styles.coverWrap}>
                     <span className={styles.cover} style={coverStyle(item)}>
-                      {item.title.charAt(0)}
+                      {item.title.slice(0, 2)}
                     </span>
                     {item.status === "completed" && (
-                      <span className={styles.completedBadge}>จบแล้ว</span>
+                      <span className={styles.completedBadge}>จบ</span>
                     )}
                   </WorkLink>
                   <div className={styles.workMain}>
@@ -1130,22 +1412,47 @@ function ListView({
                     <div className={styles.meta}>
                       <b>{item.author}</b>
                       <i className={styles.metaDivider} />
-                      <span>เปิดตัว {item.launchedAt}</span>
-                      <i className={styles.metaDivider} />
                       <span>{item.genreLabel}</span>
                       <i className={styles.metaDivider} />
-                      <span className={styles.origin}>{item.origin}</span>
+                      <span>{item.origin}</span>
                       <i className={styles.metaDivider} />
-                      <span className={styles.status}>
-                        {item.status === "completed" ? "จบแล้ว" : "กำลังเขียน"}
+                      <span>
+                        เปิดตัว{" "}
+                        {item.publishedAt
+                          ? new Date(item.publishedAt).toLocaleDateString(
+                              "th-TH",
+                              { dateStyle: "medium", timeZone: "Asia/Bangkok" },
+                            )
+                          : item.launchedAt}
                       </span>
                     </div>
                     <p className={styles.description}>{item.synopsis}</p>
+                    <div className={styles.workTags} aria-label="แท็กผลงาน">
+                      {(item.tags?.length
+                        ? item.tags
+                        : [
+                            item.genreLabel,
+                            RANKING_TYPE_LABELS[item.type],
+                            item.origin,
+                          ]
+                      ).map((tag) => (
+                        <Link
+                          key={tag}
+                          href={`/search?q=${encodeURIComponent(`#${tag}`)}`}
+                        >
+                          #{tag}
+                        </Link>
+                      ))}
+                    </div>
                     <p className={styles.updated}>
                       <b>อัปเดตล่าสุด</b>{" "}
                       <WorkLink item={item}>{item.latestEpisode}</WorkLink> ·{" "}
-                      {new Date(item.updatedAt).toLocaleDateString("th-TH", {
-                        dateStyle: "medium",
+                      {new Date(item.updatedAt).toLocaleString("sv-SE", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
                         timeZone: "Asia/Bangkok",
                       })}
                     </p>
@@ -1153,26 +1460,24 @@ function ListView({
                   <div className={styles.workActions}>
                     <div className={styles.metric}>
                       {state.view !== "completed" && (
-                        <>
+                        <button
+                          type="button"
+                          className={styles.metricScoreButton}
+                          onClick={() => onVote(item)}
+                          aria-label={`โหวตให้ ${item.title}`}
+                        >
                           <b>
                             {state.sort === "new"
-                              ? item.launchedAt
+                              ? fmt(item.recommendedVotes + bonus.daily)
                               : fmt(metric.value)}
                           </b>
-                          {metric.label}
-                          <button
-                            type="button"
-                            className={styles.voteButton}
-                            onClick={() => onVote(item)}
-                          >
-                            โหวต
-                          </button>
-                        </>
+                          {state.sort !== "new" && <span>{metric.label}</span>}
+                        </button>
                       )}
                     </div>
                     <div className={styles.actionButtons}>
                       <WorkLink item={item} className={styles.primaryButton}>
-                        รายละเอียด
+                        รายละเอียดเรื่อง
                       </WorkLink>
                       <button
                         type="button"
@@ -1180,8 +1485,8 @@ function ListView({
                         onClick={() => onToggleShelf(item.detailId)}
                       >
                         {savedIds.has(item.detailId)
-                          ? "อยู่ในชั้นแล้ว"
-                          : "เพิ่มในชั้น"}
+                          ? "✓ อยู่ในชั้นแล้ว"
+                          : "+ เพิ่มเข้าชั้น"}
                       </button>
                     </div>
                   </div>

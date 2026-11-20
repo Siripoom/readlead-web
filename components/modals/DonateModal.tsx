@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button'
 import { Coins, Heart } from 'lucide-react'
 import { useWallet } from '@/contexts/WalletContext'
 import { cn } from '@/lib/utils'
+import styles from './DonateModal.module.css'
 
 const DONATE_OPTIONS = [10, 30, 50, 100, 200, 500]
 
 interface Props {
+  appearance?: 'default' | 'detail'
   authorName: string
   detailId?: string
   open: boolean
@@ -17,8 +19,10 @@ interface Props {
   onSuccess?: (amount: number, message: string) => void
 }
 
-export default function DonateModal({ authorName, detailId, open, onOpenChange, onSuccess }: Props) {
+export default function DonateModal({ appearance = 'default', authorName, detailId, open, onOpenChange, onSuccess }: Props) {
   const { balance, spend } = useWallet()
+  const detail = appearance === 'detail'
+  const options = detail ? [1, 25, 50, 100, 300, 1000, 3000, 7500, 15000] : DONATE_OPTIONS
   const [selected, setSelected] = useState(50)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
@@ -56,11 +60,11 @@ export default function DonateModal({ authorName, detailId, open, onOpenChange, 
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className={detail ? styles.detailDialog : 'sm:max-w-sm'}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-primary">
             <Heart className="h-5 w-5 fill-primary" />
-            บริจาคให้นักเขียน
+            {detail ? 'สนับสนุนผลงาน' : 'บริจาคให้นักเขียน'}
           </DialogTitle>
         </DialogHeader>
 
@@ -73,13 +77,14 @@ export default function DonateModal({ authorName, detailId, open, onOpenChange, 
         ) : (
           <div className="space-y-4 py-2">
             <p className="text-sm text-muted-foreground">
-              บริจาคให้ <span className="font-medium text-foreground">{authorName}</span>
+              {detail ? 'ร่วมสนับสนุนผลงานของ ' : 'บริจาคให้ '}<span className="font-medium text-foreground">{authorName}</span>
             </p>
 
-            <div className="grid grid-cols-3 gap-2">
-              {DONATE_OPTIONS.map(amt => (
+            <div className={cn("grid grid-cols-3 gap-2", detail && styles.packs)}>
+              {options.map(amt => (
                 <button
                   key={amt}
+                  aria-pressed={selected === amt}
                   onClick={() => setSelected(amt)}
                   className={cn(
                     'flex flex-col items-center justify-center rounded-lg border p-3 text-sm font-medium transition-colors',
@@ -89,7 +94,7 @@ export default function DonateModal({ authorName, detailId, open, onOpenChange, 
                   )}
                 >
                   <Coins className="h-4 w-4 mb-1" />
-                  {amt}
+                  {amt.toLocaleString()} {detail && <small>เหรียญ</small>}
                 </button>
               ))}
             </div>
@@ -104,11 +109,13 @@ export default function DonateModal({ authorName, detailId, open, onOpenChange, 
             <textarea
               value={message}
               onChange={(event) => setMessage(event.target.value)}
-              maxLength={160}
+              maxLength={detail ? 200 : 160}
               rows={3}
               placeholder="เขียนข้อความเชียร์นักเขียน (ไม่บังคับ)"
               className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
             />
+
+            {detail && <p className="text-right text-xs text-muted-foreground">{message.length}/200</p>}
 
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
@@ -119,7 +126,7 @@ export default function DonateModal({ authorName, detailId, open, onOpenChange, 
             <Button variant="outline" onClick={() => handleOpenChange(false)}>ยกเลิก</Button>
             <Button onClick={handleDonate} disabled={balance < selected} className="bg-primary text-primary-foreground">
               <Heart className="h-4 w-4 mr-1" />
-              บริจาค {selected} เหรียญ
+              {detail ? 'สนับสนุน' : 'บริจาค'} {selected.toLocaleString()} เหรียญ
             </Button>
           </DialogFooter>
         )}

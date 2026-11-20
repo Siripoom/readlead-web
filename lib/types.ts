@@ -149,6 +149,7 @@ export interface Episode {
   wordCount: number
   publishedAt: string | null
   mediaUrl?: string
+  viewCount?: number
 }
 
 export interface Creator {

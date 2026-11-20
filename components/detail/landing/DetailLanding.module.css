@@ -177,3 +177,232 @@
   .reviewRecommended,.reviewNotRecommended{margin-left:0}
   .reviewBody{max-width:none}
 }
+
+/* Detail reference, November 2026. The surrounding site header/footer stay shared. */
+.page{--ink:#2b2d3a;--muted:#8b91a0;--line:#dfe1e9;position:relative;isolation:isolate;background:#fff;padding:24px 0 65px}
+.wrap{position:relative;width:min(1244px,calc(100% - 48px));z-index:1}
+.coverBand{position:absolute;z-index:0;inset:0 0 auto;height:800px;overflow:hidden;pointer-events:none;mask-image:linear-gradient(#000 30%,rgba(0,0,0,.94) 44%,rgba(0,0,0,.68) 58%,rgba(0,0,0,.32) 72%,rgba(0,0,0,.06) 86%,transparent)}
+.coverBand>div{position:absolute;inset:0;filter:blur(60px) saturate(1.4);transform:scale(1.2)}
+.coverBand:after{content:"";position:absolute;inset:0;background:rgba(16,14,26,.42)}
+.card{border-radius:20px;box-shadow:0 1px 2px rgba(0,0,0,.035),0 6px 18px -10px rgba(0,0,0,.06)}
+.hero{background:transparent;border-color:#dfe1e9}
+.heroMain{grid-template-columns:227px minmax(0,1fr);gap:37px;padding:34px 40px 28px;background:rgba(16,14,26,.42);backdrop-filter:blur(18px)}
+.cover{align-self:start;border:1px solid rgba(255,255,255,.18);border-radius:15px;box-shadow:0 14px 30px -12px rgba(0,0,0,.5)}
+.cover:after{display:none}
+.heroBody{display:flex;flex-direction:column;min-width:0}
+.title{margin:0 0 0 -4px;font-size:62.6px;font-weight:800;letter-spacing:-.5px;line-height:1.05;color:#fff;overflow-wrap:anywhere}
+.authorRow{gap:6px;margin-top:7px;font-size:14.6px;color:#fff}
+.author{font-weight:500}
+.follow{height:24px;padding:0 11px;border-color:rgba(255,255,255,.55);color:#fff;font-size:11.9px;font-weight:600}
+.followActive{background:#cc4452;border-color:#cc4452}
+.meta{gap:10px;margin-top:9px;font-size:13px;color:#fff;font-weight:600;line-height:1.55}
+.meta>*+*:before{content:"";display:inline-block;vertical-align:middle;width:3px;height:3px;margin-right:10px;border-radius:50%;background:rgba(255,255,255,.6)}
+.meta .pill{color:#fff}
+.meta .updated{color:rgba(255,255,255,.72);font-size:12.4px;font-weight:500}
+.synopsis{max-width:none;margin:13px 0 19px;color:rgba(255,255,255,.93);font-size:15.1px;line-height:1.65;white-space:pre-line}
+.stats{gap:10px;margin-top:auto;padding-top:8px}
+.stat{width:127px;padding:4px 0;flex-shrink:0}
+.stat b{color:#fff;font-size:18.4px;font-weight:700;line-height:1.2}
+.stat span{display:block;margin-top:4px;color:rgba(255,255,255,.72);font-size:11.9px;line-height:1.2}
+.actions{gap:10px;margin-top:17px}
+.primary,.secondary,.ghost,.listenBtn{width:127px;min-height:37px;height:37px;padding:0 10px;border-radius:10px;font-size:14px;font-weight:600;white-space:nowrap}
+.hero .secondary,.hero .ghost,.hero .listenBtn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.4);color:#fff}
+.hero .secondary:hover,.hero .ghost:hover,.hero .listenBtn:hover{background:rgba(255,255,255,.22)}
+.hero .secondaryActive{background:rgba(204,68,82,.6)}
+.supportItem{padding:18px 26px;min-height:118px}
+.supportItem:first-child{padding-left:35px}
+.supportTip{padding-right:35px}
+.supportTop b{font-size:17.3px}
+.supportTop span{font-size:11.9px}
+.supportScore strong{font-size:23.8px}
+.supportInfo>small{font-size:11.3px}
+.supportButton{height:29px;min-height:29px;min-width:78px;font-size:12.4px}
+.description{margin-top:22px;padding:24px 26px}
+.sectionTitle{font-size:18px;font-weight:700}
+.description p{font-size:15.1px;line-height:1.8;color:#000;white-space:pre-line}
+.readMore{font-size:14px;font-weight:600;margin-top:10px}
+.tagsBlock{margin-top:21px;padding-top:19px;border-color:#e8eaf1}
+.tagsLabel{font-size:12.4px;font-weight:700}
+.tags{gap:4px 13px}
+.tag{padding:0;border:0;border-radius:0;background:none;color:#6b6580;font-size:13.5px;font-weight:600}
+.tag:hover{color:#cc4452}
+.columns{grid-template-columns:minmax(0,1fr) 20%;gap:17px;margin-top:17px}
+.stack{gap:17px}
+.section,.reviewsSection{padding:24px 26px}
+.reviewsHeader{padding:0;border:0;margin-bottom:19px}
+.reviewsHeader h2{font-size:17.3px}
+.reviewWriteButton,.reviewSortSelect select{width:130px;height:33px;font-size:13.5px}
+.reviewAvatar{width:43px;height:43px}
+.review{gap:13px;padding:19px 0}
+.reviewName{font-size:15.1px}
+.reviewBody{font-size:13.5px;line-height:1.65;max-width:648px}
+.reviewDate{font-size:12.4px}
+.chapterHeader{align-items:flex-end;flex-wrap:wrap;margin-bottom:15px}
+.chapterHeading{font-size:18.4px}
+.chapterSummary{font-size:13px;color:#8b91a0}
+.chapterNav{display:flex;gap:6px;align-items:center;margin-left:auto}
+.chapterSelect{position:relative}
+.chapterSelect select{height:35px;min-width:162px;max-width:100%;appearance:none;border:1px solid #e8eaf1;background:#fff;border-radius:10px;padding:0 33px 0 13px;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer}
+.chapterSelect svg{position:absolute;right:12px;top:11px;pointer-events:none;color:#6b7080}
+.chapterSort{display:grid;place-items:center;width:35px;height:35px;color:#6b7080}
+.chapterSort[aria-pressed=true] svg{transform:scaleX(-1)}
+.chapterPage{max-height:720px;overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;scrollbar-width:thin;scrollbar-color:#d9d3e0 transparent;border-bottom:1px solid #e8eaf1}
+.chapterRow{min-height:72px;padding:13px 11px;scroll-snap-align:start;border-radius:11px}
+.chapterRow:first-child{border-top:1px solid #e8eaf1}
+.chapterRow+.chapterRow{border-color:#e8eaf1}
+.chapterRow:hover{background:#fdeef0}
+.chapterRowTitle{font-size:14.6px}
+.chapterDate{font-size:12.4px;color:#8b91a0}
+.chapterRowMeta{gap:11px;align-self:flex-end}
+.chapterPrice{width:65px;font-size:13.5px}
+.chapterStat{width:65px;font-size:13px;color:#8b91a0}
+.chapterStat:last-child{width:48px}
+.chapterModeTabs{width:100%;gap:0;padding:0;margin:-6px -2px 15px;background:none;border-bottom:1px solid #e8eaf1;border-radius:0}
+.chapterModeTabs button{position:relative;flex:1;width:auto;height:50px;padding:0;border-radius:0;font-size:16px;color:#9a9eaa}
+.chapterModeTabs .chapterModeActive{color:#2b2d3a!important;background:none!important;box-shadow:none;font-weight:700}
+.chapterModeActive:after{content:"";position:absolute;left:calc(50% - 45px);bottom:-1px;width:90px;height:3px;background:#cc4452;border-radius:3px 3px 0 0}
+.sidebar .section{padding:12px}
+.fanHeading{font-size:13px;font-weight:700;text-align:center;margin:2px 0 8px}
+.sideTabs{padding:2px;gap:2px;margin-bottom:6px;border-radius:11px}
+.sideTabs button{padding:4px 2px;font-size:9.7px;white-space:nowrap}
+.sideTabs .sideTabActive{color:#2b2d3a!important}
+.fan{grid-template-columns:19px 25px minmax(0,1fr) auto;gap:6px;min-height:33.5px;padding:0 2px;border-bottom:1px solid #f0eff3;font-size:11.3px}
+.fanRank{width:19px;color:#8a8894;font-size:11.9px;font-weight:700}
+.fanRankGold,.fanRankSilver,.fanRankBronze{background:none;border-radius:0}
+.fanRankGold{color:#bf2c24}.fanRankSilver{color:#e67225}.fanRankBronze{color:#d4ad1a}
+.avatar{width:25px;height:25px;font-size:10px}
+.fan strong{font-weight:600}
+.fan span:last-child{color:#2a2830;font-size:11.9px;font-weight:500}
+.currentFan{margin:6px -12px 0;padding:0 14px;border-radius:0;border:0;min-height:37px}
+.allButtonLink{font-size:12px;font-weight:600;margin-top:8px}
+.sidebar .sectionHeader{margin-bottom:13px}
+.sidebar .sectionTitle{font-size:15px}
+.related{gap:14px}
+.relatedItem{grid-template-columns:45px minmax(0,1fr);gap:11px}
+.relatedCover{position:relative;overflow:hidden}
+.relatedItem b{font-size:12px;font-weight:600}
+.relatedItem span span{font-size:10.8px}
+@media(max-width:1100px){.heroMain{grid-template-columns:190px minmax(0,1fr);padding:28px;gap:28px}.title{font-size:48px}.supportTop{flex-wrap:wrap;gap:2px}.supportItem{padding:16px}.supportTop span{white-space:normal}.columns{grid-template-columns:minmax(0,1fr) 235px}.chapterPrice,.chapterStat{width:45px}.chapterStat:last-child{width:40px}}
+@media(max-width:900px){.columns{grid-template-columns:1fr}.sidebar{grid-template-columns:1fr 1fr}.supportItem:first-child,.supportTip{padding:18px}.heroMain{grid-template-columns:170px minmax(0,1fr);gap:24px}.title{font-size:40px}.stat{width:110px}.stat span{font-size:11px}.supportItem{min-height:105px}.chapterPage{max-height:720px}}
+@media(max-width:640px){.page{padding-top:14px}.wrap{width:calc(100% - 24px)}.heroMain{grid-template-columns:1fr;padding:22px 18px;gap:20px}.cover{width:150px}.heroBody{align-items:stretch}.title{font-size:32px;text-align:center;margin:0}.authorRow,.meta,.stats,.actions{justify-content:center}.meta{gap:6px}.meta .updated{flex-basis:100%;text-align:center}.meta .updated:before{display:none}.synopsis{font-size:14px;text-align:left}.stats{gap:8px;padding-top:0}.stat{width:auto;flex:1;min-width:60px;text-align:center}.stat b{font-size:17px}.stat span{font-size:10px}.primary,.secondary,.ghost,.listenBtn{font-size:12px;width:auto;flex:1;min-width:90px}.supportItem{min-height:100px}.supportTop b{font-size:16px}.supportTop span{font-size:11px}.supportButton{min-width:72px}.description,.section,.reviewsSection{padding:20px 18px}.description p{font-size:14px}.columns{margin-top:16px}.sidebar{grid-template-columns:1fr}.reviewsHeader{align-items:flex-start;gap:12px}.reviewsHeaderActions{width:100%}.reviewSortSelect,.reviewSortSelect select,.reviewWriteButton{width:100%}.reviewDate{font-size:10px}.reviewName{font-size:13px}.reviewAvatar{width:32px;height:32px}.reviewHead{flex-wrap:wrap;gap:5px}.reviewBody{font-size:13px}.chapterHeader{align-items:flex-start}.chapterNav{width:100%;margin-left:0}.chapterSelect{flex:1}.chapterSelect select{width:100%;font-size:13px}.chapterRow{min-height:72px;gap:6px;padding:11px 4px}.chapterRowTitle{font-size:13px}.chapterRowMeta{gap:5px}.chapterPrice{width:32px;font-size:12px}.chapterStat{width:35px;min-width:0;font-size:11px}.chapterStat:last-child{width:30px}.chapterDate{font-size:11px}.chapterInfo{min-width:0}.chapterTitleLine{overflow-wrap:anywhere}.chapterPage{max-height:720px}.sideTabs button{font-size:12px}.fan{height:38px}.sidebar .section{padding:18px}.fanHeading{font-size:15px}.coverBand{height:1100px}}
+@media(prefers-reduced-motion:reduce){.chapterSort svg{transition:none}}
+
+@font-face{font-family:'ReadLead Detail Sarabun';src:url('../../../app/fonts/Sarabun-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+.synopsis,.description p,.reviewBody,.replyComposer textarea{font-family:'ReadLead Detail Sarabun',sans-serif}
+.supportItem{min-height:110px}
+.supportTop{padding-right:0}
+.supportButton{position:absolute;right:26px;bottom:16px}
+.supportTip .supportButton{right:35px}
+@media(max-width:900px){.supportTip .supportButton{right:26px}}
+@media(max-width:640px){.supportItem{min-height:100px}.supportTop{padding-right:0}.supportScore{padding-right:90px}.supportButton,.supportTip .supportButton{right:18px}}
+.voteDialog{width:430px;max-width:calc(100vw - 32px);border-radius:18px;padding:20px;gap:0;color:#2b2d3a}
+.dialogBackdrop{background:rgba(20,18,35,.35);backdrop-filter:none}
+.voteDialogTitle{text-align:center;font-size:18px;font-weight:700;padding:0 25px;margin-bottom:12px}
+.voteDialogDescription{font-size:12px;line-height:1.55;text-align:center;color:#8b91a0;margin-bottom:14px}
+.voteDialogDescription a{color:#cc4452;font-weight:600}
+.voteDialogSummary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid #eeedf2;font-size:13px;font-weight:600;color:#6b7080}
+.voteDialogSummary strong{color:#2b2d3a;flex-shrink:0}
+.quantity{justify-content:center;gap:14px;margin:24px 0 28px}
+.quantity button{width:38px;height:38px;border:1px solid #e3e5ea;border-radius:11px;background:#fff;font-size:19px;font-weight:700}
+.quantity button:disabled{opacity:.35;cursor:not-allowed}
+.quantity input{width:72px;height:38px;border:0;background:transparent;font-size:22px;font-weight:700;appearance:textfield}
+.quantity input::-webkit-inner-spin-button,.quantity input::-webkit-outer-spin-button{appearance:none}
+.voteConfirm{width:100%;height:44px;background:#cc4452;color:#fff;border-radius:12px;font-size:14.5px;font-weight:700}
+.voteConfirm:disabled{background:#f1eef3;color:#b7b2c2;cursor:not-allowed}
+.fanModal{width:520px;max-width:calc(100vw - 32px);padding:20px;border-radius:18px}
+.description .tagsLabel{font-family:inherit;font-size:12.4px;font-weight:700;color:#2b2d3a;line-height:1.55;margin:0 0 9px}
+
+.fansCard{overflow:hidden}
+.chapterPage{max-height:721px}
+.page.pageWithPlayer{padding-bottom:110px}
+.fanModal{width:430px;max-height:min(86dvh,760px);padding:0;gap:0;overflow:hidden;display:flex;flex-direction:column}
+.fanModalTitle{text-align:center;font-size:17px;padding:20px 34px 18px;font-weight:700}
+.fanModal .sideTabs{margin:9px 13px 0;padding:4px;gap:8px;flex-shrink:0}
+.fanModal .sideTabs button{font-size:12px;padding:5px 6px}
+.fanPeriods{display:flex;justify-content:center;gap:10px;padding:10px 0;font-size:11.5px;font-weight:600;color:#9a98a6}
+.fanPeriods button[aria-pressed=true]{color:#cc4452}
+.fanPeriods button+button:before{content:'·';margin-right:10px;color:#d4d3da}
+.fanPodium{display:flex;align-items:flex-end;justify-content:center;gap:20px;padding:8px 12px 28px}
+.fanPodium>div{width:100px;min-width:0;text-align:center}
+.podiumAvatar{position:relative;display:grid;place-items:center;width:76px;height:76px;margin:0 auto 12px;background:#fce3e6;border:3px solid #f4f4f7;border-radius:50%;font-size:24px;color:#bc7a85}
+.fanWinner .podiumAvatar{width:96px;height:96px}
+.podiumAvatar span{position:absolute;right:-1px;bottom:-1px;width:24px;height:24px;display:grid;place-items:center;border:2px solid #fff;border-radius:50%;background:#e67225;color:#fff;font-size:11.5px;font-weight:800}
+.fanWinner .podiumAvatar span{background:#bf2c24}
+.fanPodium>div:last-child .podiumAvatar{background:#e0f4f5}
+.fanPodium>div:last-child .podiumAvatar span{background:#e6bf25}
+.fanPodium strong{display:block;font-size:12.5px;font-weight:700;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.fanPodium small{display:block;font-size:11.5px;color:#8a8894;margin-top:3px}
+.fanDialog{min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain}
+.fanDialog .fan,.fanOwnRank{min-height:48px;padding:0 13px;grid-template-columns:22px 32px minmax(0,1fr) auto;font-size:13.5px;gap:10px}
+.fanDialog .avatar,.fanOwnRank .avatar{width:32px;height:32px}
+.fanOwnRank{display:grid;align-items:center;background:#fff4f5;border-block:1px solid #e3dde8;flex-shrink:0;font-size:13px;min-height:56px}
+.fanOwnRank>span:first-child{color:#cc4452}
+@media(max-width:390px){.fanPodium{gap:12px}.fanModal .sideTabs{gap:2px}.fanPodium>div{width:90px}}
+.voteDialog,.fanModal{--ink:#2b2d3a;--muted:#6b7080;--line:#dfe1e9;--detail-red:#cc4452}
+
+/* Review and fan details measured against the rendered reference. */
+.reviewsSection{line-height:1.55}
+.reviewsSection .reviewsHeader{padding-bottom:17px;margin-bottom:19px;border-bottom:1px solid #dfe1e9;flex-wrap:wrap}
+.reviewsSection .reviewWriteButton{gap:0}
+.reviewList .review:last-child{border-bottom:0}
+.reviewAvatar{position:relative;overflow:hidden;background:linear-gradient(135deg,#4a3a1f,#bf9a3d);box-shadow:0 1px 3px rgba(30,30,60,.18)}
+.reviewReadCount{float:right;margin:6px 0 0 13px;font-size:12.4px;line-height:1.55;color:#8b91a0;white-space:nowrap}
+.reviewBodyClamped{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.reviewInlineMore{display:block;padding:0;font-size:13px;font-weight:600;color:#cc4452}
+.reviewFooter{gap:17px;margin-top:10px}
+.reviewFooter button{font-family:'ReadLead Detail Sarabun',sans-serif;font-size:13px}
+.reviewFooter .reviewReplyButton{font-family:inherit;color:#7f7f7f;font-size:13px}
+.reviewFooter .reviewReplyButton:hover{color:#5f5f66}
+.reviewFooter .reviewReplyButton svg{width:13px;height:13px;fill:currentColor}
+.reviewFooter .reviewHistoryLink{margin-left:4px;padding:0;font-family:inherit;font-size:13px;font-weight:700;color:#cc4452}
+.reviewRecommended,.reviewNotRecommended{font-size:13px}
+.revealSpoiler{font-size:13.5px;cursor:pointer}
+.revealSpoiler:hover{color:#6b7080}
+.spoilerRevealLabel{color:#cc4452;margin-left:-2px}
+.replyAvatar{background:linear-gradient(135deg,#4a3a1f,#bf9a3d)}
+.recommendButtons{gap:13px}
+.recommendQuestion{font-size:13px;font-weight:600;color:#6b7080}
+.recommendSeparator{color:#d3d6df}
+.recommendButtons button{width:auto;flex:none;height:32px;padding:0;border:0;border-radius:0;background:none;font-size:13.5px;font-weight:600;color:#8b91a0}
+.recommendButtons .recommendYesActive{border:0;background:none;color:#1f8a5b}
+.recommendButtons .recommendNoActive{border:0;background:none;color:#cc4452}
+.reviewCharacterCount{font-size:12.4px;color:#8b91a0;white-space:nowrap}
+.reviewComposerBody textarea{font-family:'ReadLead Detail Sarabun',sans-serif;font-size:14px;min-height:48px}
+.reviewComposerActions{flex-wrap:wrap}
+.fansCard{font-family:var(--font-noto-sans-thai),sans-serif;line-height:1.55;color:#2a2830}
+.fansCard .fanHeading{margin:2px 0 8px;line-height:1.55}
+.fansCard .sideTabs{border-radius:11px;margin-bottom:6px}
+.fansCard .sideTabs button{line-height:1.55;padding:4.3px 2px;border-radius:8.6px}
+.fansCard .fan{height:33.5px;min-height:33.5px;gap:6.5px;font-size:11.34px;grid-template-columns:19.4px 24.8px minmax(0,1fr) auto}
+.fansCard .fan:last-of-type{border-bottom:0}
+.fansCard .avatar{width:24.8px;height:24.8px;box-shadow:none}
+.fansCard .fanRank{font-size:11.9px}
+.fansCard .fan span:last-child{font-size:11.9px;line-height:1.55}
+.fansCard .allButtonLink{margin-top:7.6px;font-size:11.9px;font-weight:600;line-height:1.55;color:#8b91a0}
+.fansCard .allButtonLink:hover{color:#cc4452}
+.fansCard .currentFan{height:37px;min-height:37px;margin:6px -12px 0;padding:0 17px 0 14px}
+.reviewHistoryDialog{width:560px;max-width:calc(100vw - 32px);max-height:80dvh;padding:0;gap:0;display:flex;flex-direction:column;border:1px solid #e3e5ea;border-radius:14px;overflow:hidden;--ink:#2b2d3a;--muted:#6b7080;--line:#dfe1e9}
+.reviewHistoryTitle{text-align:center;padding:16px 35px 12px;font-size:15px;border-bottom:1px solid #eceef3}
+.reviewHistoryList{padding:6px 22px 18px;overflow-y:auto;min-height:0}
+.reviewHistoryItem{padding:14px 0;border-bottom:1px solid #f0f1f5}
+.reviewHistoryItem:last-child{border-bottom:0}
+.reviewHistoryMeta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;color:#8b91a0;font-size:12px}
+.reviewHistoryMeta>b{color:#cc4452;font-weight:600}
+.reviewHistoryMeta time{margin-left:auto}
+.reviewHistoryMeta .reviewRecommended,.reviewHistoryMeta .reviewNotRecommended{margin-left:0;font-size:12px}
+.reviewHistoryItem p{font-family:'ReadLead Detail Sarabun',sans-serif;font-size:13.5px;line-height:1.65;color:#4a4e5c;margin-top:5px;white-space:pre-line}
+@media(max-width:640px){.reviewFooter{gap:12px;flex-wrap:wrap}.reviewReadCount{font-size:11px}.reviewFooter button,.reviewFooter .reviewHistoryLink{font-size:12px}.reviewHistoryMeta{font-size:11px}.reviewCharacterCount{font-size:11px}.reviewComposerRight{gap:10px}.recommendButtons{gap:10px;flex-wrap:wrap}.recommendButtons button{flex:none;width:auto}.reviewRecommended,.reviewNotRecommended{font-size:12px}}
+.reviewReactionCount{display:inline-block;min-width:12px;text-align:left}
+.reviewReplyAgain{padding:0;margin-top:5px;font-size:13px;font-weight:700;color:#7f7f7f}
+.reviewReplyAgain:hover{color:#5f5f66}
+.reviewSortTrigger{display:inline-flex;align-items:center;justify-content:space-between;gap:8px;width:130px;height:33px;padding:0 11px 0 13px;border:1px solid #dfe1e9;border-radius:7.6px;background:#fff;color:#6b7080;font-family:inherit;font-size:13.5px;font-weight:500;cursor:pointer}
+.reviewSortTrigger:hover{background:#f2f3f6}
+.reviewSortTrigger svg{width:13px;height:13px;color:#9aa0b3;transition:transform .18s}
+.reviewSortTrigger[aria-expanded=true] svg{transform:rotate(180deg)}
+.reviewSortMenu{min-width:130px;padding:5px;border:1px solid #e3e5ea;border-radius:10px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.035),0 8px 22px -8px rgba(0,0,0,.06);color:#6b7080}
+.reviewSortMenu [data-slot=dropdown-menu-item]{padding:7px 11px;border-radius:7px;font-family:var(--font-noto-sans-thai),sans-serif;font-size:13.5px;font-weight:500;line-height:1.55;color:#6b7080}
+.reviewSortMenu [data-slot=dropdown-menu-item]:hover,.reviewSortMenu [data-highlighted]{background:#f2f3f6}
+.reviewSortMenu .reviewSortSelected{color:#cc4452;font-weight:600;background:#fae8ea}
+@media(max-width:640px){.reviewSortTrigger{flex:1;min-width:0;width:auto}.reviewReplyAgain{font-size:12px}}
+@media(max-width:640px){.reviewsHeaderActions>.reviewWriteButton{flex:1;width:auto}}
+.reviewInlineMore{display:inline;font-family:var(--font-noto-sans-thai),sans-serif;font-size:13px;line-height:inherit}

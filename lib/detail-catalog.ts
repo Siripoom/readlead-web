@@ -1,4 +1,5 @@
 import {
+  HOME_GENRE_LABELS,
   HOME_LATEST_UPDATES,
   HOME_LIMITED_OFFERS,
   HOME_POPULAR_BOOKS,
@@ -22,6 +23,8 @@ import type { ContentType, Episode, Genre, Work, WorkStatus } from '@/lib/types'
 
 export interface DetailCatalogItem extends Work {
   detailId: string
+  tagline?: string
+  listenCount?: number
   coverGradient: string
   genreLabel: string
   originLabel: string
@@ -38,6 +41,9 @@ export interface DetailReview {
   detailId: string
   userId: string
   authorName: string
+  avatarUrl?: string
+  readEpisodeCount?: number
+  history?: Array<Pick<DetailReview, 'body' | 'recommended' | 'spoiler' | 'createdAt' | 'readEpisodeCount'>>
   rating: number
   body: string
   recommended: boolean
@@ -162,7 +168,7 @@ MOCK_WORKS.forEach((work, index) => add({
   ...work,
   detailId: work.id,
   coverGradient: FALLBACK_GRADIENTS[index % FALLBACK_GRADIENTS.length],
-  genreLabel: work.genres.join(' · '),
+  genreLabel: work.genres.map((genre) => HOME_GENRE_LABELS[genre]).join(' · '),
   originLabel: work.type === 'audiobook' ? 'พากย์' : work.origin === 'translated' ? 'แปล' : 'ไทย',
   narrationType: work.type === 'audiobook' ? 'human' : undefined,
   hasAudioEdition: work.type === 'novel' && work.id === '1',
